@@ -1,7 +1,13 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <PIMHeader></PIMHeader>
+    <div class="main">
+      <PIMAside></PIMAside>
+      <div class="container">
+        <CaseStatus></CaseStatus>
+        <CaseTable class="case-table"></CaseTable>
+    </div>
+    </div>
   </div>
 </template>
 
@@ -9,7 +15,7 @@
 import HelloWorld from './components/HelloWorld.vue'
 
 export default {
-  name: 'App',
+  name: 'app',
   components: {
     HelloWorld
   }
@@ -18,11 +24,23 @@ export default {
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: grayscale; */
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  height: 100%;
 }
+
+.main{
+  display: flex;
+}
+
+.case-table{
+  margin-top: 50px;
+}
+
 </style>
