@@ -48,6 +48,7 @@ export default {
     line-height: 100px;
     font-size: 20px;
     text-decoration: none;
+    padding-right: 150px;
 }
 .info a:hover{
     color:rgb(103, 194, 58)
