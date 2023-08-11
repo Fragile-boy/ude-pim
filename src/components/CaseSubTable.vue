@@ -1,6 +1,6 @@
 <template>
     <div class="subInfo">
-        <label class="caseName">{{caseName}}</label>
+        <label class="caseName">{{ caseName }}</label>
         <el-table :row-class-name="tableRowClassName" :data="subInfo" scope border style="width: 100%" max-height=700
             :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column prop="subName" label="子流程编号" width="70">
@@ -11,21 +11,24 @@
             </el-table-column>
             <el-table-column prop="startTime" label="开始时间" width="100">
             </el-table-column>
-            <el-table-column prop="targetTime" label="目标时间" width="100">
-            </el-table-column>
+            <!-- 目标时间：实际开始时间+预设时间 -->
+            <!-- <el-table-column prop="targetTime" label="目标时间" width="100">
+            </el-table-column> -->
             <el-table-column prop="standardTime" label="正常结束时间" width="100">
             </el-table-column>
             <el-table-column prop="finishTime" label="实际结束时间" width="120">
             </el-table-column>
             <el-table-column prop="unforcedDays" label="非人为异常时间" width="120">
             </el-table-column>
-            <el-table-column prop="idealTime" label="理想完成时间" width="120">
-            </el-table-column>
+            <!-- 理想完成时间：所有流程都正常结束的时间 -->
+            <!-- <el-table-column prop="idealTime" label="理想完成时间" width="120">
+            </el-table-column> -->
             <el-table-column prop="status" label="执行状态" width="100"
                 :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                 :filter-method="filterTag" filter-placement="bottom-end">
                 <template slot-scope="scope">
-                    <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ scope.row.status }}</el-tag>
+                    <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
+                    }}</el-tag>
                 </template>
 
             </el-table-column>
@@ -76,22 +79,46 @@ export default {
                     return ''
             }
         },
+
         showtype(tag) {
-            if (tag === "正在执行")
+            if (tag === 0)
                 return "primary"
-            else if (tag === "正常完成")
+            else if (tag === 1)
                 return "success"
-            else if (tag === "已延误")
+            else if (tag === 2)
                 return "danger"
-            else if (tag === "延误完成")
+            else if (tag === 3)
                 return "warning"
-        }
+        },
+
+        number2status(status) {
+            if (status === 0)
+                return "正在执行"
+            else if (status === 1)
+                return "正常完成"
+            else if (status === 2)
+                return "已延误"
+            else if (status === 3)
+                return "延误完成"
+            else if (status === 4)
+                return "未开始"
+        },
+        // showtype(tag) {
+        //     if (tag === "正在执行")
+        //         return "primary"
+        //     else if (tag === "正常完成")
+        //         return "success"
+        //     else if (tag === "已延误")
+        //         return "danger"
+        //     else if (tag === "延误完成")
+        //         return "warning"
+        // }
     }
 }
 </script>
 
 <style scoped>
-.subInfo >>> .caseName{
+.subInfo>>>.caseName {
     margin-top: 20px;
     margin-bottom: 30px;
     font-size: 40px;

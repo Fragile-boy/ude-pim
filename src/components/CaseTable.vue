@@ -14,17 +14,22 @@
         </el-table-column>
         <el-table-column prop="presetTime" label="预计完成时间" width="120">
         </el-table-column>
-        <el-table-column prop="presetDay" label="计划天数" width="100">
+        <el-table-column prop="finishTime" label="实际完成时间" width="120">
+        </el-table-column>
+        <el-table-column prop="planDay" label="计划天数" width="100">
         </el-table-column>
         <el-table-column prop="doingDay" label="执行天数" width="100">
         </el-table-column>
-        <el-table-column prop="unforcedDay" label="非计划异常天数" width="120">
+        <el-table-column prop="unforcedDay" label="外界因素延期" width="120">
+        </el-table-column>
+        <el-table-column prop="curStage" label="当前阶段" width="120">
         </el-table-column>
         <el-table-column prop="status" label="执行状态" width="100"
             :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
             :filter-method="filterTag" filter-placement="bottom-end">
             <template slot-scope="scope">
-                <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ scope.row.status }}</el-tag>
+                <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
+                }}</el-tag>
             </template>
 
         </el-table-column>
@@ -74,14 +79,26 @@ export default {
             this.$emit("showSub", row.id, row.name)
         },
         showtype(tag) {
-            if (tag === "正在执行")
+            if (tag === 0)
                 return "primary"
-            else if (tag === "正常完成")
+            else if (tag === 1)
                 return "success"
-            else if (tag === "已延误")
+            else if (tag === 2)
                 return "danger"
-            else if (tag === "延误完成")
+            else if (tag === 3)
                 return "warning"
+        },
+        number2status(status) {
+            if (status === 0)
+                return "正在执行"
+            else if (status === 1)
+                return "正常完成"
+            else if (status === 2)
+                return "已延误"
+            else if (status === 3)
+                return "延误完成"
+            else if (status === 4)
+                return "未开始"
         }
     }
 }
