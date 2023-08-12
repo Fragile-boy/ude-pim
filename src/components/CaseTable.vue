@@ -1,28 +1,28 @@
 <template>
     <!-- :row-class-name="tableRowClassName" -->
-    <el-table :data="caseInfo" scripe border style="width: 100%" max-height=700
+    <el-table :data="caseInfo" scripe border style="width: 100%" max-height=400
         :default-sort="{ prop: 'doingDay', order: 'descending' }">
         <el-table-column prop="caseNumber" label="编号" width="50">
         </el-table-column>
-        <el-table-column prop="name" label="任务名" width="250">
+        <el-table-column prop="name" label="任务名" width="245">
         </el-table-column>
-        <el-table-column prop="level" label="难度" width="100">
+        <el-table-column prop="level" label="难度" width="50">
         </el-table-column>
-        <el-table-column prop="director" label="负责人" width="100">
+        <el-table-column prop="director" label="负责人" width="70">
         </el-table-column>
         <el-table-column prop="startTime" label="开始时间" width="100">
         </el-table-column>
-        <el-table-column prop="presetTime" label="预计完成时间" width="120">
+        <el-table-column prop="presetTime" label="预计完成时间" width="100">
         </el-table-column>
-        <el-table-column prop="finishTime" label="实际完成时间" width="120">
+        <el-table-column prop="finishTime" label="实际完成时间" width="100">
         </el-table-column>
-        <el-table-column prop="planDay" label="计划天数" width="100">
+        <el-table-column prop="planDay" label="计划天数" width="60">
         </el-table-column>
-        <el-table-column prop="doingDay" label="执行天数" width="100">
+        <el-table-column prop="doingDay" label="执行天数" width="60">
         </el-table-column>
-        <el-table-column prop="unforcedDay" label="外界因素延期" width="120">
+        <el-table-column prop="unforcedDay" label="外界因素延期" width="100">
         </el-table-column>
-        <el-table-column prop="curStage" label="当前阶段" width="120">
+        <el-table-column prop="curStage" label="当前阶段" width="80">
         </el-table-column>
         <el-table-column prop="status" label="执行状态" width="100"
             :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
@@ -33,7 +33,7 @@
             </template>
 
         </el-table-column>
-        <el-table-column label="操作" width="110">
+        <el-table-column label="操作">
             <template slot-scope="scope">
                 <el-button size="mini" type="info" @click="showSub(scope.row)">查看详情</el-button>
             </template>
