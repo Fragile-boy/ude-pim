@@ -3,34 +3,51 @@
         <label class="caseName">{{ caseName }}</label>
         <div class="table">
             <div class="subTable">
-                <el-table :row-class-name="tableRowClassName" :data="subInfo" scope border style="width: 100%"
-                    max-height=400 @cell-dblclick="getCaseByUserName">
-                    <el-table-column prop="subName" label="子流程" width="70">
+                <el-table :data="subInfo" scope border :max-height=1080
+                    @cell-dblclick="getCaseByUserName">
+                    
+                    <el-table-column prop="subName" label="子流程" width="90">
                     </el-table-column>
+
                     <el-table-column prop="number" label="专案下序号" width="100">
                     </el-table-column>
+
                     <el-table-column prop="level" label="难度" width="50">
                     </el-table-column>
+
                     <el-table-column prop="chargeName[0]" label="负责人1" width="80">
                     </el-table-column>
+
                     <el-table-column prop="chargeName[1]" label="负责人2" width="80">
                     </el-table-column>
+
                     <el-table-column prop="chargeName[2]" label="负责人3" width="80">
                     </el-table-column>
+
                     <el-table-column prop="startTime" label="开始时间" width="100">
                     </el-table-column>
-                    <!-- 目标时间：实际开始时间+预设时间 -->
-                    <!-- <el-table-column prop="targetTime" label="目标时间" width="100">
-            </el-table-column> -->
-                    <el-table-column prop="standardTime" label="正常结束时间" width="100">
+
+                    <!-- 阶段目标时间：实际开始时间+预设时间 -->
+                    <el-table-column prop="targetTime" label="阶段目标时间" width="110">
                     </el-table-column>
-                    <el-table-column prop="finishTime" label="实际结束时间" width="100">
+
+                    <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
+                    <el-table-column prop="standardTime" label="目标完成时间" width="110">
                     </el-table-column>
-                    <el-table-column prop="unforcedDays" label="外界因素延期" width="100">
-                    </el-table-column>
+
                     <!-- 理想完成时间：所有流程都正常结束的时间 -->
-                    <!-- <el-table-column prop="idealTime" label="理想完成时间" width="120">
-            </el-table-column> -->
+                    <el-table-column prop="ideaTime" label="预计完成时间" width="110">
+                    </el-table-column>
+
+                    <el-table-column prop="finishTime" label="实际结束时间" width="110">
+                    </el-table-column>
+
+                    <el-table-column prop="planDays" label="计划时间" width="110">
+                    </el-table-column>
+
+                    <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
+                    </el-table-column>
+
                     <el-table-column prop="status" label="执行状态" width="100"
                         :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                         :filter-method="filterTag" filter-placement="bottom-end">
@@ -41,15 +58,19 @@
                         </template>
 
                     </el-table-column>
-                    <el-table-column label="操作">
+
+                    <el-table-column label="操作" width="120">
                         <template slot-scope="scope">
-                            <el-button size="mini" type="info" @click="handleEdit(scope.$index, scope.row)">查看详情</el-button>
+                            <el-button size="middle" type="info" @click="subDetail(scope.row.id)">查看详情</el-button>
                         </template>
                     </el-table-column>
+
                 </el-table>
             </div>
             <div class="userCase" border>
-                <label class="chargeName">{{ chargeName }}</label>
+                <div class="chargeInfo">
+                    <label class="chargeName">{{ chargeName }}</label>
+                </div>
                 <el-table :data="userInfo">
                     <el-table-column prop="caseName" label="专案名称" width="245">
                     </el-table-column>
@@ -90,16 +111,16 @@ export default {
     data() {
         return {
             userInfo: [],
-            chargeName:'負責人'
+            chargeName: '負責人'
         }
     },
-    watch:{
-        caseName:{
-            deep:true,
+    watch: {
+        caseName: {
+            deep: true,
             immediate: true,
-            handler(){
+            handler() {
                 this.userInfo = []
-                this.chargeName='負責人'
+                this.chargeName = '負責人'
             }
         }
     },
@@ -124,20 +145,6 @@ export default {
         },
         filterTag(value, row) {
             return row.status === value;
-        },
-        tableRowClassName(row) {
-            if (row.row['finishTime'] !== null)
-                return "delay_success"
-            const today = new Date()
-            const presetDay = new Date(row.row.presetTime)
-            if (presetDay < today)
-                return 'danger'
-            else {
-                if ((presetDay - today) / (3600 * 24 * 1000) <= 10)
-                    return "warning"
-                else
-                    return ''
-            }
         },
         showtype(tag) {
             if (tag === 0)
@@ -169,34 +176,34 @@ export default {
 </script>
 
 <style scoped>
-.subInfo {
-    display: flex;
-    flex-wrap: wrap;
-}
 
 .subInfo>>>.caseName {
     display: block;
-    width: 1900px;
     margin-top: 20px;
     margin-bottom: 30px;
     font-size: 40px;
 }
 
-.subInfo>>>.table{
+.subInfo>>>.table {
     display: flex;
-    flex-wrap: nowrap;
-}
-.subInfo>>>.subTable {
-    width: 1100px;
+    flex-wrap: wrap;
+    flex-direction: column;
 }
 
-.subInfo>>>.userCase {
-    width: 750px;
-}
+/* .subInfo .userCase {
+    /* display: flex;
+    flex-wrap: wrap;
+    flex-direction: column; */
+/* } */
 
-.userCase>>>.chargeName{
+.userCase .el-table{
     display: block;
-    font-size: 50px;
-    margin-bottom: 20px;
+    margin-left: 330px;
 }
+
+.userCase>>>.chargeName {
+    font-size: 30px;
+    margin-bottom: 20px;
+    text-align: left;
+}  
 </style>

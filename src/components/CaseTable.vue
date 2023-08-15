@@ -12,9 +12,9 @@
         </el-table-column>
         <el-table-column prop="startTime" label="开始时间" width="100">
         </el-table-column>
-        <el-table-column prop="presetTime" label="预计完成时间" width="100">
+        <el-table-column prop="presetTime" label="预计完成时间" width="110">
         </el-table-column>
-        <el-table-column prop="finishTime" label="实际完成时间" width="100">
+        <el-table-column prop="finishTime" label="实际完成时间" width="110">
         </el-table-column>
         <el-table-column prop="planDay" label="计划天数" width="60">
         </el-table-column>
@@ -35,7 +35,7 @@
         </el-table-column>
         <el-table-column label="操作">
             <template slot-scope="scope">
-                <el-button size="mini" type="info" @click="showSub(scope.row)">查看详情</el-button>
+                <el-button size="middle" type="info" @click="showSub(scope.row)">查看详情</el-button>
             </template>
         </el-table-column>
     </el-table>
@@ -75,8 +75,13 @@ export default {
             }
         },
         showSub(row) {
-            // console.log(row.id);
-            this.$emit("showSub", row.id, row.name)
+            this.$router.push({
+                name:'case-sub',
+                query:{
+                    caseId:row.id,
+                    caseName:row.name
+                }
+            })
         },
         showtype(tag) {
             if (tag === 0)
@@ -105,19 +110,5 @@ export default {
 </script>
 
 <style scoped>
-.el-table>>>.delay_success {
-    background: rgb(179, 216, 255);
-}
 
-.el-table>>>.success {
-    background: rgb(240, 249, 235);
-}
-
-.el-table>>>.danger {
-    background: rgb(243, 192, 210);
-}
-
-.el-table>>>.warning {
-    background: rgb(243, 223, 187);
-}
 </style>

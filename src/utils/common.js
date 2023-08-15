@@ -44,3 +44,12 @@ export function getStatus(startTime, planTime, finishTime) {
     return status
 }
 
+//时间相加
+export function timeAdd(){
+    var result = new Date(arguments[0])
+    for(var i =1;i<arguments.length;i++){
+        result.setDate(result.getDate()+arguments[i])
+    }
+    return formatDate(result)
+}
+

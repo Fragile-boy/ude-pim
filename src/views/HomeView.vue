@@ -1,19 +1,15 @@
 <template>
-  <div class="home">
-    <!-- <PIMHeader></PIMHeader> -->
+  <div class="home" style="text-align: center;">
     <div class="content">
-      <!-- <PIMAside></PIMAside> -->
       <div class="main">
         <div class="tableInfo">
-          <CaseTable v-show="loadingCase" @showSub="showSub" :caseInfo="caseInfo"></CaseTable>
-          <div class="subInfo" v-show="loadingSub">
-            <CaseSubTable :subInfo="subInfo" :caseName="caseName"></CaseSubTable>
-            <el-button size="medium" type="primary " @click="showCase">返回</el-button>
+          <div class="charts">
+            <CasePie :info="pieInfo"></CasePie>
           </div>
+          <label>执行状态总览</label>
+          <CaseTable :caseInfo="caseInfo"></CaseTable>
         </div>
-        <div class="charts">
-          <CasePie :info="pieInfo"></CasePie>
-        </div>
+
       </div>
     </div>
   </div>
@@ -21,22 +17,18 @@
 
 <script>
 import CasePie from '../components/CasePie'
-import {formatDate, getStatus} from '@/utils/common'
+import { formatDate, getStatus } from '@/utils/common'
 export default {
-
+  name:'homePage',
   components: { CasePie },
   data() {
     return {
-      loadingSub: false,
-      loadingCase: true,
       caseId: '',
-      subInfo: [],
-      caseName: '',
       caseInfo: [],
       pieInfo: []
     }
   },
-  created() {
+  mounted() {
     this.getCaseInfo()
   },
   methods: {
@@ -53,8 +45,8 @@ export default {
             this.caseInfo[i].startTime = formatDate(startTime)
             //获得今天的日期，用于计算执行天数（如果已经完成，则执行天数由结束之间-开始时间获得）
             const today = new Date()
-            //预计完成时间
-            //理想状态下的开始时间+预设时间==预计完成时间（多少天完成）
+            //目标完成时间
+            //开始时间+各个阶段的计划时间
             //必须new一个新的，否则共用一个对象，修改一个，两个都改了
             var presetTime = new Date(startTime)
             presetTime.setDate(presetTime.getDate() + this.caseInfo[i].planDay)
@@ -81,9 +73,12 @@ export default {
 
             //执行状态显示
             // 如果案子还没有完结
-            this.caseInfo[i].status = getStatus(this.caseInfo[i].startTime,this.caseInfo[i].presetTime,this.caseInfo[i].finishTime)
+            this.caseInfo[i].status = getStatus(this.caseInfo[i].startTime, this.caseInfo[i].presetTime, this.caseInfo[i].finishTime)
           }
           this.pieInfo = this.caseInfo
+        })
+        .catch(error=>{
+
         })
     },
 
@@ -106,7 +101,7 @@ export default {
       this.$axios.get(`caseSub/list/${caseId}`)
         .then(result => {
           this.subInfo = result.data.data
-          console.log(this.subInfo)
+          // console.log(this.subInfo)
           for (let i = 0; i < this.subInfo.length; i++) {
             this.subInfo[i].startTime = formatDate(this.subInfo[i].startTime)
             //目标时间
@@ -122,7 +117,7 @@ export default {
     },
     //获取理想时间
     getTargetTime(startTime, planDay) {
-      if(startTime===null)
+      if (startTime === null)
         return null
       var presetTime = new Date(startTime)
       presetTime.setDate(presetTime.getDate() + planDay)
@@ -145,23 +140,33 @@ export default {
 <style scoped>
 .home {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
 .content {
   display: flex;
-  /* flex-direction: row; */
 }
 
 .main {
+
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
 
+.main>>>label {
+  display: block;
+  font-size: 50px;
+  padding-bottom: 20px;
+  margin-top: 40px;
+  align-content: center;
+  margin-left: 0%;
+}
+
+
 .main>>>.tableInfo {
-  width: 70%;
+  width: 100%;
 }
 
 .main>>>.userCase {
@@ -174,10 +179,10 @@ export default {
 }
 
 .charts {
-  /* width: 700px; */
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  margin-bottom: 30px;
 }
 </style>
 
