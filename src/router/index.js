@@ -4,15 +4,18 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFind from '@/views/NotFind.vue'
 import CaseSubView from '@/views/CaseSubView.vue'
-import UserView from '@/views/UserView.vue'
+import UserView from '@/views/UserViews/UserView.vue'
+import UserNotice from '@/views/UserViews/UserNotice.vue'
+import User4Case from '@/views/UserViews/User4Case.vue'
+import UserChart from '@/views/UserViews/UserChart.vue'
 
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path:'/',
-    redirect:'/home'
+    path: '/',
+    redirect: '/home'
   },
   {
     path: '/home',
@@ -20,28 +23,45 @@ const routes = [
     component: HomeView
   },
   {
-    path:'/case2sub',
-    name:'case-sub',
-    component:CaseSubView
+    path: '/case2sub',
+    name: 'case-sub',
+    component: CaseSubView
   },
   {
-    path:'/user',
-    name:'user',
-    component:UserView
+    path: '/user',
+    name: 'user',
+    component: UserView,
+    children: [
+      {
+        path: '/user/1',
+        name: 'userNotice',
+        component: UserNotice
+      },
+      {
+        path: '/user/2',
+        name: 'user4case',
+        component: User4Case
+      },
+      {
+        path: '/user/3',
+        name: 'userchart',
+        component: UserChart
+      },
+    ]
   },
   {
-    path:'/login',
-    name:'login',
-    component:LoginView
+    path: '/login',
+    name: 'login',
+    component: LoginView
   },
   {
-    path:'*',
-    component:NotFind
+    path: '*',
+    component: NotFind
   }
 ]
 
 const router = new VueRouter({
-  mode:'history',
+  mode: 'history',
   routes
 })
 

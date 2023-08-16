@@ -1,9 +1,9 @@
 <template>
-    <div class="singleBox" style="text-align: center;">
-        <label class="caseName">{{data.caseName}}</label>
+    <div class="singleBox" style="text-align: center;" :class="{ 'normal': leftDay >= 0, 'delay': leftDay < 0 }">
+        <label class="caseName">{{ data.caseName }}</label>
         <div class="caseSubStatus" min-width="500px">
-            <div class="subName">{{data.subName}}</div>
-            <el-progress type="circle" :percentage="25"></el-progress>
+            <div class="subName">{{ data.subName }}</div>
+            <el-progress type="circle" text-color="#ffffff" :stroke-width="15" :percentage="leftRate" :color="showColor" :format="showText"></el-progress>
         </div>
 
         <div class="operation">
@@ -13,19 +13,67 @@
 </template>
 
 <script>
+import { timeSub } from '@/utils/common'
 export default {
-    props:{
-        data:Array
+    props: {
+        data: Object
+    },
+    data() {
+        return {
+            leftDay: 0,
+            leftRate: 0
+        }
+    },
+    created() {
+        setTimeout(this.getPercentage(), 2000)
+    },
+    methods: {
+        getPercentage() {
+            //分为已延误和未延误
+            var today = new Date()
+            today.setHours(0, 0, 0, 0)
+            //还未截止
+            if (today <= new Date(this.data.presetTime)) {
+                var costDay = timeSub(today, this.data.presetTime)
+                this.leftDay = costDay
+                this.leftRate = Math.ceil(this.leftDay / this.data.planDays * 100)
+            } else {
+                var delayDay = timeSub(this.data.presetTime, today)
+                this.leftRate = delayDay / this.data.planDays * 100
+                this.leftDay = -delayDay
+            }
+            return this.leftRate
+        },
+        showText() {
+            if (this.leftDay >= 0)
+                return `剩余${this.leftDay}天`
+            else
+                return `已延误${Math.abs(this.leftDay)}天`
+        },
+        showColor() {
+            if (this.leftDay >= 0)
+                return "#67c23a"
+            else
+                return "#DFF144"
+        }
     }
 }
 </script>
 
 <style scoped>
+.normal {
+    background-color: #A4D8DD;
+}
+
+.delay{
+    background-color: #EE8192;;
+}
+
 .singleBox {
     border: 1px solid grey;
     /* width: 500px; */
     /* height: 200px; */
-    /* background-color: pink; */
+
     padding-top: 10px;
     padding-left: 20px;
     padding-right: 20px;
@@ -36,21 +84,24 @@ export default {
 
 .singleBox label {
     font-size: 30px;
+    padding-left: 50px;
+    padding-right: 50px;
 }
 
 
-.singleBox .caseSubStatus{
+.singleBox .caseSubStatus {
     display: flex;
     justify-content: space-between;
 }
 
-.singleBox .el-progress{
+.singleBox .el-progress {
     margin-right: 10px;
     margin-top: 5px;
 }
 
 .singleBox .subName {
-    background-color: #fff;
+    background-color: #81EEA4;
+    color: white;
     width: 30%;
     height: 60px;
     line-height: 60px;

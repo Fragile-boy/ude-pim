@@ -21,19 +21,20 @@
 </template>
 
 <script>
+import { mapMutations, mapState } from 'vuex'
 export default {
     data() {
         return {
-            user:{}
+            
         }
     },
-    mounted(){
-        this.user = JSON.parse(localStorage.getItem("user"))
-        console.log(this.user)
+    computed:{
+        ...mapState(['user'])
     },
     methods: {
+        ...mapMutations(['setUser']),
         logout() {
-            this.userName = ''
+            this.setUser({})
             if(localStorage.getItem("user")===null)
                 return
             this.$axios.post('/user/logout')
