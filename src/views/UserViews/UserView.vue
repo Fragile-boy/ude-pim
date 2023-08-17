@@ -1,6 +1,6 @@
 <template>
     <div class="userBox">
-        <div class="userNav">
+        <el-container>
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" background-color="#545c64"
                 text-color="#fff" active-text-color="#ffd04b" :router=true>
                 <el-menu-item index="/user/1">
@@ -9,7 +9,7 @@
                 <el-menu-item index="/user/2">我的工作台</el-menu-item>
                 <el-menu-item index="/user/3">工作总览</el-menu-item>
             </el-menu>
-        </div>
+        </el-container>
         <keep-alive :include="['case4me']">
             <router-view></router-view>
         </keep-alive>
@@ -32,16 +32,14 @@ export default {
 </script>
 
 <style scoped>
-.userNav .item {
-    margin-left: 5px;
-}
 
 .userBox {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    align-content: flex-start;
     width: 100%;
-}
-
-.userBox>>>.singleBox {
-    display: inline-block;
+    border: 1px solid grey;
 }
 
 /* .userBox>>>.container {

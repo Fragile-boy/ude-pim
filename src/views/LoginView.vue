@@ -8,10 +8,10 @@
             <div class="inputArea">
                 <el-input v-model="pimNumber" clearable placeholder="请输入你的工号" prefix-icon="el-icon-user-solid"></el-input>
                 <el-input v-model="password" clearable placeholder="请输入密码" prefix-icon="el-icon-s-cooperation" show-password
-                    @keyup.native.enter="login"></el-input>
+                    @keyup.native.enter="handlerLogin"></el-input>
                 <div class="loginArea" style="text-align: center;">
                     <el-checkbox v-model="remember" @change="fn">记住密码</el-checkbox>
-                    <el-button type="primary" @click="login">登录</el-button>
+                    <el-button type="primary" @click="handlerLogin">登录</el-button>
                 </div>
             </div>
         </div>
@@ -20,6 +20,7 @@
 
 <script>
 import { mapMutations } from 'vuex'
+import {loginApi} from '@/api/login'
 export default {
     data() {
         return {
@@ -37,34 +38,31 @@ export default {
     methods: {
         ...mapMutations(['setUser']),
         //登录
-        login() {
+        async handlerLogin() {
             console.log(this.pimNumber)
             console.log(this.password)
-            this.$axios.post('/user/login', {
+            const params = {
                 number: this.pimNumber,
                 password: this.password
-            }).then(res => {
-                if (res.data.code == 200) {
-                    
-                    //持久化存储上一个登录成功的账号
-                    localStorage.setItem("userNumber", this.pimNumber)
-                    //如果点击了记住密码
-                    if(this.remember)
-                        localStorage.setItem("password", this.password)
-                    this.setUser(res.data.data)
-                    localStorage.setItem("user", JSON.stringify(res.data.data))
-                    this.$message({
-                        message:"登录成功",
-                        type:'success',
-                        duration:900
-                    })
-                    setTimeout(()=>this.$router.push('/home'),1000)
-                } else {
-                    this.$message.error(res.data.msg)
-                }
-            }).catch(err => {
-                console.log(err)
-            })
+            }
+            const res = await loginApi(params)
+            if (res.code == 200) {
+                //持久化存储上一个登录成功的账号
+                localStorage.setItem("userNumber", this.pimNumber)
+                //如果点击了记住密码
+                if(this.remember)
+                    localStorage.setItem("password", this.password)
+                this.setUser(res.data)
+                localStorage.setItem("user", JSON.stringify(res.data))
+                this.$message({
+                    message:"登录成功",
+                    type:'success',
+                    duration:900
+                })
+                setTimeout(()=>this.$router.push('/home'),1000)
+            } else {
+                this.$message.error(res.msg)
+            }
         },
         fn() {
             if (this.remember) {

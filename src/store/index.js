@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import caseM from '@/store/modules/caseM'
 
 Vue.use(Vuex)
 
@@ -19,5 +20,6 @@ export default new Vuex.Store({
   actions: {
   },
   modules: {
+    caseM
   }
 })

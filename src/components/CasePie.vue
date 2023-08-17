@@ -1,35 +1,49 @@
 <template>
-  <div class="pieInfo">
-    <div id="pieChart" style="width: 600px; height: 400px;"></div>
-    <div id="barChart" style="width: 1000px; height: 400px;"></div>
+  <div class="pieInfo" v-loading="info.length===0">
+    <div id="pieChart" style="width: 600px; height: 300px;"></div>
+    <div id="barChart" style="width: 1000px; height: 300px;"></div>
   </div>
 </template>
   
 <script>
+import { mapState } from 'vuex';
 
 export default {
-  props: {
-    info: Array
-  },
+  // props: {
+  //   info: Array
+  // },
   data() {
     return {
       pieChart: null,
-      barChart: null
+      barChart: null,
+      info: []
     }
   },
+  computed: {
+    ...mapState('caseM', ['caseList', 'queryList'])
+  },
   mounted() {
+    this.info = this.caseList
     this.pieChart = this.$echarts.init(document.getElementById('pieChart'));
     this.barChart = this.$echarts.init(document.getElementById('barChart'));
-    this.renderBarChart();
+    this.renderBarChart()
     this.renderPieChart()
   },
   watch: {
-    info: {
+    caseList: {
       handler() {
+        this.info = this.caseList
         this.renderBarChart()
         this.renderPieChart()
       }
-    }
+    },
+    queryList: {
+      handler() {
+        this.info = this.queryList
+        this.renderBarChart()
+        this.renderPieChart()
+      }
+    },
   },
   methods: {
     renderPieChart() {
@@ -193,7 +207,8 @@ export default {
   display: flex;
 }
 
-.pieInfo #pieChart, #barChart{
+.pieInfo #pieChart,
+#barChart {
   border: 1px solid grey;
   border-radius: 10px;
   margin-right: 10px;

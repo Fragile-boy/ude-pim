@@ -99,6 +99,7 @@
 
 <script>
 import { formatDate, getStatus } from '@/utils/common'
+import { getSubByUserName } from '@/api/caseSub'
 export default {
 
     props: {
@@ -126,22 +127,20 @@ export default {
     },
     methods: {
         //显示负责人手头的子流程
-        getCaseByUserName(row, column, cell, event) {
+        async getCaseByUserName(row, column, cell, event) {
             var index = column.label.match(/(\d+)/)[1] - 1
-            this.$axios.get(`/caseSub/director/${row.chargeId[index]}`)
-                .then(res => {
-                    this.userInfo = res.data.data
-                    //負責人姓名顯示
-                    this.chargeName = row.chargeName[index]
-                    for (var i = 0; i < this.userInfo.length; i++) {
-                        this.userInfo[i].startTime = formatDate(this.userInfo[i].startTime)
-                        const presetTime = new Date(this.userInfo[i].startTime)
-                        this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays))
-                        this.userInfo[i].status = getStatus(this.userInfo[i].startTime, this.userInfo[i].presetTime, this.userInfo[i].finishTime)
-                        this.userInfo[i].deadLine = Math.floor(this.userInfo[i].status == 0 ? (new Date(this.userInfo[i].presetTime) - new Date().setHours(0, 0, 0, 0)) / (1000 * 3600 * 24) :
-                            (new Date(new Date().setHours(0, 0, 0, 0) - new Date(this.userInfo[i].presetTime))) / (1000 * 3600 * 24))
-                    }
-                })
+            var res = await getSubByUserName(row.chargeId[index])
+            this.userInfo = res.data
+            //負責人姓名顯示
+            this.chargeName = row.chargeName[index]
+            for (var i = 0; i < this.userInfo.length; i++) {
+                this.userInfo[i].startTime = formatDate(this.userInfo[i].startTime)
+                const presetTime = new Date(this.userInfo[i].startTime)
+                this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays))
+                this.userInfo[i].status = getStatus(this.userInfo[i].startTime, this.userInfo[i].presetTime, this.userInfo[i].finishTime)
+                this.userInfo[i].deadLine = Math.floor(this.userInfo[i].status == 0 ? (new Date(this.userInfo[i].presetTime) - new Date().setHours(0, 0, 0, 0)) / (1000 * 3600 * 24) :
+                    (new Date(new Date().setHours(0, 0, 0, 0) - new Date(this.userInfo[i].presetTime))) / (1000 * 3600 * 24))
+            }
         },
         filterTag(value, row) {
             return row.status === value;

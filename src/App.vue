@@ -1,27 +1,27 @@
 <template>
   <div id="app">
+    <!-- 侧边栏 -->
     <PIMAside></PIMAside>
-    <keep-alive :include="['homePage']">
-      <router-view></router-view>
-    </keep-alive>
+
+    <router-view></router-view>
   </div>
 </template>
 
 
 <script>
 import { mapMutations } from 'vuex'
-  export default{
-    mounted(){
-      if(localStorage.getItem("user")!==null){
-        var user = JSON.parse(localStorage.getItem("user"))
-        console.log("正在设置名称")
-        this.setUser(user)
-      }
-    },
-    methods:{
-      ...mapMutations(['setUser'])
+export default {
+  created() {
+    if (localStorage.getItem("user") !== null) {
+      var user = JSON.parse(localStorage.getItem("user"))
+      console.log("正在设置名称")
+      this.setUser(user)
     }
+  },
+  methods: {
+    ...mapMutations(['setUser'])
   }
+}
 </script>
 
 <style>
@@ -35,16 +35,4 @@ import { mapMutations } from 'vuex'
   position: relative;
 }
 
-/* nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-} */
 </style>

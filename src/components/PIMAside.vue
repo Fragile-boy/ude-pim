@@ -22,6 +22,7 @@
 
 <script>
 import { mapMutations, mapState } from 'vuex'
+import { logout } from '@/api/login'
 export default {
     data() {
         return {
@@ -33,14 +34,15 @@ export default {
     },
     methods: {
         ...mapMutations(['setUser']),
-        logout() {
+        async logout() {
             this.setUser({})
             if(localStorage.getItem("user")===null)
                 return
-            this.$axios.post('/user/logout')
-                .then(res => {
-                    console.log(res.data.data)
-                })
+            await logout()
+            this.$message.success({
+                message:"登出成功",
+                duration:1000
+            })
             localStorage.removeItem('user')
             this.$router.push('/login')
             
@@ -88,11 +90,8 @@ a.router-link-active{
 }
 
 .logout {
-    width: 50px;
-    height: 100px;
     color: white;
     margin-bottom: 30px;
     margin-top: 30px;
-    margin-left: 18px;
 }
 </style>

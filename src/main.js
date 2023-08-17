@@ -8,7 +8,7 @@ import CaseTable from './components/CaseTable'
 import CaseSubTable from './components/CaseSubTable'
 import UserCase from './components/UserCase'
 import CaseBox from './components/CaseBox'
-import axios from './plugins/axios'
+import axios from './plugins/service'
 import router from './router'
 import * as echarts from 'echarts';
 import store from './store'
