@@ -1,5 +1,7 @@
 <template>
-  <div>这是显示科员负责专案的界面</div>
+  <div class="subCommit">
+    <SubForm></SubForm>
+  </div>
 </template>
 
 <script>
@@ -8,6 +10,8 @@ export default {
 }
 </script>
 
-<style>
-
+<style scoped>
+  .subCommit{
+    border: 1px solid grey;
+  }
 </style>

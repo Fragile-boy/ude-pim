@@ -1,5 +1,5 @@
 <template>
-    <div v-loading="caseInfo.length===0">
+    <div class="indexTable" v-loading="caseInfo.length===0">
         <div class="query" style="text-align: left;">
             <!-- 专案名称 -->
             <label class="label">专案名称：</label>
@@ -29,7 +29,7 @@
             <el-button type="primary" @click="handleQuery">搜索 <i class="el-icon-search"></i></el-button>
             <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
         </div>
-        <el-table :data="caseInfo" scripe border style="width: 100%" max-height=600
+        <el-table :data="caseInfo" border scrope style="width: 100%" max-height=600
             :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column prop="caseNumber" label="编号" width="50">
             </el-table-column>
@@ -217,6 +217,7 @@ export default {
 </script>
 
 <style scoped>
+
 .query {
     margin-bottom: 20px;
 }

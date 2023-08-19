@@ -7,7 +7,7 @@
         </div>
 
         <div class="operation">
-            <el-button size="medium" type="primary" icon="el-icon-edit" round></el-button>
+            <el-button size="medium" type="primary" icon="el-icon-edit" round @click="openCommitView(data)"></el-button>
         </div>
     </div>
 </template>
@@ -55,6 +55,16 @@ export default {
                 return "#67c23a"
             else
                 return "#DFF144"
+        },
+        openCommitView(caseSub) {
+            this.$router.push({
+                path: '/subForm',
+                query: {
+                    caseSubId: caseSub.id,
+                    caseSubName:caseSub.subName,
+                    caseName:caseSub.caseName
+                }
+            })
         }
     }
 }
@@ -71,8 +81,8 @@ export default {
 
 .singleBox {
     border: 1px solid grey;
-    /* width: 500px; */
-    /* height: 200px; */
+    /* width: 500px; 
+    height: 200px; */
 
     padding-top: 10px;
     padding-left: 20px;

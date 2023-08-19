@@ -1,9 +1,10 @@
 <template>
   <div id="app">
     <!-- 侧边栏 -->
-    <PIMAside></PIMAside>
+    <PIMAside class="nav"></PIMAside>
 
     <router-view></router-view>
+
   </div>
 </template>
 
@@ -32,7 +33,5 @@ export default {
   /* text-align: center; */
   color: #2c3e50;
   display: flex;
-  position: relative;
 }
-
 </style>

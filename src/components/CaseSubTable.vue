@@ -3,9 +3,8 @@
         <label class="caseName">{{ caseName }}</label>
         <div class="table">
             <div class="subTable">
-                <el-table :data="subInfo" scope border :max-height=1080
-                    @cell-dblclick="getCaseByUserName">
-                    
+                <el-table :data="subInfo" scope border :max-height=1080 @cell-dblclick="getCaseByUserName">
+
                     <el-table-column prop="subName" label="子流程" width="90">
                     </el-table-column>
 
@@ -61,7 +60,7 @@
 
                     <el-table-column label="操作" width="120">
                         <template slot-scope="scope">
-                            <el-button size="middle" type="info" @click="subDetail(scope.row.id)">查看详情</el-button>
+                            <el-button size="middle" type="info" @click="openCommitView(scope.row)">查看详情</el-button>
                         </template>
                     </el-table-column>
 
@@ -99,7 +98,7 @@
 
 <script>
 import { formatDate, getStatus } from '@/utils/common'
-import { getSubByUserName } from '@/api/caseSub'
+import { getSubByUserId } from '@/api/caseSub'
 export default {
 
     props: {
@@ -129,7 +128,7 @@ export default {
         //显示负责人手头的子流程
         async getCaseByUserName(row, column, cell, event) {
             var index = column.label.match(/(\d+)/)[1] - 1
-            var res = await getSubByUserName(row.chargeId[index])
+            var res = await getSubByUserId(row.chargeId[index])
             this.userInfo = res.data
             //負責人姓名顯示
             this.chargeName = row.chargeName[index]
@@ -167,15 +166,22 @@ export default {
                 return "延误完成"
             else if (status === 4)
                 return "未开始"
+        },
+        openCommitView(caseSub) {
+            this.$router.push({
+                path: '/subForm',
+                query: {
+                    caseSubId: caseSub.id,
+                    caseSubName:caseSub.subName,
+                    caseName:this.caseName
+                }
+            })
         }
-
-
     }
 }
 </script>
 
 <style scoped>
-
 .subInfo>>>.caseName {
     display: block;
     margin-top: 20px;
@@ -195,7 +201,7 @@ export default {
     flex-direction: column; */
 /* } */
 
-.userCase .el-table{
+.userCase .el-table {
     display: block;
     margin-left: 330px;
 }
@@ -204,5 +210,5 @@ export default {
     font-size: 30px;
     margin-bottom: 20px;
     text-align: left;
-}  
+}
 </style>

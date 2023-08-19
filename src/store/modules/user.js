@@ -5,21 +5,12 @@ export default{
     namespaced:true,
     state(){
         return{
-            userList:[],
-            userTypeList:[],
-            type2userList:[]
+            // 用户负责的正在进行的专案子流程列表
+            userChargeList:[],
         }
     },
     mutations:{
-        //获取
-        updateList(state,newList){
-            state.caseList = newList
-        },
-        //获取查询后的专案列表
-        queryCase(state,obj){
-            state.queryList = state.caseList.filter(item=>item.name.includes(obj.name))
-            console.log(state.queryList)
-        }
+        
     },
     actions:{
         //获取专案列表

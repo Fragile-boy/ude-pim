@@ -14,7 +14,10 @@
             <router-link to="/home">主页</router-link>
             <router-link to="/manageCase">专案管理</router-link>
             <router-link to="/manageCaseSub">子流程管理</router-link>
-            <router-link to="/user">个人管理</router-link>
+            <router-link to="/check" v-if="user.type===1">审批管理</router-link>
+            <router-link to="/user" v-if="user.type===1">部员管理</router-link>
+            <router-link to="/user" v-else>个人管理</router-link>
+            
         </div>
 
     </div>
@@ -36,8 +39,8 @@ export default {
         ...mapMutations(['setUser']),
         async logout() {
             this.setUser({})
-            if(localStorage.getItem("user")===null)
-                return
+            // if(localStorage.getItem("user")===null)
+            //     return
             await logout()
             this.$message.success({
                 message:"登出成功",
@@ -53,7 +56,8 @@ export default {
 
 <style scoped>
 .nav {
-    height: 1080px;
+    width: 200px;
+    height: 130vh;
     background-color: rgb(33, 37, 41);
     display: flex;
     flex-direction: column;
@@ -62,6 +66,7 @@ export default {
 .nav .logo {
     width: 150px;
     height: 150px;
+    margin-left: 23px;
 }
 
 .menuList {

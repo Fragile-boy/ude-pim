@@ -1,18 +1,18 @@
 <template>
     <div class="userBox">
-        <el-container>
-            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" background-color="#545c64"
-                text-color="#fff" active-text-color="#ffd04b" :router=true>
-                <el-menu-item index="/user/1">
-                    消息中心
-                </el-menu-item>
-                <el-menu-item index="/user/2">我的工作台</el-menu-item>
-                <el-menu-item index="/user/3">工作总览</el-menu-item>
-            </el-menu>
-        </el-container>
-        <keep-alive :include="['case4me']">
-            <router-view></router-view>
-        </keep-alive>
+        <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" background-color="#545c64"
+            text-color="#fff" active-text-color="#ffd04b" :router=true>
+            <el-menu-item index="/user/1">
+                消息中心
+            </el-menu-item>
+            <el-menu-item index="/user/2">我的工作台</el-menu-item>
+            <el-menu-item index="/user/3">工作总览</el-menu-item>
+        </el-menu>
+        <div class="userSubView">
+            <keep-alive :include="['case4me']">
+                <router-view></router-view>
+            </keep-alive>
+        </div>
     </div>
 </template>
 
@@ -32,19 +32,20 @@ export default {
 </script>
 
 <style scoped>
-
 .userBox {
     display: flex;
-    justify-content: flex-start;
+    flex-direction: column;
     flex-wrap: wrap;
-    align-content: flex-start;
-    width: 100%;
+    width: 400vh;
+    height: 100vh;
     border: 1px solid grey;
 }
 
-/* .userBox>>>.container {
+.userBox .el-menu-demo{
+    width: 400vh;
+}
+
+.userBox .userSubView{
     display: flex;
-    flex-wrap: wrap;
-    border: 1px solid grey;
-} */
+}
 </style>

@@ -1,4 +1,4 @@
-
+import {getSubByUserId} from '@/api/caseSub'
 
 // 公共方法，提高代码复用率
 
@@ -60,3 +60,22 @@ export function timeSub(time1, time2){
     return Math.ceil((time2-time1)/(1000*24*3600))
 }
 
+
+//获取用户负责的专案子列表
+export async function getSubById(id) {
+    var res = await getSubByUserId(id)
+    res = res.data
+    for (var i = 0; i < res.length; i++) {
+        //开始时间
+        res[i].startTime = formatDate(res[i].startTime)
+        const presetTime = new Date(res[i].startTime)
+        // 预计时间
+        res[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + res[i].planDays))
+        // 状态
+        res[i].status = getStatus(res[i].startTime, res[i].presetTime, res[i].finishTime)
+        // 截止日期（还剩多少天/已延误多少天）
+        res[i].deadLine = Math.floor(res[i].status == 0 ? (new Date(res[i].presetTime) - new Date().setHours(0, 0, 0, 0)) / (1000 * 3600 * 24) :
+            (new Date(new Date().setHours(0, 0, 0, 0) - new Date(res[i].presetTime))) / (1000 * 3600 * 24))
+    }
+    return res
+}

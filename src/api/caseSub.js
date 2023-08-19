@@ -6,6 +6,6 @@ export const getSubList = (caseId)=>{
 }
 
 //根据科员id获取其未完成的子流程列表
-export const getSubByUserName = (userId)=>{
+export const getSubByUserId = (userId)=>{
     return service.get(`/caseSub/director/${userId}`)
 }
