@@ -17,12 +17,12 @@
             </el-card>
         </el-form-item>
 
-        <el-form-item label="增加备注:">
+        <el-form-item label="增加备注:" v-if="user.type===1||chargeId.indexOf(user.id)!==-1">
             <el-input type="textarea" v-model="newContent"></el-input>
         </el-form-item>
 
         <el-form-item>
-            <el-button type="primary" @click="submitCommitForm">提交</el-button>
+            <el-button type="primary" @click="submitCommitForm" v-if="user.type===1||chargeId.indexOf(user.id)!==-1">提交</el-button>
             <el-button @click="$router.back()">返回</el-button>
         </el-form-item>
     </el-form>
@@ -39,10 +39,13 @@ export default {
             subName: '上线跟踪',
             content: [],
             newContent: '',
-            caseSubId:0
+            caseSubId:0,
+            chargeId:[]
         }
     },
     created() {
+        //一个子流程可能有多个负责人，所以这里是个数组！！！这里是个数组！！！这里是个数组！！！
+        this.chargeId = this.$route.query.chargeId
         this.caseSubId = this.$route.query.caseSubId
         this.subName = this.$route.query.caseSubName
         this.caseName = this.$route.query.caseName

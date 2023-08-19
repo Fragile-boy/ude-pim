@@ -39,4 +39,7 @@ li {
     list-style: none;
     display: inline;
 }
+ul{
+    display: flex;
+}
 </style>

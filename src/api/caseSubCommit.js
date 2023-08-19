@@ -16,7 +16,13 @@ export const getPendingReview = ()=>{
     return service.get('/caseSubComment/pendingList')
 }
 
-//通过该id对应备注的审核
-export const passCheck = (params)=>{
+//修改该id对应备注的审核的状态
+export const handleCheck = (params)=>{
     return service.put(`/caseSubComment`,{...params})
+}
+
+
+//根据用户id查询对应的备注，分为已审核，审核中，审核失败三种
+export const getCommitByStatus = (params)=>{
+    return service.post('/caseSubComment/byUserAndStatus',params)
 }

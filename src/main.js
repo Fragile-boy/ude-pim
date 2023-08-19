@@ -21,6 +21,7 @@ Vue.component("CaseSubTable",CaseSubTable)
 Vue.component("UserCase",UserCase)
 Vue.component("CaseBox",CaseBox)
 
+
 Vue.prototype.$axios = axios
 Vue.prototype.$echarts = echarts;
 Vue.config.productionTip = false

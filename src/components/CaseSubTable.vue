@@ -173,7 +173,8 @@ export default {
                 query: {
                     caseSubId: caseSub.id,
                     caseSubName:caseSub.subName,
-                    caseName:this.caseName
+                    caseName:this.caseName,
+                    chargeId:caseSub.chargeId
                 }
             })
         }

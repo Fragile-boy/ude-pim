@@ -34,18 +34,18 @@ export default {
 <style scoped>
 .userBox {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: wrap;
-    width: 400vh;
     height: 100vh;
-    border: 1px solid grey;
 }
 
 .userBox .el-menu-demo{
-    width: 400vh;
+    height: 8vh;
+    width: 186vh;
 }
 
 .userBox .userSubView{
+    height: 85vh;
     display: flex;
 }
 </style>

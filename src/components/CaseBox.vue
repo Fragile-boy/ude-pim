@@ -14,6 +14,7 @@
 
 <script>
 import { timeSub } from '@/utils/common'
+import { mapState } from 'vuex'
 export default {
     props: {
         data: Object
@@ -23,6 +24,9 @@ export default {
             leftDay: 0,
             leftRate: 0
         }
+    },
+    computed:{
+        ...mapState(['user'])
     },
     created() {
         setTimeout(this.getPercentage(), 2000)
@@ -62,7 +66,8 @@ export default {
                 query: {
                     caseSubId: caseSub.id,
                     caseSubName:caseSub.subName,
-                    caseName:caseSub.caseName
+                    caseName:caseSub.caseName,
+                    chargeId:[this.user.id]
                 }
             })
         }
@@ -81,15 +86,12 @@ export default {
 
 .singleBox {
     border: 1px solid grey;
-    /* width: 500px; 
-    height: 200px; */
-
-    padding-top: 10px;
     padding-left: 20px;
     padding-right: 20px;
     margin-left: 20px;
-    margin-top: 20px;
     border-radius: 30px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 .singleBox label {

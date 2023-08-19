@@ -37,6 +37,7 @@ const routes = [
     path: '/user',
     name: 'user',
     component: UserView,
+    redirect:'/user/1',
     children: [
       {
         // 信息中心页
