@@ -12,8 +12,8 @@
 
         <div class="menuList">
             <router-link to="/home">主页</router-link>
-            <router-link to="/manageCase">专案管理</router-link>
-            <router-link to="/manageCaseSub">子流程管理</router-link>
+            <router-link to="/manageCase" v-if="user.type===1">专案管理</router-link>
+            <router-link to="/manageCaseSub" v-if="user.type===1">子流程管理</router-link>
             <router-link to="/check" v-if="user.type===1">审批管理</router-link>
             <router-link to="/user" v-if="user.type===1">部员管理</router-link>
             <router-link to="/user" v-else>个人管理</router-link>

@@ -138,8 +138,13 @@ export default {
         this.caseInfo = this.caseList
     },
     watch: {
-        caseList: {
+        queryList: {
             handler() {
+                this.caseInfo = this.queryList
+            }
+        },
+        caseList:{
+            handler(){
                 this.caseInfo = this.caseList
             }
         }

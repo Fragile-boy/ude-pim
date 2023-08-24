@@ -2,35 +2,27 @@
     <div class="status">
         <div class="cards">
             <a href="#">
-                <el-col :span="8" class="card">
-                    <el-card shadow="hover" class="doing">
-                        正在执行
-                    </el-card>
-                </el-col>
+                <el-card shadow="hover" class="sub_card">
+                    子阶段审核
+                </el-card>
             </a>
 
             <a href="#">
-                <el-col :span="8" class="card">
-                    <el-card shadow="hover" class="dead-line">
-                        即将截至
-                    </el-card>
-                </el-col>
+                <el-card shadow="hover" class="delay_card">
+                    延期审核
+                </el-card>
             </a>
 
             <a href="#">
-                <el-col :span="8" class="card">
-                    <el-card shadow="hover" class="delay">
-                        已延误
-                    </el-card>
-                </el-col>
+                <el-card shadow="hover" class="finish_card">
+                    完结审核
+                </el-card>
             </a>
 
             <a href="#">
-                <el-col :span="8" class="card">
-                    <el-card shadow="hover" class="finish">
-                        已完成
-                    </el-card>
-                </el-col>
+                <el-card shadow="hover" class="research_card">
+                    技术研究审核
+                </el-card>
             </a>
         </div>
     </div>
@@ -43,37 +35,40 @@ export default {
 </script>
 
 <style scoped>
-.status{
+.status {
     display: flex;
     justify-content: space-between;
 }
+
 .cards {
-    margin-top: 20px;
     display: flex;
     width: 800px;
     color: white;
 }
 
 .el-card {
-    margin-left: 20px;
     color: white;
     border-radius: 20px;
     width: 200px;
 }
 
-.doing {
+.cards a{
+    text-decoration: none;
+}
+
+.sub_card {
     background-color: rgb(13, 110, 253);
 }
 
-.dead-line {
+.delay_card {
     background-color: rgb(255, 193, 7);
 }
 
-.delay {
+.finish_card {
     background-color: rgb(220, 53, 69);
 }
 
-.finish {
+.research_card {
     background-color: rgb(25, 135, 84);
 }
 </style>

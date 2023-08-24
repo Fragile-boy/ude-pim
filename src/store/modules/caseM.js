@@ -16,7 +16,6 @@ export default {
         },
         //获取查询后的专案列表
         queryCase(state, obj) {
-            console.log(obj)
             state.queryList = state.caseList
             if ("name" in obj)
                 state.queryList = state.queryList.filter(item => item.name.includes(obj.name))

@@ -7,7 +7,9 @@
         </div>
 
         <div class="operation">
-            <el-button size="medium" type="primary" icon="el-icon-edit" round @click="openCommitView(data)"></el-button>
+            <el-button size="medium" type="primary" icon="el-icon-s-comment" round @click="openCommitView(data)">备注</el-button>
+            <el-button size="medium" type="danger" icon="el-icon-timer" round @click="openDelayApply(data)">申请延期</el-button>
+            <el-button size="medium" type="success" icon="el-icon-success" round>完结</el-button>
         </div>
     </div>
 </template>
@@ -60,9 +62,22 @@ export default {
             else
                 return "#DFF144"
         },
+        //跳转阶段备注页
         openCommitView(caseSub) {
             this.$router.push({
                 path: '/subForm',
+                query: {
+                    caseSubId: caseSub.id,
+                    caseSubName:caseSub.subName,
+                    caseName:caseSub.caseName,
+                    chargeId:[this.user.id]
+                }
+            })
+        },
+        //跳转阶段延期申请页
+        openDelayApply(caseSub) {
+            this.$router.push({
+                path: '/delayApply',
                 query: {
                     caseSubId: caseSub.id,
                     caseSubName:caseSub.subName,
@@ -126,5 +141,6 @@ export default {
 
 .singleBox .operation {
     margin-top: -20px;
+    margin-left: -140px;
 }
 </style>

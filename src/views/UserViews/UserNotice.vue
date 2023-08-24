@@ -1,5 +1,6 @@
 <template>
   <div class="commitContainer">
+    <CaseStatus></CaseStatus>
     <!-- 审核中表格 -->
     <label>审核中</label>
     <el-table :data="checkingCommit" style="width: 100%" border>

@@ -1,4 +1,5 @@
-import {getSubByUserId} from '@/api/caseSub'
+import { getSubByUserId } from '@/api/caseSub'
+import { Message } from 'element-ui';
 
 // 公共方法，提高代码复用率
 
@@ -45,19 +46,19 @@ export function getStatus(startTime, planTime, finishTime) {
 }
 
 //时间相加
-export function timeAdd(){
+export function timeAdd() {
     var result = new Date(arguments[0])
-    for(var i =1;i<arguments.length;i++){
-        result.setDate(result.getDate()+arguments[i]-1)
+    for (var i = 1; i < arguments.length; i++) {
+        result.setDate(result.getDate() + arguments[i] - 1)
     }
     return formatDate(result)
 }
 
 //时间相见
-export function timeSub(time1, time2){
+export function timeSub(time1, time2) {
     time1 = new Date(time1)
     time2 = new Date(time2)
-    return Math.ceil((time2-time1)/(1000*24*3600))
+    return Math.ceil((time2 - time1) / (1000 * 24 * 3600))
 }
 
 
@@ -70,7 +71,7 @@ export async function getSubById(id) {
         res[i].startTime = formatDate(res[i].startTime)
         const presetTime = new Date(res[i].startTime)
         // 预计时间
-        res[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + res[i].planDays))
+        res[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + res[i].planDays + res[i].unforcedDays))
         // 状态
         res[i].status = getStatus(res[i].startTime, res[i].presetTime, res[i].finishTime)
         // 截止日期（还剩多少天/已延误多少天）
@@ -78,4 +79,13 @@ export async function getSubById(id) {
             (new Date(new Date().setHours(0, 0, 0, 0) - new Date(res[i].presetTime))) / (1000 * 3600 * 24))
     }
     return res
+}
+
+//检查后端结果
+export async function checkResult(res) {
+    if (res.code === 200) {
+        Message.success(res.data)
+    } else {
+        Message.error(res.msg)
+    }
 }

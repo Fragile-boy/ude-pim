@@ -11,6 +11,8 @@ import UserChart from '@/views/UserViews/UserChart.vue'
 import SubForm from '@/views/SubForm.vue'
 import CheckIndex from '@/views/CheckViews/CheckIndex'
 import checkCommit from '@/views/CheckViews/checkCommit'
+import checkDelay from '@/views/CheckViews/checkDelay'
+import DelayView from '@/views/DelayView'
 
 
 Vue.use(VueRouter)
@@ -37,7 +39,7 @@ const routes = [
     path: '/user',
     name: 'user',
     component: UserView,
-    redirect:'/user/1',
+    redirect: '/user/1',
     children: [
       {
         // 信息中心页
@@ -73,15 +75,27 @@ const routes = [
   },
   //审批管理页
   {
-    path:'/check',
-    name:"check",
-    component:CheckIndex,
-    redirect:'/commit',
-    children:[{
-      path:'/commit',
-      name:'commit',
-      component:checkCommit
-    }]
+    path: '/check',
+    name: "check",
+    component: CheckIndex,
+    redirect: '/commit',
+    children: [
+      {
+        path: '/commit',
+        name: 'commit',
+        component: checkCommit
+      }, {
+        path: '/delay',
+        name: 'delay',
+        component: checkDelay
+      }
+    ]
+  },
+  //阶段申请延期页
+  {
+    path: '/delayApply',
+    name: 'delayApple',
+    component: DelayView
   },
   {
     path: '*',
