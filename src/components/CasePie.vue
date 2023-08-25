@@ -1,5 +1,5 @@
 <template>
-  <div class="pieInfo" v-loading="info.length===0">
+  <div class="pieInfo">
     <div id="pieChart" style="width: 600px; height: 300px;"></div>
     <div id="barChart" style="width: 1000px; height: 300px;"></div>
   </div>

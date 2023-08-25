@@ -12,3 +12,7 @@ export const getApplyList = () => {
 export const judgeApply = (params) => {
     return service.put('/caseSubDelayApply/judgeApply', params)
 }
+
+export const getDelayByStatus = (params) => {
+    return service.post('/caseSubDelayApply/byUserAndStatus', params)
+}

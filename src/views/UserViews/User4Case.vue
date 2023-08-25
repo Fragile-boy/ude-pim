@@ -26,6 +26,7 @@ export default {
         async getSubByUserId(user) {
             const res = await getSubById(user.id)
             this.userInfo = res
+            console.log(this.userInfo)
         },
     }
     // computed:{

@@ -72,6 +72,11 @@ export default {
         }
     },
     created() {
+        console.log(this.$route.query.caseSubId)
+        if(this.$route.query.caseSubId===undefined){
+            this.$message.warning("请不要搞破坏，按照正确流程操作")
+            setTimeout(()=>this.$router.back(),2000)
+        }
         this.delayApplyObject.caseSubId = this.$route.query.caseSubId
         this.delayApplyObject.applyId = this.user.id
         this.subName = this.$route.query.caseSubName

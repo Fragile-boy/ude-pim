@@ -2,17 +2,19 @@
     <el-table :data="tableData" style="width: 100%">
         <el-table-column prop="caseName" label="专案" width="240">
         </el-table-column>
-        <el-table-column prop="subName" label="阶段" width="180">
+        <el-table-column prop="subName" label="阶段" width="100">
         </el-table-column>
-        <el-table-column prop="type" label="延期类型">
+        <el-table-column prop="type" label="延期类型" width="120">
         </el-table-column>
         <el-table-column prop="applyReason" label="延期原因">
         </el-table-column>
-        <el-table-column prop="applyDays" label="申请天数">
+        <el-table-column prop="applyDays" label="申请天数" width="80">
         </el-table-column>
-        <el-table-column prop="applyName" label="申请人">
+        <el-table-column prop="predictTime" label="预计完成时间" width="120">
         </el-table-column>
-        <el-table-column prop="createTime" label="申请创建时间">
+        <el-table-column prop="applyName" label="申请人" width="80">
+        </el-table-column>
+        <el-table-column prop="applyTime" label="申请创建时间" width="120">
         </el-table-column>
         <el-table-column label="操作">
 
@@ -26,11 +28,16 @@
 
 <script>
 import { getApplyList, judgeApply } from '@/api/caseDelayApply'
+import { mapState } from 'vuex'
+import { formatDate } from '@/utils/common'
 export default {
     data() {
         return {
             tableData: []
         }
+    },
+    computed:{
+        ...mapState(['user'])
     },
     created() {
         this.getDelay()
@@ -39,6 +46,7 @@ export default {
         async getDelay() {
             var res = await getApplyList()
             this.tableData = res.data
+            this.tableData.map(item=>item.applyTime = formatDate(item.createTime))
         },
         async handleCheck(row, status) {
             //这里catch的return不能结束方法的执行，他表示该promise对象的返回值，所以用外部标志位来决定是否执行后面的逻辑
@@ -52,7 +60,7 @@ export default {
                         this.$message.error("请输入拒绝原因")
                         return 0
                     }
-                    row.reason = value
+                    row.rejectReason = value
                     return 1
                 }).catch(()=>{
                     //如果点击取消，则什么也不做
@@ -61,6 +69,8 @@ export default {
             }
             if(flag!==0){
                 row.status = status
+                row.checkUser=this.user.id
+                // console.log(row)
                 await judgeApply(row)
                 this.$message.success("审核已完成")
                 setTimeout(() => this.$router.go(0), 1000)

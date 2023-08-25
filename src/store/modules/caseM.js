@@ -20,8 +20,8 @@ export default {
             if ("name" in obj)
                 state.queryList = state.queryList.filter(item => item.name.includes(obj.name))
 
-            if ("level" in obj)
-                state.queryList = state.queryList.filter(item => item.level === obj.level)
+            if ("status" in obj)
+                state.queryList = state.queryList.filter(item => item.status === obj.status)
 
             if ("startTime" in obj)
                 state.queryList = state.queryList.filter(item => (new Date(obj.startTime[0]) <= new Date(item.startTime)) && (new Date(obj.startTime[1]) >= new Date(item.startTime)))

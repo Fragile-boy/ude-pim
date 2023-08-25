@@ -3,9 +3,9 @@
     <div class="content">
       <div class="main">
         <div class="tableInfo">
-          <div class="charts">
+          <!-- <div class="charts">
             <CasePie></CasePie>
-          </div>
+          </div> -->
           <div class="tableA">
             <label>执行状态总览</label>
             <CaseTable></CaseTable>

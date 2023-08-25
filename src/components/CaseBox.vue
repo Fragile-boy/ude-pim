@@ -1,13 +1,14 @@
 <template>
-    <div class="singleBox" style="text-align: center;" :class="{ 'normal': leftDay >= 0, 'delay': leftDay < 0 }">
+    <div class="singleBox" style="text-align: center;"
+        :class="{ 'normal': leftDay >= 0, 'appliedDelay': leftDay < 0 && leftDelay>=0, 'delay': leftDay < 0 && leftDelay<0 }">
         <label class="caseName">{{ data.caseName }}</label>
         <div class="caseSubStatus" min-width="500px">
             <div class="subName">{{ data.subName }}</div>
-            <el-progress type="circle" text-color="#ffffff" :stroke-width="15" :percentage="leftRate" :color="showColor" :format="showText"></el-progress>
+            <el-progress type="circle" text-color="#ffffff" :stroke-width="15" :percentage="leftRate" :color="showColor"
+                :format="showText"></el-progress>
         </div>
 
         <div class="operation">
-            <el-button size="medium" type="primary" icon="el-icon-s-comment" round @click="openCommitView(data)">备注</el-button>
             <el-button size="medium" type="danger" icon="el-icon-timer" round @click="openDelayApply(data)">申请延期</el-button>
             <el-button size="medium" type="success" icon="el-icon-success" round>完结</el-button>
         </div>
@@ -15,7 +16,7 @@
 </template>
 
 <script>
-import { timeSub } from '@/utils/common'
+import { formatDate, timeSub } from '@/utils/common'
 import { mapState } from 'vuex'
 export default {
     props: {
@@ -24,10 +25,11 @@ export default {
     data() {
         return {
             leftDay: 0,
-            leftRate: 0
+            leftRate: 0,
+            leftDelay: 0,
         }
     },
-    computed:{
+    computed: {
         ...mapState(['user'])
     },
     created() {
@@ -40,39 +42,45 @@ export default {
             today.setHours(0, 0, 0, 0)
             //还未截止
             if (today <= new Date(this.data.presetTime)) {
+                //还剩多少天
                 var costDay = timeSub(today, this.data.presetTime)
                 this.leftDay = costDay
-                this.leftRate = Math.ceil(this.leftDay / this.data.planDays * 100)
+                // 总共多少天
+                const totolDay = timeSub(this.data.startTime, this.data.presetTime)
+                this.leftRate = Math.ceil(this.leftDay / totolDay * 100)
             } else {
+                //已经延期了多少天
                 var delayDay = timeSub(this.data.presetTime, today)
-                this.leftRate = delayDay / this.data.planDays * 100
                 this.leftDay = -delayDay
+                //计算延误期限
+                this.leftDelay = this.data.applyDelay-delayDay
+                //判断是否在延期期限内
+                if( this.leftDelay>=0){
+                    this.leftRate = (this.leftDelay/this.data.applyDelay)*100
+                }else
+                    this.leftRate = (delayDay/this.data.planDays)*100
             }
+            if (this.leftRate > 100)
+                this.leftRate = 100
             return this.leftRate
         },
         showText() {
             if (this.leftDay >= 0)
                 return `剩余${this.leftDay}天`
-            else
-                return `已延误${Math.abs(this.leftDay)}天`
+            else{
+                if(this.leftDelay<0)
+                    return `已延误${Math.abs(this.leftDay)}天`
+                else
+                    return `延期剩余${Math.abs(this.leftDelay)}天`
+            }
         },
+        //进度条颜色显示
         showColor() {
             if (this.leftDay >= 0)
                 return "#67c23a"
-            else
+            else {
                 return "#DFF144"
-        },
-        //跳转阶段备注页
-        openCommitView(caseSub) {
-            this.$router.push({
-                path: '/subForm',
-                query: {
-                    caseSubId: caseSub.id,
-                    caseSubName:caseSub.subName,
-                    caseName:caseSub.caseName,
-                    chargeId:[this.user.id]
-                }
-            })
+            }
         },
         //跳转阶段延期申请页
         openDelayApply(caseSub) {
@@ -80,9 +88,9 @@ export default {
                 path: '/delayApply',
                 query: {
                     caseSubId: caseSub.id,
-                    caseSubName:caseSub.subName,
-                    caseName:caseSub.caseName,
-                    chargeId:[this.user.id]
+                    caseSubName: caseSub.subName,
+                    caseName: caseSub.caseName,
+                    chargeId: [this.user.id]
                 }
             })
         }
@@ -95,8 +103,13 @@ export default {
     background-color: #A4D8DD;
 }
 
-.delay{
-    background-color: #EE8192;;
+.delay {
+    background-color: #EE8192;
+    ;
+}
+
+.appliedDelay {
+    background-color: #7F3393;
 }
 
 .singleBox {

@@ -53,7 +53,7 @@ export default {
                 if(this.remember)
                     localStorage.setItem("password", this.password)
                 this.setUser(res.data)
-                localStorage.setItem("user", JSON.stringify(res.data))
+                // localStorage.setItem("user", JSON.stringify(res.data))
                 this.$message({
                     message:"登录成功",
                     type:'success',

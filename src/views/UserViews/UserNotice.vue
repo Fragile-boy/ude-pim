@@ -3,29 +3,41 @@
     <CaseStatus></CaseStatus>
     <!-- 审核中表格 -->
     <label>审核中</label>
-    <el-table :data="checkingCommit" style="width: 100%" border>
-      <el-table-column prop="caseName" label="专案" width="180">
+    <el-table :data="checkingDelay" style="width: 100%" border>
+      <el-table-column prop="caseName" label="专案" width="240">
       </el-table-column>
-      <el-table-column prop="subName" label="阶段" width="180">
+      <el-table-column prop="subName" label="阶段" width="100">
       </el-table-column>
-      <el-table-column prop="content" label="备注信息">
+      <el-table-column prop="type" label="延期类型" width="120">
       </el-table-column>
-      <el-table-column prop="status" label="状态">
-        <el-tag type="info">审核中</el-tag>
+      <el-table-column prop="applyReason" label="延期原因">
+      </el-table-column>
+      <el-table-column prop="applyDays" label="申请天数" width="80">
+      </el-table-column>
+      <el-table-column prop="predictTime" label="预计完成时间" width="120">
+      </el-table-column>
+      <el-table-column label="状态">
+        <el-tag type="info">审核中...</el-tag>
       </el-table-column>
     </el-table>
     <br>
     <br>
     <!-- 审核成功表格 -->
     <label>审核成功表</label>
-    <el-table :data="passCommit" style="width: 100%" border>
-      <el-table-column prop="caseName" label="专案" width="180">
+    <el-table :data="passDelay" style="width: 100%" border>
+      <el-table-column prop="caseName" label="专案" width="240">
       </el-table-column>
-      <el-table-column prop="subName" label="阶段" width="180">
+      <el-table-column prop="subName" label="阶段" width="100">
       </el-table-column>
-      <el-table-column prop="content" label="备注信息">
+      <el-table-column prop="type" label="延期类型" width="120">
       </el-table-column>
-      <el-table-column prop="status" label="状态">
+      <el-table-column prop="applyReason" label="延期原因">
+      </el-table-column>
+      <el-table-column prop="applyDays" label="申请天数" width="80">
+      </el-table-column>
+      <el-table-column prop="predictTime" label="预计完成时间" width="120">
+      </el-table-column>
+      <el-table-column label="状态">
         <el-tag type="success">审核通过</el-tag>
       </el-table-column>
     </el-table>
@@ -33,53 +45,63 @@
     <br>
     <!-- 审核失败表格 -->
     <label>审核失败表</label>
-    <el-table :data="failCommit" style="width: 100%" border>
-      <el-table-column prop="caseName" label="专案" width="180">
+    <el-table :data="failDelay" style="width: 100%" border>
+      <el-table-column prop="caseName" label="专案" width="240">
       </el-table-column>
-      <el-table-column prop="subName" label="阶段" width="180">
+      <el-table-column prop="subName" label="阶段" width="100">
       </el-table-column>
-      <el-table-column prop="content" label="备注信息" width="230">
+      <el-table-column prop="type" label="延期类型" width="120">
       </el-table-column>
-      <el-table-column prop="reason" label="失败原因" width="230">
+      <el-table-column prop="applyReason" label="延期原因" width="300">
       </el-table-column>
-      <el-table-column prop="status" label="状态" width="120">
-        <el-tag type="danger">审核不通过</el-tag>
+      <el-table-column prop="applyDays" label="申请天数" width="80">
+      </el-table-column>
+      <el-table-column prop="rejectReason" label="拒绝原因" width="200">
+      </el-table-column>
+      <el-table-column prop="predictTime" label="预计完成时间" width="120">
+      </el-table-column>
+      <el-table-column label="状态">
+        <el-tag type="danger">审核失败</el-tag>
       </el-table-column>
     </el-table>
   </div>
 </template>
 
 <script>
-import { getCommitByStatus } from '@/api/caseSubCommit'
+import { getDelayByStatus } from '@/api/caseDelayApply'
 import { mapState } from 'vuex'
+import { formatDate } from '@/utils/common'
 export default {
   data() {
     return {
-      checkingCommit: [],
-      passCommit: [],
-      failCommit: []
+      checkingDelay: [],
+      passDelay: [],
+      failDelay: []
     }
   },
   computed: {
     ...mapState(['user'])
   },
   created() {
-    this.getAllCommit()
+    this.getAllDelay()
   },
   methods: {
     //获取当前用户的所有相关备注
-    async getAllCommit() {
+    async getAllDelay() {
       //获取正在审核的
-      var res = await getCommitByStatus({ createUser: this.user.id, status: 0 })
-      this.checkingCommit = res.data
+      var res = await getDelayByStatus({ applyId: this.user.id, status: 0 })
+      this.checkingDelay = res.data
+      this.checkingDelay.map(item=>item.predictTime = formatDate(item.predictTime))
 
       //获取审核通过的
-      res = await getCommitByStatus({ createUser: this.user.id, status: 1 })
-      this.passCommit = res.data
+      res = await getDelayByStatus({ applyId: this.user.id, status: 1 })
+      this.passDelay = res.data
+      this.passDelay.map(item=>item.predictTime = formatDate(item.predictTime))
 
       //获取审核失败的
-      res = await getCommitByStatus({ createUser: this.user.id, status: 2 })
-      this.failCommit = res.data
+      res = await getDelayByStatus({ applyId: this.user.id, status: 2 })
+      this.failDelay = res.data
+      this.failDelay.map(item=>item.predictTime = formatDate(item.predictTime))
     }
   },
   //根据数字获取状态

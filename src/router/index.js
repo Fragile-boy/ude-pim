@@ -13,6 +13,8 @@ import CheckIndex from '@/views/CheckViews/CheckIndex'
 import checkCommit from '@/views/CheckViews/checkCommit'
 import checkDelay from '@/views/CheckViews/checkDelay'
 import DelayView from '@/views/DelayView'
+import store from '@/store'
+import { getInfo } from '@/utils/storage'
 
 
 Vue.use(VueRouter)
@@ -106,6 +108,21 @@ const routes = [
 const router = new VueRouter({
   mode: 'history',
   routes
+})
+
+//管理员权限界面
+const authUrls = ['/check','/commit','/delay']
+
+
+router.beforeEach(async (to,from,next)=>{
+  if(authUrls.includes(to.path)){
+    await store.dispatch('fetchUserData',getInfo())
+    if(store.state.user.type!==1){
+      next("/home")
+      return
+    }
+  }
+  next()
 })
 
 export default router

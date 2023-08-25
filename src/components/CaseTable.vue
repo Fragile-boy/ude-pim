@@ -1,5 +1,5 @@
 <template>
-    <div class="indexTable" v-loading="caseInfo.length===0">
+    <div class="indexTable">
         <div class="query" style="text-align: left;">
             <!-- 专案名称 -->
             <label class="label">专案名称：</label>
@@ -8,8 +8,8 @@
             </el-input>
 
             <!-- 难度 -->
-            <label class="label"> 难度: </label>
-            <el-select v-model="queryLevel" placeholder="请选择难度" clearable @change="handleQuery">
+            <label class="label"> 状态: </label>
+            <el-select v-model="queryStatus" placeholder="请选择难度" clearable @change="handleQuery">
                 <el-option v-for="item in levels" :key="item" :label="item" :value="item">
                 </el-option>
             </el-select>
@@ -22,14 +22,16 @@
 
             <!-- 结束时间 -->
             <label class="label"> 结束时间: </label>
-            <el-date-picker v-model="queryEndTime" type="daterange" align="right" unlink-panels range-separator="至"
+            <el-date-picker v-model="queryEndTime" type="daterange" align="right" unlink-panels range-separator="到"
                 start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions">
             </el-date-picker>
             <!-- 按钮 -->
-            <el-button type="primary" @click="handleQuery">搜索 <i class="el-icon-search"></i></el-button>
-            <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
+            <div style="text-align: center; margin-top: 10px;">
+                <el-button type="primary" size="small" @click="handleQuery">搜索 <i class="el-icon-search"></i></el-button>
+                <el-button type="primary" size="small" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
+            </div>
         </div>
-        <el-table :data="caseInfo" border scrope style="width: 100%" max-height=600
+        <el-table :data="pageInfo" border scrope style="width: 100%" max-height=600
             :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column prop="caseNumber" label="编号" width="50">
             </el-table-column>
@@ -53,9 +55,9 @@
             </el-table-column>
             <el-table-column prop="curStage" label="当前阶段" width="80">
             </el-table-column>
-            <el-table-column prop="status" label="执行状态" width="100"
-                :filters="[{ text: '正在执行', value: 0 }, { text: '已完成', value: 1 }, { text: '已延误', value: 2 }, { text: '延误完成', value: 3 }]"
-                :filter-method="filterTag" filter-placement="bottom-end">
+            <!-- :filters="[{ text: '正在执行', value: 0 }, { text: '已完成', value: 1 }, { text: '已延误', value: 2 }, { text: '延误完成', value: 3 }]"
+                :filter-method="filterTag" filter-placement="bottom-end" -->
+            <el-table-column prop="status" label="执行状态" width="100">
                 <template slot-scope="scope">
                     <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
                     }}</el-tag>
@@ -68,6 +70,10 @@
                 </template>
             </el-table-column>
         </el-table>
+        <!-- 分页区域 -->
+        <el-pagination style="margin-top: 10px;text-align: center;" @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="page"
+            :page-sizes="[5, 7, 10, 20]" :page-size="size" layout="sizes, prev, pager, next" :total="total">
+        </el-pagination>
     </div>
 </template>
 
@@ -77,10 +83,14 @@ import { mapActions, mapMutations, mapState } from 'vuex';
 export default {
     data() {
         return {
+            pageInfo: [],
+            page: 1,
+            size: 7,
+            total: 0,
             queryText: '',
             caseInfo: [],
-            levels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            queryLevel: '',
+            levels: ['正在执行', '已延误', '正常完成', '延误完成', '中断'],
+            queryStatus: '',
             queryStartTime: '',
             queryEndTime: '',
             timeOptions: {
@@ -136,6 +146,7 @@ export default {
     },
     created() {
         this.caseInfo = this.caseList
+        this.getTableDate()
     },
     watch: {
         queryList: {
@@ -143,17 +154,19 @@ export default {
                 this.caseInfo = this.queryList
             }
         },
-        caseList:{
-            handler(){
+        caseList: {
+            handler() {
                 this.caseInfo = this.caseList
+            }
+        },
+        caseInfo: {
+            handler() {
+                this.getTableDate()
             }
         }
     },
     methods: {
         ...mapMutations('caseM', ['queryCase']),
-        filterTag(value, row) {
-            return row.status === value;
-        },
         showSub(row) {
             this.$router.push({
                 name: 'case-sub',
@@ -184,6 +197,22 @@ export default {
                 return "延误完成"
             else if (status === 4)
                 return "未开始"
+            else if (status === 5)
+                return "中断"
+        },
+        transformStatus(status) {
+            if (status === "正在执行")
+                return 0
+            else if (status === "正常完成")
+                return 1
+            else if (status === "已延误")
+                return 2
+            else if (status === "延误完成")
+                return 3
+            else if (status === "未开始")
+                return 4
+            else if (status === "中断")
+                return 5
         },
         //查询
         handleQuery() {
@@ -192,23 +221,27 @@ export default {
             //4. 开始时间
             //5. 结束时间
             var queryObj = {}
-            if(this.queryText!=='')
+            if (this.queryText !== '')
                 queryObj.name = this.queryText
-            // 难度不为空
-            if (this.queryLevel !== '' && this.queryLevel !== null )
-                queryObj.level = this.queryLevel
+            // 状态不为空
+            if (this.queryStatus !== '' && this.queryStatus !== null) {
+                // this.queryStatus = this.transformStatus(this.queryStatus)
+                queryObj.status = this.transformStatus(this.queryStatus)
+            }
 
             //开始时间不为空
             if (this.queryStartTime !== null && this.queryStartTime !== '')
                 queryObj.startTime = this.queryStartTime
 
             //结束时间不为空
-            if (this.queryEndTime !== null  && this.queryEndTime !== '')
+            if (this.queryEndTime !== null && this.queryEndTime !== '')
                 queryObj.endTime = this.queryEndTime
 
 
             this.queryCase(queryObj)
-            this.caseInfo = this.queryList
+
+            this.page = 1
+            // this.caseInfo = this.queryList
         },
         handleReset() {
             //空查询对象，保证queryList变化，让上方图形也跟随变化
@@ -216,15 +249,31 @@ export default {
             //清空状态
             this.queryText = ''
             this.queryLevel = null
+        },
+        //页面大小发生变化
+        handleSizeChange(val) {
+            this.size = val
+            this.page = 1
+            this.getTableDate()
+        },
+        //翻页
+        handleCurrentChange(val) {
+            this.page = val
+            this.getTableDate()
+        },
+        getTableDate() {
+            this.pageInfo = this.caseInfo.slice((this.page - 1) * this.size,
+                this.page * this.size)
+            this.total = this.caseInfo.length
         }
     }
 }
 </script>
 
 <style scoped>
-
 .query {
     margin-bottom: 20px;
+    width: 100%;
 }
 
 .query>>>.label {
