@@ -1,6 +1,6 @@
 <template>
     <div class="singleBox" style="text-align: center;"
-        :class="{ 'normal': leftDay >= 0, 'appliedDelay': leftDay < 0 && leftDelay>=0, 'delay': leftDay < 0 && leftDelay<0 }">
+        :class="{ 'normal': leftDay >= 0, 'appliedDelay': leftDay < 0 && leftDelay >= 0, 'delay': leftDay < 0 && leftDelay < 0 }">
         <label class="caseName">{{ data.caseName }}</label>
         <div class="caseSubStatus" min-width="500px">
             <div class="subName">{{ data.subName }}</div>
@@ -10,14 +10,16 @@
 
         <div class="operation">
             <el-button size="medium" type="danger" icon="el-icon-timer" round @click="openDelayApply(data)">申请延期</el-button>
-            <el-button size="medium" type="success" icon="el-icon-success" round>完结</el-button>
+            <el-button size="medium" type="success" icon="el-icon-success" round @click="finishCaseSub(data)">完结</el-button>
         </div>
     </div>
 </template>
 
 <script>
-import { formatDate, timeSub } from '@/utils/common'
+import { checkResult, formatDate, timeSub } from '@/utils/common'
+import { countUser } from '@/api/caseSubUser'
 import { mapState } from 'vuex'
+import { saveFinishApply } from '@/api/caseFinishApply'
 export default {
     props: {
         data: Object
@@ -53,12 +55,12 @@ export default {
                 var delayDay = timeSub(this.data.presetTime, today)
                 this.leftDay = -delayDay
                 //计算延误期限
-                this.leftDelay = this.data.applyDelay-delayDay
+                this.leftDelay = this.data.applyDelay - delayDay
                 //判断是否在延期期限内
-                if( this.leftDelay>=0){
-                    this.leftRate = (this.leftDelay/this.data.applyDelay)*100
-                }else
-                    this.leftRate = (delayDay/this.data.planDays)*100
+                if (this.leftDelay >= 0) {
+                    this.leftRate = (this.leftDelay / this.data.applyDelay) * 100
+                } else
+                    this.leftRate = (delayDay / this.data.planDays) * 100
             }
             if (this.leftRate > 100)
                 this.leftRate = 100
@@ -67,8 +69,8 @@ export default {
         showText() {
             if (this.leftDay >= 0)
                 return `剩余${this.leftDay}天`
-            else{
-                if(this.leftDelay<0)
+            else {
+                if (this.leftDelay < 0)
                     return `已延误${Math.abs(this.leftDay)}天`
                 else
                     return `延期剩余${Math.abs(this.leftDelay)}天`
@@ -91,6 +93,36 @@ export default {
                     caseSubName: caseSub.subName,
                     caseName: caseSub.caseName,
                     chargeId: [this.user.id]
+                }
+            })
+        },
+        finishCaseSub(caseSub) {
+            console.log(caseSub)
+            this.$confirm('此操作将提交完结申请, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                //查询是否有多个负责人，如果有，则需要二次提醒，否则通过
+                var res = await countUser(caseSub.id)
+                if (res.data.length > 1) {
+                    var htmlStr = "<strong>该阶段有多个负责人, 您确定已经和其他负责人确认完结进度?</strong><br><br>"
+                    for (var i = 0; i < res.data.length; i++) {
+                        htmlStr += `<input type="checkBox">  ${res.data[i]}<br>`
+                    }
+                    this.$confirm(htmlStr, '提示', {
+                        dangerouslyUseHTMLString: true,
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(async () => {
+                        var result = await saveFinishApply({ caseSubId: caseSub.id, applyId: this.user.id })
+                        checkResult(result)
+                    })
+                } else {
+                    //直接申请
+                    var result = await saveFinishApply({ caseSubId: caseSub.id, applyId: this.user.id })
+                    checkResult(result)
                 }
             })
         }

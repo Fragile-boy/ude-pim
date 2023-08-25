@@ -86,6 +86,10 @@ export async function checkResult(res) {
     if (res.code === 200) {
         Message.success(res.data)
     } else {
-        Message.error(res.msg)
+        Message({
+            type:'error',
+            message:res.msg,
+            duration:5000
+        })
     }
 }
