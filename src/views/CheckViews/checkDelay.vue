@@ -10,7 +10,7 @@
         </el-table-column>
         <el-table-column prop="applyDays" label="申请天数" width="80">
         </el-table-column>
-        <el-table-column prop="predictTime" label="预计完成时间" width="120">
+        <el-table-column prop="formatPredictTime" label="预计完成时间" width="120">
         </el-table-column>
         <el-table-column prop="applyName" label="申请人" width="80">
         </el-table-column>
@@ -46,7 +46,10 @@ export default {
         async getDelay() {
             var res = await getApplyList()
             this.tableData = res.data
-            this.tableData.map(item=>item.applyTime = formatDate(item.createTime))
+            this.tableData.map(item=>{
+                item.applyTime = formatDate(item.createTime)
+                item.formatPredictTime = formatDate(item.predictTime)
+            })
         },
         async handleCheck(row, status) {
             //这里catch的return不能结束方法的执行，他表示该promise对象的返回值，所以用外部标志位来决定是否执行后面的逻辑

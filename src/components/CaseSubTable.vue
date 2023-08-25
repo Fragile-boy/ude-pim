@@ -3,7 +3,7 @@
         <label class="caseName">{{ caseName }}</label>
         <div class="table">
             <div class="subTable">
-                <el-table :data="subInfo" scope border :max-height=1080 @cell-dblclick="getCaseByUserName">
+                <el-table :data="subInfo" scope border :max-height=1080 @cell-dblclick="handleDoubleClick">
 
                     <el-table-column prop="subName" label="子流程" width="90">
                     </el-table-column>
@@ -47,6 +47,9 @@
                     <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
                     </el-table-column>
 
+                    <el-table-column prop="applyDelay" label="人为因素延期" width="110">
+                    </el-table-column>
+
                     <el-table-column prop="status" label="执行状态" width="100"
                         :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                         :filter-method="filterTag" filter-placement="bottom-end">
@@ -66,32 +69,52 @@
 
                 </el-table>
             </div>
-            <div class="userCase" border>
-                <div class="chargeInfo">
-                    <label class="chargeName">{{ chargeName }}</label>
+            <!-- 显示负责人手头的子流程 -->
+            <el-drawer :visible.sync="drawer" :direction="direction" size="50%">
+                <div class="userCase" border>
+                    <div class="chargeInfo">
+                        <label class="chargeName">{{ chargeName }}</label>
+                    </div>
+                    <el-table :data="userInfo">
+                        <el-table-column prop="caseName" label="专案名称" width="245">
+                        </el-table-column>
+                        <el-table-column prop="subName" label="阶段名称" width="80">
+                        </el-table-column>
+                        <el-table-column prop="startTime" label="开始时间" width="100">
+                        </el-table-column>
+                        <el-table-column prop="presetTime" label="预计完成时间" width="110">
+                        </el-table-column>
+                        <el-table-column prop="deadLine" label="延期/截止" width="110">
+                        </el-table-column>
+                        <el-table-column prop="status" label="执行状态" width="100"
+                            :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
+                            :filter-method="filterTag" filter-placement="bottom-end">
+                            <template slot-scope="scope">
+                                <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
+                                    number2status(scope.row.status)
+                                }}</el-tag>
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </div>
-                <el-table :data="userInfo">
-                    <el-table-column prop="caseName" label="专案名称" width="245">
+            </el-drawer>
+            <!-- 显示外界因素延期 -->
+            <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
+                <el-table :data="delayList" style="width: 100%" border>
+                    <el-table-column prop="caseName" label="专案" width="240">
                     </el-table-column>
-                    <el-table-column prop="subName" label="阶段名称" width="50">
+                    <el-table-column prop="subName" label="阶段" width="100">
                     </el-table-column>
-                    <el-table-column prop="startTime" label="开始时间" width="100">
+                    <el-table-column prop="type" label="延期类型" width="120">
                     </el-table-column>
-                    <el-table-column prop="presetTime" label="预计完成时间" width="110">
+                    <el-table-column prop="applyReason" label="延期原因">
                     </el-table-column>
-                    <el-table-column prop="deadLine" label="延期/截止" width="110">
+                    <el-table-column prop="applyDays" label="申请天数" width="80">
                     </el-table-column>
-                    <el-table-column prop="status" label="执行状态" width="100"
-                        :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
-                        :filter-method="filterTag" filter-placement="bottom-end">
-                        <template slot-scope="scope">
-                            <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
-                                number2status(scope.row.status)
-                            }}</el-tag>
-                        </template>
+                    <el-table-column prop="predictTime" label="预计完成时间" width="120">
                     </el-table-column>
                 </el-table>
-            </div>
+            </el-drawer>
         </div>
     </div>
 </template>
@@ -99,6 +122,7 @@
 <script>
 import { formatDate, getStatus } from '@/utils/common'
 import { getSubByUserId } from '@/api/caseSub'
+import { getDelayByStatus } from '@/api/caseDelayApply'
 export default {
 
     props: {
@@ -110,6 +134,10 @@ export default {
     },
     data() {
         return {
+            drawer: false,
+            direction: 'rtl',
+            delayDrawer: false,
+            delayList: [],
             userInfo: [],
             chargeName: '負責人'
         }
@@ -126,7 +154,29 @@ export default {
     },
     methods: {
         //显示负责人手头的子流程
-        async getCaseByUserName(row, column, cell, event) {
+        async handleDoubleClick(row, column) {
+            //双击了负责人
+            if (column.label.slice(0, 3) === '负责人') {
+                this.getCaseByUserName(row, column)
+            } else if (column.label === '外界因素延期') {
+                this.getUnforcedDays(row)
+            } else if (column.label === '人为因素延期')
+                this.getApplyDelay(row)
+
+        },
+        async getUnforcedDays(row) {
+            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '外界因素延期' })
+            this.delayList = res.data
+            this.delayList.map(item=>item.predictTime = formatDate(item.predictTime))
+            this.delayDrawer = true
+        },
+        async getApplyDelay(row) {
+            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '人为因素延期' })
+            this.delayList = res.data
+            this.delayList.map(item=>item.predictTime = formatDate(item.predictTime))
+            this.delayDrawer = true
+        },
+        async getCaseByUserName(row, column) {
             var index = column.label.match(/(\d+)/)[1] - 1
             var res = await getSubByUserId(row.chargeId[index])
             this.userInfo = res.data
@@ -140,6 +190,7 @@ export default {
                 this.userInfo[i].deadLine = Math.floor(this.userInfo[i].status == 0 ? (new Date(this.userInfo[i].presetTime) - new Date().setHours(0, 0, 0, 0)) / (1000 * 3600 * 24) :
                     (new Date(new Date().setHours(0, 0, 0, 0) - new Date(this.userInfo[i].presetTime))) / (1000 * 3600 * 24))
             }
+            this.drawer = true
         },
         filterTag(value, row) {
             return row.status === value;
@@ -172,9 +223,9 @@ export default {
                 path: '/subForm',
                 query: {
                     caseSubId: caseSub.id,
-                    caseSubName:caseSub.subName,
-                    caseName:this.caseName,
-                    chargeId:caseSub.chargeId
+                    caseSubName: caseSub.subName,
+                    caseName: this.caseName,
+                    chargeId: caseSub.chargeId
                 }
             })
         }
@@ -196,20 +247,9 @@ export default {
     flex-direction: column;
 }
 
-/* .subInfo .userCase {
-    /* display: flex;
-    flex-wrap: wrap;
-    flex-direction: column; */
-/* } */
 
-.userCase .el-table {
-    display: block;
-    margin-left: 330px;
-}
-
-.userCase>>>.chargeName {
-    font-size: 30px;
-    margin-bottom: 20px;
-    text-align: left;
+.chargeName {
+    font-size: 50px;
+    color: white;
 }
 </style>
