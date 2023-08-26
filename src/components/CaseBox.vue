@@ -12,6 +12,16 @@
             <el-button size="medium" type="danger" icon="el-icon-timer" round @click="openDelayApply(data)">申请延期</el-button>
             <el-button size="medium" type="success" icon="el-icon-success" round @click="finishCaseSub(data)">完结</el-button>
         </div>
+
+        <!-- 日期选择组件 -->
+        <el-dialog title="请选择完结日期" :visible.sync="isDatePickerVisible">
+            <el-date-picker v-model="selectedFinishDate" type="date" placeholder="请选择完结时间" value-format="yyyy-MM-dd HH:mm:ss"
+                :picker-options="pickerOptions"></el-date-picker>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="isDatePickerVisible = false">取 消</el-button>
+                <el-button type="primary" @click="confirmFinishDate">确 定</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -29,6 +39,13 @@ export default {
             leftDay: 0,
             leftRate: 0,
             leftDelay: 0,
+            isDatePickerVisible: false,
+            selectedFinishDate: "",
+            pickerOptions: {
+                disabledDate(time) {
+                    return time.getTime() > Date.now();
+                }
+            }
         }
     },
     computed: {
@@ -106,9 +123,9 @@ export default {
                 //查询是否有多个负责人，如果有，则需要二次提醒，否则通过
                 var res = await countUser(caseSub.id)
                 if (res.data.length > 1) {
-                    var htmlStr = "<strong>该阶段有多个负责人, 您确定已经和其他负责人确认完结进度?</strong><br><br>"
+                    var htmlStr = "<h5>该阶段有多个负责人, 您确定已经和其他负责人确认完结进度?</h5><br><br>"
                     for (var i = 0; i < res.data.length; i++) {
-                        htmlStr += `<input type="checkBox">  ${res.data[i]}<br>`
+                        htmlStr += `<h5><input type="checkBox">  ${res.data[i]}</h5><br>`
                     }
                     this.$confirm(htmlStr, '提示', {
                         dangerouslyUseHTMLString: true,
@@ -116,16 +133,34 @@ export default {
                         cancelButtonText: '取消',
                         type: 'warning'
                     }).then(async () => {
-                        var result = await saveFinishApply({ caseSubId: caseSub.id, applyId: this.user.id })
-                        checkResult(result)
+                        this.applyFinish(caseSub)
                     })
                 } else {
-                    //直接申请
-                    var result = await saveFinishApply({ caseSubId: caseSub.id, applyId: this.user.id })
-                    checkResult(result)
+                    this.applyFinish(caseSub)
                 }
             })
-        }
+        },
+        async applyFinish(caseSub) {
+            //给一个时间框，让用户选择多久结束,将id以标志位传入
+            this.isDatePickerVisible = caseSub.id
+        },
+        async confirmFinishDate() {
+            if (this.selectedFinishDate) {
+                console.log(this.selectedFinishDate)
+                // 接着，将 formattedFinishDate 作为参数提交给后端
+                var result = await saveFinishApply({
+                    caseSubId: this.isDatePickerVisible,
+                    applyId: this.user.id,
+                    createTime: this.selectedFinishDate // 添加结束时间参数
+                });
+                checkResult(result)
+                // 关闭日期选择器对话框
+                this.isDatePickerVisible = false;
+            } else {
+                // 用户未选择日期时给出提示
+                this.$message.error("请选择完结日期");
+            }
+        },
     }
 }
 </script>

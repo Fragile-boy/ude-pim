@@ -12,6 +12,8 @@ import SubForm from '@/views/SubForm.vue'
 import CheckIndex from '@/views/CheckViews/CheckIndex'
 import checkCommit from '@/views/CheckViews/checkCommit'
 import checkDelay from '@/views/CheckViews/checkDelay'
+import checkFinish from '@/views/CheckViews/checkFinish'
+//延期表单界面
 import DelayView from '@/views/DelayView'
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
@@ -90,6 +92,10 @@ const routes = [
         path: '/delay',
         name: 'delay',
         component: checkDelay
+      }, {
+        path: '/finish',
+        name: 'finish',
+        component: checkFinish
       }
     ]
   },
@@ -111,13 +117,13 @@ const router = new VueRouter({
 })
 
 //管理员权限界面
-const authUrls = ['/check','/commit','/delay']
+const authUrls = ['/check', '/commit', '/delay','/finish']
 
 
-router.beforeEach(async (to,from,next)=>{
-  if(authUrls.includes(to.path)){
-    await store.dispatch('fetchUserData',getInfo())
-    if(store.state.user.type!==1){
+router.beforeEach(async (to, from, next) => {
+  if (authUrls.includes(to.path)) {
+    await store.dispatch('fetchUserData', getInfo())
+    if (store.state.user.type !== 1) {
       next("/home")
       return
     }
