@@ -1,73 +1,93 @@
 <template>
     <div class="body">
-        <!-- <div class="logo"></div> -->
         <div class="loginInfo">
+            <div class="avatar_box">
+                <img src="@/assets/logo.png" alt="" srcset="">
+            </div>
             <div class="title" style="text-align: center;">
                 <span>新技研进度管理系统</span>
             </div>
-            <div class="inputArea">
-                <el-input v-model="pimNumber" clearable placeholder="请输入你的工号" prefix-icon="el-icon-user-solid"></el-input>
-                <el-input v-model="password" clearable placeholder="请输入密码" prefix-icon="el-icon-s-cooperation" show-password
-                    @keyup.native.enter="handlerLogin"></el-input>
-                <div class="loginArea" style="text-align: center;">
-                    <el-checkbox v-model="remember" @change="fn">记住密码</el-checkbox>
+            <el-form ref="loginFormRef" label-width="0px" :rules="rules" class="login_form" :model="loginForm">
+                <el-form-item prop="userName">
+                    <el-input v-model.number="loginForm.number" prefix-icon="el-icon-user-solid"
+                        placeholder="请输入工号"></el-input>
+                </el-form-item>
+                <el-form-item prop="password">
+                    <el-input type="password" v-model="loginForm.password" prefix-icon="el-icon-s-cooperation"
+                        placeholder="请输入密码"></el-input>
+                </el-form-item>
+                <el-form-item class="btns">
                     <el-button type="primary" @click="handlerLogin">登录</el-button>
-                </div>
-            </div>
+                    <el-button type="info" @click="resetForm">重置</el-button>
+                </el-form-item>
+            </el-form>
         </div>
     </div>
 </template>
 
 <script>
 import { mapMutations } from 'vuex'
-import {loginApi} from '@/api/login'
+import { loginApi } from '@/api/login'
 export default {
     data() {
+        var checkUserName = (rule, value, callback) => {
+            if (!/^52\d{4}/.test(value))
+                return callback(new Error("工号是以52开头的6位数字"))
+            else
+                return callback()
+        }
         return {
-            pimNumber: '',
-            password: '',
-            remember: false
+            loginForm: {
+                number: null,
+                password: ''
+            },
+            remember: false,
+            rules: {
+                userName: [
+                    { validator: checkUserName, trigger: 'blur' },
+                ],
+                password: [
+                    { required: true, message: '密码不能为空', trigger: 'blur' }
+                ]
+            }
         }
     },
-    created(){
-        this.pimNumber = localStorage.getItem("userNumber")
-        this.password = localStorage.getItem("password")
-        if(this.password!==null)
+    created() {
+        this.loginForm.number = localStorage.getItem("userNumber")
+        this.loginForm.password = localStorage.getItem("password")
+        if (this.loginForm.password !== null)
             this.remember = true
     },
     methods: {
         ...mapMutations(['setUser']),
         //登录
         async handlerLogin() {
-            console.log(this.pimNumber)
-            console.log(this.password)
-            const params = {
-                number: this.pimNumber,
-                password: this.password
-            }
-            const res = await loginApi(params)
-            if (res.code == 200) {
-                //持久化存储上一个登录成功的账号
-                localStorage.setItem("userNumber", this.pimNumber)
-                //如果点击了记住密码
-                if(this.remember)
-                    localStorage.setItem("password", this.password)
-                this.setUser(res.data)
-                // localStorage.setItem("user", JSON.stringify(res.data))
-                this.$message({
-                    message:"登录成功",
-                    type:'success',
-                    duration:900
-                })
-                setTimeout(()=>this.$router.push('/home'),1000)
-            } else {
-                this.$message.error(res.msg)
-            }
+            this.$refs.loginFormRef.validate(async valid => {
+                if (!valid) return;
+                const res = await loginApi(this.loginForm)
+                if (res.code == 200) {
+                    //持久化存储上一个登录成功的账号
+                    localStorage.setItem("userNumber", this.pimNumber)
+                    //如果点击了记住密码
+                    if (this.remember)
+                        localStorage.setItem("password", this.password)
+                    this.setUser(res.data)
+                    // localStorage.setItem("user", JSON.stringify(res.data))
+                    this.$message({
+                        message: "登录成功",
+                        type: 'success',
+                        duration: 900
+                    })
+                    setTimeout(() => this.$router.push('/home'), 1000)
+                } else {
+                    this.$message.error(res.msg)
+                }
+            })
         },
         fn() {
             if (this.remember) {
                 localStorage.setItem("password", this.password)
-            }else{
+            } else {
                 localStorage.removeItem("password")
             }
         }
@@ -75,53 +95,58 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .body {
-    width: 1920px;
-    height: 1080px;
-    background-color: rgb(13, 110, 253);
+    height: 100%;
+    background-color: #2b4b6b;
 }
 
-/* 
-.body>>>.logo {
-    width: 100px;
-    height: 100px;
-    background-color: #fff;
-    background-image: url("../assets/logo.png");
-    background-size: cover;
-    margin-left: 20px;
-} */
-
-.body>>>.loginInfo {
+.loginInfo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     width: 500px;
-    height: 300px;
+    height: 330px;
     background-color: rgb(247, 247, 247);
-    border: 1px solid grey;
-    margin: auto;
     border-radius: 20px;
-    margin-top: 300px;
+
+    .avatar_box {
+        height: 130px;
+        width: 130px;
+        border: 1px solid #eee;
+        border-radius: 50%;
+        padding: 10px;
+        box-shadow: 0, 0, 10px, #ddd;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #fff;
+
+        img {
+            background-color: #eee;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+    }
 }
 
-.body>>>.title {
-    height: 80px;
-    line-height: 100px;
+.title {
+    margin-top: 70px;
     font-size: 30px;
-    align-content: center;
 }
 
-.body>>>.inputArea {
-    margin-left: 40px;
-    margin-right: 40px;
-    margin-top: 30px;
+.login_form {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
-
-.body>>>.el-checkbox {
-    display: block;
-    margin-left: -350px;
-}
-
-.body>>>.el-input {
-    margin-bottom: 20px;
+.btns {
+    display: flex;
+    justify-content: flex-end;
 }
 </style>

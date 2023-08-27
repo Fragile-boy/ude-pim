@@ -4,12 +4,12 @@
     <el-header>
       <img src="@/assets/logo.png" alt="">
       <span>新技研进度管理系统</span>
-      <el-button>退出</el-button>
+      <el-button @click="logout">退出</el-button>
     </el-header>
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse?'64px':'200px'">
+      <el-aside :width="isCollapse ? '64px' : '200px'">
         <div class="toggle-button" @click="toggleCollapse">|||</div>
         <PIMAside :isCollapse="isCollapse"></PIMAside>
       </el-aside>
@@ -22,15 +22,31 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+import {logout} from '@/api/login'
 export default {
-  data(){
-    return{
-      isCollapse:false
+  data() {
+    return {
+      isCollapse: false
     }
   },
-  methods:{
-    toggleCollapse(){
+  methods: {
+    toggleCollapse() {
       this.isCollapse = !this.isCollapse
+    },
+    ...mapMutations(['setUser']),
+    async logout() {
+      this.setUser({})
+      // if(localStorage.getItem("user")===null)
+      //     return
+      await logout()
+      this.$message.success({
+        message: "登出成功",
+        duration: 1000
+      })
+      localStorage.removeItem('user')
+      this.$router.push('/login')
+
     }
   }
 }
@@ -59,12 +75,12 @@ export default {
   background-color: #eaedf1;
 }
 
-.toggle-button{
+.toggle-button {
   background-color: #4a5064;
   color: white;
   font-size: 20px;
   text-align: center;
   letter-spacing: 0.2em;
-  cursor:pointer;
+  cursor: pointer;
 }
 </style>
