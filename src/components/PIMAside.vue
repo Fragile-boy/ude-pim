@@ -1,38 +1,67 @@
 <template>
-    <div class="nav" style="text-align: center;">
-        <div class="logo">
-            <router-link to="/">
-                <img src="../assets/logo.png" title="返回主页">
-            </router-link>
-        </div>
+    <el-menu background-color="#343743" 
+    text-color="#fff" 
+    active-text-color="#409eff" 
+    default-active="index"
+    :collapse="isCollapse"
+    :collapse-transition="false"
+    router>
+        <el-submenu index="1">
+            <template slot="title">
+                <i class="el-icon-s-platform"></i>
+                <span>专案管理</span>
+            </template>
+            <el-menu-item index="index"><i class="el-icon-s-tools"></i>主页</el-menu-item>
+            <el-menu-item index="caseManege"><i class="el-icon-s-tools"></i>专案列表</el-menu-item>
+            <el-menu-item index="caseSubManege"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
+        </el-submenu>
 
-        <div class="logout">
-            <el-button @click="logout">{{ user.name }}<i class="el-icon-switch-button"></i></el-button>
-        </div>
+        <el-submenu index="2">
+            <template slot="title">
+                <i class="el-icon-s-operation"></i>
+                <span>审批流程</span>
+            </template>
+            <el-menu-item index="delay"><i class="el-icon-s-tools"></i>延期申请</el-menu-item>
+            <el-menu-item index="finish"><i class="el-icon-s-tools"></i>完结申请</el-menu-item>
+            <el-menu-item index="research"><i class="el-icon-s-tools"></i>技术研究申请</el-menu-item>
+            <el-menu-item index="subCase"><i class="el-icon-s-tools"></i>专案类申请</el-menu-item>
+        </el-submenu>
 
-        <div class="menuList">
-            <router-link to="/home">主页</router-link>
-            <router-link to="/manageCase" v-if="user.type===1">专案管理</router-link>
-            <router-link to="/manageCaseSub" v-if="user.type===1">子流程管理</router-link>
-            <router-link to="/check" v-if="user.type===1">审批管理</router-link>
-            <router-link to="/user" v-if="user.type===1">部员管理</router-link>
-            <router-link to="/user" v-else>个人管理</router-link>
-            
-        </div>
+        <el-submenu index="3">
+            <template slot="title">
+                <i class="el-icon-s-custom"></i>
+                <span>部员管理</span>
+            </template>
+            <el-menu-item><i class="el-icon-s-tools"></i>权限管理</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>角色列表</el-menu-item>
+        </el-submenu>
 
-    </div>
+        <el-submenu index="4">
+            <template slot="title">
+                <i class="el-icon-s-data"></i>
+                <span>数据统计</span>
+            </template>
+            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案数据分析</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item>
+        </el-submenu>
+    </el-menu>
 </template>
 
 <script>
 import { mapMutations, mapState } from 'vuex'
 import { logout } from '@/api/login'
 export default {
+
+    props:{
+        isCollapse:Boolean
+    },
+
     data() {
         return {
-            
+
         }
     },
-    computed:{
+    computed: {
         ...mapState(['user'])
     },
     methods: {
@@ -43,60 +72,19 @@ export default {
             //     return
             await logout()
             this.$message.success({
-                message:"登出成功",
-                duration:1000
+                message: "登出成功",
+                duration: 1000
             })
             localStorage.removeItem('user')
             this.$router.push('/login')
-            
+
         }
     }
 }
 </script>
 
 <style scoped>
-.nav {
-    width: 200px;
-    height: 130vh;
-    background-color: rgb(33, 37, 41);
-    display: flex;
-    flex-direction: column;
-}
-
-.nav .logo {
-    width: 150px;
-    height: 150px;
-    margin-left: 23px;
-}
-
-.menuList {
-    /* display: flex;
-    flex-direction: column; */
-    font-size: 25px;
-}
-
-
-.menuList a {
-    display: block;
-    width: 100%;
-    height: 30px;
-    color: skyblue;
-    text-decoration: none;
-    margin-top: 60px;
-    border-bottom: 1px solid grey;
-}
-
-a:hover {
-    color: orange;
-}
-
-a.router-link-active{
-    color: orange;
-}
-
-.logout {
-    color: white;
-    margin-bottom: 30px;
-    margin-top: 30px;
+.el-menu {
+    border-right: none;
 }
 </style>

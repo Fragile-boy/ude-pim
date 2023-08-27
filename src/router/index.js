@@ -1,5 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+
+import IndexView from '../views/IndexView.vue'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFind from '@/views/NotFind.vue'
@@ -15,6 +17,8 @@ import checkDelay from '@/views/CheckViews/checkDelay'
 import checkFinish from '@/views/CheckViews/checkFinish'
 //延期表单界面
 import DelayView from '@/views/DelayView'
+
+import caseData from '@/views/dataViews/caseData'
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
 
@@ -26,12 +30,39 @@ const routes = [
     path: '/',
     redirect: '/home'
   },
-  //主页
+  //home
   {
     path: '/home',
-    name: 'home',
-    component: HomeView
+    component: HomeView,
+    redirect:'/index',
+    children: [
+      //主页
+      {
+        path: '/index',
+        name: 'index',
+        component: IndexView
+      },
+      //延期申请
+      {
+        path: '/delay',
+        name: 'delay',
+        component: checkDelay
+      },
+      // 完结申请 
+      {
+        path: '/finish',
+        name: 'finish',
+        component: checkFinish
+      },
+      //专案分析
+      {
+        path:'/caseAnalysis',
+        name:'caseAnalysis',
+        component:caseData
+      }
+    ]
   },
+
   // 子流程详情页
   {
     path: '/case2sub',
@@ -88,15 +119,7 @@ const routes = [
         path: '/commit',
         name: 'commit',
         component: checkCommit
-      }, {
-        path: '/delay',
-        name: 'delay',
-        component: checkDelay
-      }, {
-        path: '/finish',
-        name: 'finish',
-        component: checkFinish
-      }
+      }, 
     ]
   },
   //阶段申请延期页
@@ -117,17 +140,17 @@ const router = new VueRouter({
 })
 
 //管理员权限界面
-const authUrls = ['/check', '/commit', '/delay','/finish']
+// const authUrls = ['/check', '/commit', '/delay', '/finish']
 
 
 router.beforeEach(async (to, from, next) => {
-  if (authUrls.includes(to.path)) {
-    await store.dispatch('fetchUserData', getInfo())
-    if (store.state.user.type !== 1) {
-      next("/home")
-      return
-    }
-  }
+  // if (authUrls.includes(to.path)) {
+  //   await store.dispatch('fetchUserData', getInfo())
+  //   if (store.state.user.type !== 1) {
+  //     next("/home")
+  //     return
+  //   }
+  // }
   next()
 })
 

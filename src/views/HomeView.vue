@@ -1,91 +1,70 @@
 <template>
-  <div class="home" style="text-align: center;">
-    <div class="content">
-      <div class="main">
-        <div class="tableInfo">
-          <!-- <div class="charts">
-            <CasePie></CasePie>
-          </div> -->
-          <div class="tableA">
-            <label>执行状态总览</label>
-            <CaseTable></CaseTable>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
+  <el-container class="home-container">
+    <!-- 头部区域 -->
+    <el-header>
+      <img src="@/assets/logo.png" alt="">
+      <span>新技研进度管理系统</span>
+      <el-button>退出</el-button>
+    </el-header>
+    <!-- 主体区域 -->
+    <el-container>
+      <!-- 侧边栏 -->
+      <el-aside :width="isCollapse?'64px':'200px'">
+        <div class="toggle-button" @click="toggleCollapse">|||</div>
+        <PIMAside :isCollapse="isCollapse"></PIMAside>
+      </el-aside>
+      <!-- 右侧内容区域 -->
+      <el-main>
+        <router-view></router-view>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>
 
 <script>
-import CasePie from '../components/CasePie'
-import { formatDate, getStatus } from '@/utils/common'
-import { mapState } from 'vuex'
 export default {
-  name: 'homePage',
-  components: { CasePie },
-  data() {
-    return {
-      caseId: '',
-      caseInfo: [],
-      pieInfo: []
+  data(){
+    return{
+      isCollapse:false
     }
   },
-  created(){
-    this.$store.dispatch('caseM/getCaseList')
-  },
-  methods: {
-
+  methods:{
+    toggleCollapse(){
+      this.isCollapse = !this.isCollapse
+    }
   }
 }
 </script>
 
-<style scoped>
-.home {
+<style lang="less" scoped>
+.home-container {
+  height: 100%;
+}
+
+.el-header {
+  background-color: #373d41;
   display: flex;
-  flex-direction: row;
+  justify-content: space-between;
+  padding-left: 0;
+  align-items: center;
+  color: white;
+  font-size: 30px;
 }
 
-.content {
-  display: flex;
+.el-aside {
+  background-color: #333744;
 }
 
-.main {
-
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+.el-main {
+  background-color: #eaedf1;
 }
 
-
-.main>>>label {
-  display: block;
-  font-size: 50px;
-  padding-bottom: 20px;
-  margin-top: 40px;
-  align-content: center;
-  margin-left: 0%;
-}
-
-
-.main>>>.tableInfo {
-  width: 100%;
-}
-
-.main>>>.userCase {
-  /* width: 30%; */
-  /* background-color: pink; */
-}
-
-.el-button {
-  margin-top: 20px;
-}
-
-.charts {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  margin-bottom: 30px;
+.toggle-button{
+  background-color: #4a5064;
+  color: white;
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 0.2em;
+  cursor:pointer;
 }
 </style>
-

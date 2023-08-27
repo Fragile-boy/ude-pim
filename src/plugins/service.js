@@ -1,14 +1,10 @@
 import router from "@/router";
 import axios from "axios";
-// import { Message } from "element-ui";
 
 const service = axios.create({
-  baseURL: "http://192.168.1.176",
+  baseURL: "http://localhost",
   timeout: 1000 * 60,
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json', // 设置请求头
-  }
 });
 
 

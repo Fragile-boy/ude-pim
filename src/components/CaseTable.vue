@@ -1,38 +1,35 @@
 <template>
     <div class="indexTable">
-        <div class="query" style="text-align: left;">
-            <!-- 专案名称 -->
-            <label class="label">专案名称：</label>
-            <el-input class="queryText" placeholder="请输入内容" v-model="queryText" clearable style="width: 15%;"
-                @change="handleQuery">
-            </el-input>
+        <div class="query" style="margin-bottom: 15px;">
+            <el-row :gutter="20">
+                <!-- 专案名称 -->
+                <el-col :span="4">
+                    <el-input class="queryText" placeholder="请输入专案名称" v-model="queryText" clearable @change="handleQuery">
+                    </el-input>
+                </el-col>
 
-            <!-- 难度 -->
-            <label class="label"> 状态: </label>
-            <el-select v-model="queryStatus" placeholder="请选择难度" clearable @change="handleQuery">
-                <el-option v-for="item in levels" :key="item" :label="item" :value="item">
-                </el-option>
-            </el-select>
+                <!-- 难度 -->
+                <el-col :span="4">
+                    <el-select v-model="queryStatus" placeholder="请选择执行状态" clearable @change="handleQuery">
+                        <el-option v-for="item in levels" :key="item" :label="item" :value="item">
+                        </el-option>
+                    </el-select>
+                </el-col>
 
-            <!-- 开始时间-->
-            <label class="label"> 开始时间: </label>
-            <el-date-picker v-model="queryStartTime" type="daterange" align="right" unlink-panels range-separator="至"
-                start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions">
-            </el-date-picker>
+                <el-col :span="2">
+                    <!-- 按钮 -->
+                    <el-button type="primary" @click="handleQuery">搜索 <i class="el-icon-search"></i></el-button>
+                </el-col>
 
-            <!-- 结束时间 -->
-            <label class="label"> 结束时间: </label>
-            <el-date-picker v-model="queryEndTime" type="daterange" align="right" unlink-panels range-separator="到"
-                start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions">
-            </el-date-picker>
-            <!-- 按钮 -->
-            <div style="text-align: center; margin-top: 10px;">
-                <el-button type="primary" size="small" @click="handleQuery">搜索 <i class="el-icon-search"></i></el-button>
-                <el-button type="primary" size="small" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
-            </div>
+                <el-col :span="2">
+                    <!-- 按钮 -->
+                    <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
+                </el-col>
+
+            </el-row>
         </div>
-        <el-table :data="pageInfo" border scrope style="width: 100%" max-height=600
-            :default-sort="{ prop: 'doingDay', order: 'descending' }">
+
+        <el-table :data="pageInfo" border scrope max-height=600 :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column prop="caseNumber" label="编号" width="50">
             </el-table-column>
             <el-table-column prop="name" label="任务名" width="245">
@@ -41,7 +38,7 @@
             </el-table-column>
             <el-table-column prop="director" label="负责人" width="70">
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间" width="100">
+            <el-table-column prop="startTime" label="开始时间" width="110">
             </el-table-column>
             <el-table-column prop="presetTime" label="预计完成时间" width="110">
             </el-table-column>
@@ -53,10 +50,8 @@
             </el-table-column>
             <el-table-column prop="unforcedDay" label="外界因素延期" width="100">
             </el-table-column>
-            <el-table-column prop="curStage" label="当前阶段" width="80">
+            <el-table-column prop="curStage" label="当前阶段" width="120">
             </el-table-column>
-            <!-- :filters="[{ text: '正在执行', value: 0 }, { text: '已完成', value: 1 }, { text: '已延误', value: 2 }, { text: '延误完成', value: 3 }]"
-                :filter-method="filterTag" filter-placement="bottom-end" -->
             <el-table-column prop="status" label="执行状态" width="100">
                 <template slot-scope="scope">
                     <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
@@ -71,8 +66,9 @@
             </el-table-column>
         </el-table>
         <!-- 分页区域 -->
-        <el-pagination style="margin-top: 10px;text-align: center;" @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page.sync="page"
-            :page-sizes="[5, 7, 10, 20]" :page-size="size" layout="sizes, prev, pager, next" :total="total">
+        <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
+            @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 7, 10, 20]" :page-size="size"
+            layout="sizes, prev, pager, next" :total="total">
         </el-pagination>
     </div>
 </template>
@@ -270,18 +266,4 @@ export default {
 }
 </script>
 
-<style scoped>
-.query {
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.query>>>.label {
-    font-size: 15px;
-    display: inline;
-}
-
-.queryText {
-    margin-right: 20px;
-}
-</style>
+<style scoped></style>

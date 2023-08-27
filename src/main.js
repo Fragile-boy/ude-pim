@@ -3,6 +3,7 @@ import App from './App.vue'
 import './plugins/element.js'
 import PIMHeader from './components/PIMHeader'
 import PIMAside from './components/PIMAside'
+import CasePie from './components/CasePie'
 import CaseStatus from './components/CaseStatus'
 import CaseTable from './components/CaseTable'
 import CaseSubTable from './components/CaseSubTable'
@@ -12,6 +13,7 @@ import axios from './plugins/service'
 import router from './router'
 import * as echarts from 'echarts';
 import store from './store'
+import '@/css/global.css'
 
 Vue.component("PIMHeader",PIMHeader)
 Vue.component("PIMAside",PIMAside)
@@ -20,6 +22,7 @@ Vue.component("CaseTable",CaseTable)
 Vue.component("CaseSubTable",CaseSubTable)
 Vue.component("UserCase",UserCase)
 Vue.component("CaseBox",CaseBox)
+Vue.component("CasePie",CasePie)
 
 
 Vue.prototype.$axios = axios
