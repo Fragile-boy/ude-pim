@@ -1,5 +1,5 @@
 import service from "@/plugins/service";
 
-export const getUserList = ()=>{
-    return service.get('/user/list')
+export const getUserList = (obj)=>{
+    return service.get('/user/list',{params: obj})
 }

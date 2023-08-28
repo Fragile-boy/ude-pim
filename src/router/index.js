@@ -19,6 +19,8 @@ import checkFinish from '@/views/CheckViews/checkFinish'
 import DelayView from '@/views/DelayView'
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
+//部员列表界面
+import UserList from '@/views/UserViews/UserList'
 import caseData from '@/views/dataViews/caseData'
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
@@ -54,6 +56,12 @@ const routes = [
         path:'/caseList',
         name:'caseList',
         component:CaseList
+      },
+      //部员列表
+      {
+        path:'/userList',
+        name:'userList',
+        component:UserList
       },
       //延期申请
       {

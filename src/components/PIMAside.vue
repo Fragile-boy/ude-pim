@@ -29,8 +29,8 @@
 
         <el-submenu index="3">
             <template slot="title">
-                <i class="el-icon-s-custom"></i>
-                <span>部员管理</span>
+                <i class="el-icon-s-cooperation"></i>
+                <span>权限管理</span>
             </template>
             <el-menu-item><i class="el-icon-s-tools"></i>权限管理</el-menu-item>
             <el-menu-item><i class="el-icon-s-tools"></i>角色列表</el-menu-item>
@@ -43,6 +43,15 @@
             </template>
             <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案数据分析</el-menu-item>
             <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item>
+        </el-submenu>
+
+        <el-submenu index="5">
+            <template slot="title">
+                <i class="el-icon-s-custom"></i>
+                <span>部员管理</span>
+            </template>
+            <el-menu-item index="/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>部员专案管理</el-menu-item>
         </el-submenu>
     </el-menu>
 </template>
