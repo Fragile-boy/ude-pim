@@ -44,11 +44,11 @@
             </el-table-column>
             <el-table-column prop="finishTime" label="实际完成时间" width="110">
             </el-table-column>
-            <el-table-column prop="planDay" label="计划天数" width="60">
+            <el-table-column prop="planDay" label="计划天数" width="90">
             </el-table-column>
-            <el-table-column prop="doingDay" label="执行天数" width="60">
+            <el-table-column prop="doingDay" label="执行天数" width="90">
             </el-table-column>
-            <el-table-column prop="unforcedDay" label="外界因素延期" width="100">
+            <el-table-column prop="unforcedDay" label="外界因素延期" width="110">
             </el-table-column>
             <el-table-column prop="curStage" label="当前阶段" width="120">
             </el-table-column>
@@ -59,7 +59,7 @@
                 </template>
 
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" width="120">
                 <template slot-scope="scope">
                     <el-button size="middle" type="info" @click="showSub(scope.row)">查看详情</el-button>
                 </template>
@@ -68,7 +68,7 @@
         <!-- 分页区域 -->
         <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
             @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 7, 10, 20]" :page-size="size"
-            layout="sizes, prev, pager, next" :total="total">
+            layout="total, sizes, prev, pager, next" :total="total">
         </el-pagination>
     </div>
 </template>

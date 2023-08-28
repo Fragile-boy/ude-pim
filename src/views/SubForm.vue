@@ -1,31 +1,33 @@
 <template>
-    <el-form ref="form" label-width="80px">
-        <el-form-item label="专案名称:">
-            <el-form-item>{{ caseName }}</el-form-item>
-        </el-form-item>
+        <el-form ref="form" label-width="80px">
 
-        <el-form-item label="子流程:">
-            <el-form-item>{{ subName }}</el-form-item>
-        </el-form-item>
+            <el-form-item label="专案名称:">
+                <el-form-item>{{ caseName }}</el-form-item>
+            </el-form-item>
 
-        <el-form-item label="备注信息:">
-            <el-card class="box-card">
-                <div v-for="o in content" :key="o" class="text item">
-                    {{ o }}
-                </div>
-                <label v-if="content.length===0">暂无备注</label>
-            </el-card>
-        </el-form-item>
+            <el-form-item label="子流程:">
+                <el-form-item>{{ subName }}</el-form-item>
+            </el-form-item>
 
-        <el-form-item label="增加备注:" v-if="user.type===1||chargeId.indexOf(user.id)!==-1">
-            <el-input type="textarea" v-model="newContent"></el-input>
-        </el-form-item>
+            <el-form-item label="备注信息:">
+                <el-card class="box-card">
+                    <div v-for="o in content" :key="o" class="text item">
+                        {{ o }}
+                    </div>
+                    <label v-if="content.length === 0">暂无备注</label>
+                </el-card>
+            </el-form-item>
 
-        <el-form-item>
-            <el-button type="primary" @click="submitCommitForm" v-if="user.type===1||chargeId.indexOf(user.id)!==-1">提交</el-button>
+            <el-form-item label="增加备注:" v-if="user.type === 1 || chargeId.indexOf(user.id) !== -1">
+                <el-input type="textarea" v-model="newContent"></el-input>
+            </el-form-item>
+
+            <el-form-item>
+                <el-button type="primary" @click="submitCommitForm"
+                v-if="user.type === 1 || chargeId.indexOf(user.id) !== -1">提交</el-button>
             <el-button @click="$router.back()">返回</el-button>
-        </el-form-item>
-    </el-form>
+            </el-form-item>
+        </el-form>
 </template>
 
 <script>
@@ -35,12 +37,11 @@ import { mapState } from 'vuex';
 export default {
     data() {
         return {
-            caseName: 'SXX-F類-焊PCB&焊點檢測',
-            subName: '上线跟踪',
+            subName: '',
             content: [],
             newContent: '',
-            caseSubId:0,
-            chargeId:[]
+            caseSubId: 0,
+            chargeId: []
         }
     },
     created() {
@@ -63,9 +64,9 @@ export default {
                 this.content.push(res[i].content)
             }
         },
-        async submitCommitForm(){
+        async submitCommitForm() {
             //判断备注信息是否为空或者内容太少
-            if(this.newContent.length<8){
+            if (this.newContent.length < 8) {
                 this.$message.warning("您输入的内容太少，请尽可能详细描述进度信息")
                 return
             }
@@ -76,8 +77,7 @@ export default {
             var res = await saveCommit(commmitObj)
             this.$message(res.data)
             // 刷新页面
-            setTimeout(()=>this.$router.go(0),1000)
-            
+            setTimeout(() => this.$router.go(0), 1000)
         }
     }
 }

@@ -1,128 +1,178 @@
 <template>
-    <div class="subInfo">
-        <label class="caseName">{{ caseName }}</label>
-        <div class="table">
-            <div class="subTable">
-                <el-table :data="subInfo" scope border :max-height=1080 @cell-dblclick="handleDoubleClick">
+    <el-card>
+        <div class="subInfo">
+            <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
+            <!-- <label class="caseName">{{ caseName }}</label> -->
+            <div class="table">
+                <div class="subTable">
+                    <el-table :data="subInfo" scope border @cell-dblclick="handleDoubleClick">
 
-                    <el-table-column prop="subName" label="子流程" width="90">
-                    </el-table-column>
-
-                    <el-table-column prop="number" label="专案下序号" width="100">
-                    </el-table-column>
-
-                    <el-table-column prop="level" label="难度" width="50">
-                    </el-table-column>
-
-                    <el-table-column prop="chargeName[0]" label="负责人1" width="80">
-                    </el-table-column>
-
-                    <el-table-column prop="chargeName[1]" label="负责人2" width="80">
-                    </el-table-column>
-
-                    <el-table-column prop="chargeName[2]" label="负责人3" width="80">
-                    </el-table-column>
-
-                    <el-table-column prop="startTime" label="开始时间" width="100">
-                    </el-table-column>
-
-                    <!-- 阶段目标时间：实际开始时间+预设时间 -->
-                    <el-table-column prop="targetTime" label="阶段目标时间" width="110">
-                    </el-table-column>
-
-                    <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
-                    <el-table-column prop="standardTime" label="目标完成时间" width="110">
-                    </el-table-column>
-
-                    <!-- 理想完成时间：所有流程都正常结束的时间 -->
-                    <el-table-column prop="ideaTime" label="预计完成时间" width="110">
-                    </el-table-column>
-
-                    <el-table-column prop="finishTime" label="实际结束时间" width="110">
-                    </el-table-column>
-
-                    <el-table-column prop="planDays" label="计划时间" width="110">
-                    </el-table-column>
-
-                    <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
-                    </el-table-column>
-
-                    <el-table-column prop="applyDelay" label="人为因素延期" width="110">
-                    </el-table-column>
-
-                    <el-table-column prop="status" label="执行状态" width="100"
-                        :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
-                        :filter-method="filterTag" filter-placement="bottom-end">
-                        <template slot-scope="scope">
-                            <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
-                                number2status(scope.row.status)
-                            }}</el-tag>
-                        </template>
-
-                    </el-table-column>
-
-                    <el-table-column label="操作" width="120">
-                        <template slot-scope="scope">
-                            <el-button size="middle" type="info" @click="openCommitView(scope.row)">查看详情</el-button>
-                        </template>
-                    </el-table-column>
-
-                </el-table>
-            </div>
-            <!-- 显示负责人手头的子流程 -->
-            <el-drawer :visible.sync="drawer" :direction="direction" size="50%">
-                <div class="userCase" border>
-                    <div class="chargeInfo">
-                        <label class="chargeName">{{ chargeName }}</label>
-                    </div>
-                    <el-table :data="userInfo">
-                        <el-table-column prop="caseName" label="专案名称" width="245">
+                        <el-table-column prop="subName" label="子流程" width="120">
                         </el-table-column>
-                        <el-table-column prop="subName" label="阶段名称" width="80">
+
+                        <el-table-column prop="number" label="专案下序号" width="100">
                         </el-table-column>
+
+                        <el-table-column prop="level" label="难度" width="50">
+                        </el-table-column>
+
+                        <el-table-column prop="chargeName[0]" label="负责人1" width="75">
+
+                        </el-table-column>
+
+                        <el-table-column prop="chargeName[1]" label="负责人2" width="75">
+                        </el-table-column>
+
+                        <el-table-column prop="chargeName[2]" label="负责人3" width="75">
+                        </el-table-column>
+
                         <el-table-column prop="startTime" label="开始时间" width="100">
                         </el-table-column>
-                        <el-table-column prop="presetTime" label="预计完成时间" width="110">
+
+                        <!-- 阶段目标时间：实际开始时间+预设时间 -->
+                        <el-table-column prop="targetTime" label="阶段目标时间" width="110">
                         </el-table-column>
-                        <el-table-column prop="deadLine" label="延期/截止" width="110">
+
+                        <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
+                        <el-table-column prop="standardTime" label="目标完成时间" width="110">
                         </el-table-column>
+
+                        <!-- 理想完成时间：所有流程都正常结束的时间 -->
+                        <el-table-column prop="ideaTime" label="预计完成时间" width="110">
+                        </el-table-column>
+
+                        <el-table-column prop="finishTime" label="实际结束时间" width="110">
+                        </el-table-column>
+
+                        <el-table-column prop="planDays" label="计划时间" width="110">
+                        </el-table-column>
+
+                        <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
+                        </el-table-column>
+
+                        <el-table-column prop="applyDelay" label="人为因素延期" width="110">
+                        </el-table-column>
+
                         <el-table-column prop="status" label="执行状态" width="100"
-                            :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
+                            :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                             :filter-method="filterTag" filter-placement="bottom-end">
                             <template slot-scope="scope">
                                 <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
                                     number2status(scope.row.status)
                                 }}</el-tag>
                             </template>
+
+                        </el-table-column>
+
+                        <el-table-column label="操作" width="180">
+                            <template slot-scope="scope">
+                                <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
+                                    <el-button type="info" size="mini" icon="el-icon-info" round
+                                        @click="openCommitView(scope.row)"></el-button>
+                                </el-tooltip>
+                                <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
+                                    v-if="scope.row.startTime === null">
+                                    <el-button type="success" size="mini" icon="el-icon-success" round
+                                        @click="openCommitView(scope.row)"></el-button>
+                                </el-tooltip>
+                                <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
+                                    <el-button type="primary" size="mini" icon="el-icon-edit" round
+                                        @click="openCommitView(scope.row)"></el-button>
+                                </el-tooltip>
+                            </template>
                         </el-table-column>
                     </el-table>
+                    <!-- 分页区域 -->
+
                 </div>
-            </el-drawer>
-            <!-- 显示外界因素延期 -->
-            <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
-                <el-table :data="delayList" style="width: 100%" border>
-                    <el-table-column prop="caseName" label="专案" width="240">
-                    </el-table-column>
-                    <el-table-column prop="subName" label="阶段" width="100">
-                    </el-table-column>
-                    <el-table-column prop="type" label="延期类型" width="120">
-                    </el-table-column>
-                    <el-table-column prop="applyReason" label="延期原因">
-                    </el-table-column>
-                    <el-table-column prop="applyDays" label="申请天数" width="80">
-                    </el-table-column>
-                    <el-table-column prop="predictTime" label="预计完成时间" width="120">
-                    </el-table-column>
-                </el-table>
-            </el-drawer>
+                <!-- 显示负责人手头的子流程 -->
+                <el-drawer :visible.sync="drawer" :direction="direction" size="50%">
+                    <div class="userCase" border>
+                        <div class="chargeInfo">
+                            <label class="chargeName">{{ chargeName }}</label>
+                        </div>
+                        <el-table :data="userInfo">
+                            <el-table-column prop="caseName" label="专案名称" width="245">
+                            </el-table-column>
+                            <el-table-column prop="subName" label="阶段名称" width="80">
+                            </el-table-column>
+                            <el-table-column prop="startTime" label="开始时间" width="100">
+                            </el-table-column>
+                            <el-table-column prop="presetTime" label="预计完成时间" width="110">
+                            </el-table-column>
+                            <el-table-column prop="deadLine" label="延期/截止" width="110">
+                            </el-table-column>
+                            <el-table-column prop="status" label="执行状态" width="100"
+                                :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
+                                :filter-method="filterTag" filter-placement="bottom-end">
+                                <template slot-scope="scope">
+                                    <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
+                                        number2status(scope.row.status)
+                                    }}</el-tag>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </div>
+                </el-drawer>
+                <!-- 显示外界因素延期 -->
+                <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
+                    <el-table :data="delayList" style="width: 100%" border>
+                        <el-table-column prop="caseName" label="专案" width="240">
+                        </el-table-column>
+                        <el-table-column prop="subName" label="阶段" width="100">
+                        </el-table-column>
+                        <el-table-column prop="type" label="延期类型" width="120">
+                        </el-table-column>
+                        <el-table-column prop="applyReason" label="延期原因">
+                        </el-table-column>
+                        <el-table-column prop="applyDays" label="申请天数" width="80">
+                        </el-table-column>
+                        <el-table-column prop="predictTime" label="预计完成时间" width="120">
+                        </el-table-column>
+                    </el-table>
+                </el-drawer>
+                <!-- 显示备注框 -->
+                <el-dialog title="备注信息" :visible.sync="commitVisible" width="30%" @close="closeCommitDialog">
+                    <el-form ref="commitFormRef" :model="commitForm" :rules="rules">
+                        <!-- 子流程名称显示 -->
+                        <el-form-item label='子流程：'>
+                            <el-form-item :label="commitForm.subName"></el-form-item>
+                        </el-form-item>
+                        <el-form-item label="备注信息">
+                        </el-form-item>
+                        <!-- 备注显示区域 -->
+                        <el-form-item>
+                            <el-card class="box-card">
+                                <div v-for="o in commitForm.content" :key="o" class="text item">
+                                    {{ o }}
+                                </div>
+                                <label v-if="commitForm.content.length === 0">暂无备注</label>
+                            </el-card>
+                        </el-form-item>
+                        <!-- 备注增加 -->
+                        <el-form-item prop="newContent" label="增加备注:"
+                            v-if="user.type === 1 || chargeId.indexOf(user.id) !== -1">
+                            <el-input type="textarea" v-model="commitForm.newContent"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <span slot="footer" class="dialog-footer">
+                        <el-button type="primary" @click="submitCommitForm"
+                            v-if="user.type === 1 || chargeId.indexOf(user.id) !== -1">提交</el-button>
+                        <el-button @click="commitVisible = false">取 消</el-button>
+                    </span>
+                </el-dialog>
+                <!-- 显示修改框 -->
+            </div>
         </div>
-    </div>
+    </el-card>
 </template>
 
 <script>
 import { formatDate, getStatus } from '@/utils/common'
 import { getSubByUserId } from '@/api/caseSub'
 import { getDelayByStatus } from '@/api/caseDelayApply'
+import { getById, saveCommit } from '@/api/caseSubCommit';
+import { mapState } from 'vuex';
 export default {
 
     props: {
@@ -139,7 +189,24 @@ export default {
             delayDrawer: false,
             delayList: [],
             userInfo: [],
-            chargeName: '負責人'
+            chargeName: '負責人',
+            // 显示备注框
+            commitVisible: false,
+            commitForm: {
+                content: [],
+                newContent: null,
+                chargeId: []
+            },
+            rules: {
+                newContent: [
+                    {
+                        required: true, message: '备注不能为空', trigger: 'blur'
+                    },
+                    {
+                        min: 8, max: 255, message: '备注应该大于8个字符，小于255个字符', trigger: 'blur'
+                    }
+                ]
+            }
         }
     },
     watch: {
@@ -151,6 +218,9 @@ export default {
                 this.chargeName = '負責人'
             }
         }
+    },
+    computed: {
+        ...mapState(['user'])
     },
     methods: {
         //显示负责人手头的子流程
@@ -167,13 +237,13 @@ export default {
         async getUnforcedDays(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '外界因素延期' })
             this.delayList = res.data
-            this.delayList.map(item=>item.predictTime = formatDate(item.predictTime))
+            this.delayList.map(item => item.predictTime = formatDate(item.predictTime))
             this.delayDrawer = true
         },
         async getApplyDelay(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '人为因素延期' })
             this.delayList = res.data
-            this.delayList.map(item=>item.predictTime = formatDate(item.predictTime))
+            this.delayList.map(item => item.predictTime = formatDate(item.predictTime))
             this.delayDrawer = true
         },
         async getCaseByUserName(row, column) {
@@ -218,27 +288,48 @@ export default {
             else if (status === 4)
                 return "未开始"
         },
-        openCommitView(caseSub) {
-            this.$router.push({
-                path: '/subForm',
-                query: {
-                    caseSubId: caseSub.id,
-                    caseSubName: caseSub.subName,
-                    caseName: this.caseName,
-                    chargeId: caseSub.chargeId
-                }
+        async openCommitView(caseSub) {
+            this.commitVisible = true
+            this.commitForm.subName = caseSub.subName
+            this.commitForm.caseSubId = caseSub.id
+            // 获取专案子流程对应的所有备注
+            var res = await getById(caseSub.id)
+            res = res.data
+            for (var i = 0; i < res.length; i++) {
+                this.commitForm.content.push(res[i].content)
+            }
+        },
+        async submitCommitForm() {
+            //判断备注信息是否为空或者内容太少
+            this.$refs.commitFormRef.validate(async valid => {
+                if (!valid) return;
+                const commmitObj = {}
+                commmitObj.caseSubId = this.commitForm.caseSubId
+                commmitObj.content = this.commitForm.newContent
+                commmitObj.createUser = this.user.id
+                var res = await saveCommit(commmitObj)
+                this.$message(res.data)
+                //隐藏画面
+                this.commitVisible = false
             })
+
+        },
+        closeCommitDialog() {
+            //重置表单
+            this.$refs.commitFormRef.resetFields()
         }
     }
 }
 </script>
 
 <style scoped>
+.el-page-header {
+    margin-bottom: 10px;
+}
+
 .subInfo>>>.caseName {
     display: block;
-    margin-top: 20px;
-    margin-bottom: 30px;
-    font-size: 40px;
+    font-size: 35px;
 }
 
 .subInfo>>>.table {

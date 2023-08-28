@@ -1,5 +1,5 @@
 <template>
-    <div class="body">
+    <div class="login_container">
         <div class="loginInfo">
             <div class="avatar_box">
                 <img src="@/assets/logo.png" alt="" srcset="">
@@ -8,17 +8,19 @@
                 <span>新技研进度管理系统</span>
             </div>
             <el-form ref="loginFormRef" label-width="0px" :rules="rules" class="login_form" :model="loginForm">
-                <el-form-item prop="userName">
-                    <el-input v-model.number="loginForm.number" prefix-icon="el-icon-user-solid"
-                        placeholder="请输入工号"></el-input>
+                <el-form-item prop="number">
+                    <el-input v-model="loginForm.number" prefix-icon="el-icon-user-solid" placeholder="请输入工号"></el-input>
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input type="password" v-model="loginForm.password" prefix-icon="el-icon-s-cooperation"
                         placeholder="请输入密码"></el-input>
                 </el-form-item>
-                <el-form-item class="btns">
-                    <el-button type="primary" @click="handlerLogin">登录</el-button>
-                    <el-button type="info" @click="resetForm">重置</el-button>
+                <el-form-item>
+                    <div class="btns">
+                        <el-checkbox v-model="rememberPsw">记住密码</el-checkbox>
+                        <el-button type="primary" @click="handlerLogin">登录</el-button>
+                    </div>
+
                 </el-form-item>
             </el-form>
         </div>
@@ -30,49 +32,54 @@ import { mapMutations } from 'vuex'
 import { loginApi } from '@/api/login'
 export default {
     data() {
-        var checkUserName = (rule, value, callback) => {
-            if (!/^52\d{4}/.test(value))
+        var checkUserNumber = (rule, value, callback) => {
+            console.log(value)
+            if (!/^\d{6}$/.test(value))
                 return callback(new Error("工号是以52开头的6位数字"))
             else
                 return callback()
-        }
+        };
         return {
             loginForm: {
-                number: null,
+                number: '',
                 password: ''
             },
-            remember: false,
             rules: {
-                userName: [
-                    { validator: checkUserName, trigger: 'blur' },
+                number: [
+                    { required: true, message: '工号不能为空', trigger: 'blur' },
+                    { validator: checkUserNumber, trigger: 'blur' }
                 ],
                 password: [
                     { required: true, message: '密码不能为空', trigger: 'blur' }
                 ]
-            }
+            },
+            rememberPsw: false
         }
     },
     created() {
-        this.loginForm.number = localStorage.getItem("userNumber")
-        this.loginForm.password = localStorage.getItem("password")
-        if (this.loginForm.password !== null)
-            this.remember = true
+        if (localStorage.getItem('userLogin') !== null){
+            this.loginForm = JSON.parse(localStorage.getItem('userLogin'))
+            if(this.loginForm.password!==null)
+                this.rememberPsw = true
+        }
     },
     methods: {
         ...mapMutations(['setUser']),
         //登录
         async handlerLogin() {
             this.$refs.loginFormRef.validate(async valid => {
+                console.log(valid)
                 if (!valid) return;
                 const res = await loginApi(this.loginForm)
                 if (res.code == 200) {
                     //持久化存储上一个登录成功的账号
-                    localStorage.setItem("userNumber", this.pimNumber)
-                    //如果点击了记住密码
-                    if (this.remember)
-                        localStorage.setItem("password", this.password)
+                    if(this.rememberPsw)
+                        localStorage.setItem("userLogin", JSON.stringify(this.loginForm))
+                    else{
+                        this.loginForm.password = null
+                        localStorage.setItem("userLogin", JSON.stringify(this.loginForm))
+                    }
                     this.setUser(res.data)
-                    // localStorage.setItem("user", JSON.stringify(res.data))
                     this.$message({
                         message: "登录成功",
                         type: 'success',
@@ -96,7 +103,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.body {
+.login_container {
     height: 100%;
     background-color: #2b4b6b;
 }
@@ -147,6 +154,6 @@ export default {
 
 .btns {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
 }
 </style>

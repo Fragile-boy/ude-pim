@@ -1,20 +1,27 @@
 <template>
     <div class="subView" style="text-align: center;">
+        <!-- 面包屑导航区域 -->
+        <div>
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item>专案管理</el-breadcrumb-item>
+                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
+                <el-breadcrumb-item>{{ caseName }}</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
         <CaseSubTable :subInfo="subInfo" :caseName="caseName"></CaseSubTable>
-        <router-link to="/"><el-button size="medium" type="primary ">返回</el-button></router-link>
     </div>
 </template>
 
 <script>
 import { formatDate, getStatus, timeAdd } from '@/utils/common'
-import {getSubList} from '@/api/caseSub'
+import { getSubList } from '@/api/caseSub'
 
 export default {
     data() {
         return {
             pieInfo: [],
             subInfo: [],
-            caseName: 'SXX泛用裝LED&cover模組（B類）',
+            caseName: '',
         }
     },
     created() {
@@ -27,7 +34,7 @@ export default {
         async getSubInfo(caseId) {
             var res = await getSubList(caseId)
             this.subInfo = res.data
-            // console.log(this.subInfo)
+            console.log(this.subInfo)
             for (let i = 0; i < this.subInfo.length; i++) {
                 this.subInfo[i].startTime = formatDate(this.subInfo[i].startTime)
                 if (this.subInfo[i].startTime !== null) {

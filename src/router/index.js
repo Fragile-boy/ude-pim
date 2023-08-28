@@ -17,7 +17,8 @@ import checkDelay from '@/views/CheckViews/checkDelay'
 import checkFinish from '@/views/CheckViews/checkFinish'
 //延期表单界面
 import DelayView from '@/views/DelayView'
-
+//专案列表界面
+import CaseList from '@/views/CaseViews/CaseList'
 import caseData from '@/views/dataViews/caseData'
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
@@ -34,13 +35,25 @@ const routes = [
   {
     path: '/home',
     component: HomeView,
-    redirect:'/index',
+    redirect: '/index',
     children: [
       //主页
       {
         path: '/index',
         name: 'index',
         component: IndexView
+      },
+      // 子流程详情页
+      {
+        path: '/case2sub',
+        name: 'case-sub',
+        component: CaseSubView
+      },
+      // 专案列表
+      {
+        path:'/caseList',
+        name:'caseList',
+        component:CaseList
       },
       //延期申请
       {
@@ -56,18 +69,11 @@ const routes = [
       },
       //专案分析
       {
-        path:'/caseAnalysis',
-        name:'caseAnalysis',
-        component:caseData
+        path: '/caseAnalysis',
+        name: 'caseAnalysis',
+        component: caseData
       }
     ]
-  },
-
-  // 子流程详情页
-  {
-    path: '/case2sub',
-    name: 'case-sub',
-    component: CaseSubView
   },
   // 个人管理页
   {
@@ -119,7 +125,7 @@ const routes = [
         path: '/commit',
         name: 'commit',
         component: checkCommit
-      }, 
+      },
     ]
   },
   //阶段申请延期页
