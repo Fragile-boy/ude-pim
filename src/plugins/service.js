@@ -1,8 +1,9 @@
 import router from "@/router";
 import axios from "axios";
+import { Message } from "element-ui";
 
 const service = axios.create({
-  baseURL: "http://localhost",
+  baseURL: "http://192.168.1.176",
   timeout: 1000 * 60,
   withCredentials: true,
 });
@@ -16,11 +17,20 @@ service.interceptors.response.use((res) => {
     localStorage.removeItem('user')
     router.push('/login')
     return Promise.reject(res.data.msg)
-  } else
+  } else if(res.data.code===404){
+    Message({
+      message:'系统错误，请稍后重试',
+      type:'error'
+    })
+  }else
     return res.data
 }, (error) => {
   // 超出 2xx 范围的状态码都会触发该函数。
   // 对响应错误做点什么
+  Message({
+    message:'系统繁忙，请稍后重试',
+    type:'error'
+  })
   return Promise.reject(error)
 });
 

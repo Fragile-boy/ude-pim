@@ -29,7 +29,7 @@
             </el-row>
         </div>
 
-        <el-table :data="pageInfo" border scrope max-height=600 :default-sort="{ prop: 'doingDay', order: 'descending' }">
+        <el-table :data="pageInfo" border stripe max-height=600 :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column prop="caseNumber" label="编号" width="50">
             </el-table-column>
             <el-table-column prop="name" label="任务名" width="245">

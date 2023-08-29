@@ -2,10 +2,24 @@
     <el-card>
         <div class="subInfo">
             <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
-            <!-- <label class="caseName">{{ caseName }}</label> -->
             <div class="table">
                 <div class="subTable">
-                    <el-table :data="subInfo" scope border @cell-dblclick="handleDoubleClick">
+                    <el-table :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
+
+                        <el-table-column type="expand">
+                            <template slot-scope="scope">
+                                <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
+                                    <el-col :span="4">
+                                        <el-tag class="chargeNameTag" closable 
+                                        @close="removeDirector(scope.row.chargeId,index)"
+                                        @click="getCaseByUserName(scope.row.chargeId[index],item)">
+                                            {{ item }}
+                                        </el-tag>
+                                    </el-col>
+                                </el-row>
+
+                            </template>
+                        </el-table-column>
 
                         <el-table-column prop="subName" label="子流程" width="120">
                         </el-table-column>
@@ -14,16 +28,6 @@
                         </el-table-column>
 
                         <el-table-column prop="level" label="难度" width="50">
-                        </el-table-column>
-
-                        <el-table-column prop="chargeName[0]" label="负责人1" width="75">
-
-                        </el-table-column>
-
-                        <el-table-column prop="chargeName[1]" label="负责人2" width="75">
-                        </el-table-column>
-
-                        <el-table-column prop="chargeName[2]" label="负责人3" width="75">
                         </el-table-column>
 
                         <el-table-column prop="startTime" label="开始时间" width="100">
@@ -170,6 +174,7 @@
 <script>
 import { formatDate, getStatus } from '@/utils/common'
 import { getSubByUserId } from '@/api/caseSub'
+import {removeDirector} from '@/api/caseSubUser'
 import { getDelayByStatus } from '@/api/caseDelayApply'
 import { getById, saveCommit } from '@/api/caseSubCommit';
 import { mapState } from 'vuex';
@@ -186,8 +191,10 @@ export default {
         return {
             drawer: false,
             direction: 'rtl',
+            // 延期显示
             delayDrawer: false,
             delayList: [],
+            //个人对应的专案子流程
             userInfo: [],
             chargeName: '負責人',
             // 显示备注框
@@ -209,26 +216,13 @@ export default {
             }
         }
     },
-    watch: {
-        caseName: {
-            deep: true,
-            immediate: true,
-            handler() {
-                this.userInfo = []
-                this.chargeName = '負責人'
-            }
-        }
-    },
     computed: {
         ...mapState(['user'])
     },
     methods: {
         //显示负责人手头的子流程
         async handleDoubleClick(row, column) {
-            //双击了负责人
-            if (column.label.slice(0, 3) === '负责人') {
-                this.getCaseByUserName(row, column)
-            } else if (column.label === '外界因素延期') {
+            if (column.label === '外界因素延期') {
                 this.getUnforcedDays(row)
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
@@ -246,12 +240,11 @@ export default {
             this.delayList.map(item => item.predictTime = formatDate(item.predictTime))
             this.delayDrawer = true
         },
-        async getCaseByUserName(row, column) {
-            var index = column.label.match(/(\d+)/)[1] - 1
-            var res = await getSubByUserId(row.chargeId[index])
+        async getCaseByUserName(id,name) {
+            var res = await getSubByUserId(id)
             this.userInfo = res.data
             //負責人姓名顯示
-            this.chargeName = row.chargeName[index]
+            this.chargeName = name
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].startTime = formatDate(this.userInfo[i].startTime)
                 const presetTime = new Date(this.userInfo[i].startTime)
@@ -295,6 +288,8 @@ export default {
             // 获取专案子流程对应的所有备注
             var res = await getById(caseSub.id)
             res = res.data
+            //备注数组必须清空，否则会叠加
+            this.commitForm.content = []
             for (var i = 0; i < res.length; i++) {
                 this.commitForm.content.push(res[i].content)
             }
@@ -317,7 +312,20 @@ export default {
         closeCommitDialog() {
             //重置表单
             this.$refs.commitFormRef.resetFields()
-        }
+        },
+        //移除子流程负责人
+        async removeDirector(ids,index) {
+            if(ids.length===1){
+                this.$message.warning('当前阶段仅剩一个负责人，请先增加负责人再删除')
+                return
+            }
+            const res = await removeDirector(ids[index])
+            if(res.code===200){
+                this.$message.success(res.data)
+            }else{
+                this.$message.error(res.msg)
+            }
+        },
     }
 }
 </script>
@@ -327,20 +335,15 @@ export default {
     margin-bottom: 10px;
 }
 
-.subInfo>>>.caseName {
-    display: block;
-    font-size: 35px;
-}
-
-.subInfo>>>.table {
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: column;
-}
 
 
 .chargeName {
     font-size: 50px;
     color: white;
+}
+
+.chargeNameTag {
+    margin: 7px;
+    font-size: 20px;
 }
 </style>

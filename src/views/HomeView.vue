@@ -15,7 +15,10 @@
       </el-aside>
       <!-- 右侧内容区域 -->
       <el-main>
-        <router-view></router-view>
+        <keep-alive :include="['indexPage']">
+          <router-view></router-view>
+        </keep-alive>
+
       </el-main>
     </el-container>
   </el-container>
@@ -23,7 +26,7 @@
 
 <script>
 import { mapMutations } from 'vuex'
-import {logout} from '@/api/login'
+import { logout } from '@/api/login'
 export default {
   data() {
     return {

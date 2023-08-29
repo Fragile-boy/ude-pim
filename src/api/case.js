@@ -6,11 +6,16 @@ export const getCaseList = () => {
 }
 
 // 返回专案列表
-export const getList = () => {
-    return service.get('case/list')
+export const getList = (obj) => {
+    return service.get('case/list', { params: obj })
 }
 
 // 新增专案
 export const addCase = (caseObj) => {
     return service.post('case', caseObj)
+}
+
+//返回专案朴素信息
+export const getById = (id)=>{
+    return service.get(`/case/${id}`)
 }
