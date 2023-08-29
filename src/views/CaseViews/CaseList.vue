@@ -32,7 +32,7 @@
                 </el-table-column>
                 <el-table-column prop="level" label="难度">
                 </el-table-column>
-                <el-table-column prop="director" label="负责人">
+                <el-table-column prop="directorName" label="负责人">
                 </el-table-column>
                 <el-table-column prop="createTime" label="创建时间">
                 </el-table-column>
@@ -52,9 +52,18 @@
         <el-dialog :title="dialogTitle" :visible.sync="addCaseVisible" width="35%" @close="addCaseFormClose()">
             <el-form ref="addCaseFormRef" :model="addCaseForm" :rules="addCaseRules" label-width="80px">
                 <el-row :gutter="20">
-                    <el-col :span="12">
+                    <el-col>
                         <el-form-item label="专案名称" prop="name">
                             <el-input v-model="addCaseForm.name" placeholder="请输入专案名称"></el-input>
+                        </el-form-item>
+                    </el-col>
+
+                </el-row>
+
+                <el-row :gutter="40">
+                    <el-col :span="12">
+                        <el-form-item label="专案号">
+                            <el-input v-model="addCaseForm.number" placeholder="如专案号未申请下来，为空"></el-input>
                         </el-form-item>
                     </el-col>
 
@@ -65,17 +74,9 @@
                     </el-col>
                 </el-row>
 
-                <el-row :gutter="40">
-                    <el-col :span="12">
-                        <el-form-item label="专案号">
-                            <el-input v-model="addCaseForm.number" placeholder="如专案号未申请下来，为空"></el-input>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-
                 <el-form-item label="负责人" prop="directors">
                     <el-cascader v-model="addCaseForm.directors" :options="directorOptions" :show-all-levels="false"
-                        placeholder="请选择负责人" :props="{ checkStrictly: true, value: 'value', label: 'label', children: 'children' }"></el-cascader>
+                        placeholder="请选择负责人"></el-cascader>
                 </el-form-item>
 
                 <el-form-item label="专案描述" prop="description">
@@ -84,7 +85,7 @@
 
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="addCase">确 定</el-button>
+                <el-button type="primary" @click="addCase(newFlag)">确 定</el-button>
                 <el-button @click="addCaseVisible = false">取 消</el-button>
             </span>
         </el-dialog>
@@ -96,11 +97,12 @@ import { mapActions, mapState } from 'vuex'
 import { getUserList } from '@/api/user'
 import { addCase, getList } from '@/api/case'
 import { checkResult } from '@/utils/common'
-import { getById } from '@/api/case'
+import { editCase } from '@/api/case'
+import { getUserStatus } from '@/api/user'
 export default {
     data() {
         return {
-            dialogTitle:"新增专案",
+            dialogTitle: "新增专案",
             pageInfo: [],
             queryInfo: {
                 page: 1,
@@ -117,7 +119,8 @@ export default {
                 //这里用directors，避免和director冲突
                 directors: null,
             },
-
+            // 标志这是新增还是修改,0=>new,1=>edit
+            newFlag:0,
             // 新增专案表单校验规则
             addCaseRules: {
                 name: [
@@ -168,15 +171,17 @@ export default {
         },
         //修改专案
         async editCase(caseObj) {
-            
-            this.addCaseForm = {...caseObj}
-            this.addCaseForm['directors'] = [0,"1686921839289237542"]
-
+            // 先赋值给表单元素
+            this.addCaseForm = { ...caseObj }
+            const res = await getUserStatus(caseObj.director);
+            if (res.code !== 200) {
+                this.$message.error("获取用户职务失败")
+                return
+            }
+            this.addCaseForm['directors'] = [res.data, caseObj.director]
             this.dialogTitle = "修改专案"
+            this.newFlag = 1
             this.addCaseVisible = true
-
-            //1. 获取到该行的专案信息
-            console.log(this.addCaseForm)
         },
         //页面大小发生变化
         handleSizeChange(val) {
@@ -193,6 +198,7 @@ export default {
         // 打开新增专案
         async openAddCase() {
             this.dialogTitle = "新增专案"
+            this.newFlag = 0
             this.addCaseVisible = true
         },
         //关闭新增窗口的回调函数
@@ -205,13 +211,17 @@ export default {
         addCase() {
             this.$refs.addCaseFormRef.validate(async valid => {
                 if (!valid) return;
+                // 获得正确的负责人值
                 this.addCaseForm.director = this.addCaseForm.directors[1]
                 this.addCaseForm.createUser = this.user.id
-                var res = await addCase(this.addCaseForm)
+                if(this.newFlag = 0)
+                    var res = await addCase(this.addCaseForm)
+                else
+                    var res = await editCase(this.addCaseForm)
                 checkResult(res)
                 if (res.code === 200) {
                     this.addCaseVisible = false
-                    setTimeout(() => this.$router.go(0), 500)
+                    this.getTableDate()
                 }
             })
         }

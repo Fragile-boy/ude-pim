@@ -15,6 +15,11 @@ export const addCase = (caseObj) => {
     return service.post('case', caseObj)
 }
 
+// 修改专案
+export const editCase = (caseObj) => {
+    return service.put('case', caseObj)
+}
+
 //返回专案朴素信息
 export const getById = (id)=>{
     return service.get(`/case/${id}`)
