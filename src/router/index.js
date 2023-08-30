@@ -19,6 +19,10 @@ import checkFinish from '@/views/CheckViews/checkFinish'
 import DelayView from '@/views/DelayView'
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
+//子流程管理界面
+import subManage from '@/views/CaseViews/subManage'
+//模板管理界面
+import TempleteManage from '@/views/CaseViews/TempleteManage'
 //部员列表界面
 import UserList from '@/views/UserViews/UserList'
 import caseData from '@/views/dataViews/caseData'
@@ -56,6 +60,18 @@ const routes = [
         path:'/caseList',
         name:'caseList',
         component:CaseList
+      },
+      //子流程管理
+      {
+        path:'/subManage',
+        name:'subManage',
+        component:subManage
+      },
+      //模板管理
+      {
+        path:'/templeteManage',
+        name:'templeteManage',
+        component:TempleteManage
       },
       //部员列表
       {

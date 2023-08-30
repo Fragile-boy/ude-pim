@@ -83,6 +83,9 @@
                     <el-input type="textarea" v-model="addCaseForm.description" placeholder="简要介绍专案"></el-input>
                 </el-form-item>
 
+                <!-- 子流程添加区域 -->
+                
+
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="addCase(newFlag)">确 定</el-button>

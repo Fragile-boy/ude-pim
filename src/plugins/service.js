@@ -19,7 +19,7 @@ service.interceptors.response.use((res) => {
     return Promise.reject(res.data.msg)
   } else if(res.data.code===404){
     Message({
-      message:'系统错误，请稍后重试',
+      message:res.data.msg,
       type:'error'
     })
   }else

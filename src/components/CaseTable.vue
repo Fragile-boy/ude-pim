@@ -36,7 +36,7 @@
             </el-table-column>
             <el-table-column prop="level" label="难度" width="50">
             </el-table-column>
-            <el-table-column prop="director" label="负责人" width="70">
+            <el-table-column prop="directorName" label="负责人" width="70">
             </el-table-column>
             <el-table-column prop="startTime" label="开始时间" width="110">
             </el-table-column>
@@ -142,6 +142,7 @@ export default {
     },
     created() {
         this.caseInfo = this.caseList
+        console.log(this.caseInfo)
         this.getTableDate()
     },
     watch: {

@@ -13,7 +13,8 @@
             </template>
             <el-menu-item index="index"><i class="el-icon-s-tools"></i>主页</el-menu-item>
             <el-menu-item index="caseList"><i class="el-icon-s-tools"></i>专案列表</el-menu-item>
-            <el-menu-item index="caseSubManege"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
+            <el-menu-item index="subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
+            <el-menu-item index="templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
         </el-submenu>
 
         <el-submenu index="2">
