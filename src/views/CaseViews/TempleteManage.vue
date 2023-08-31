@@ -33,6 +33,7 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-button type="primary" icon="el-icon-edit" @click="showDetail(scope.row)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" @click="deleteTemplete(scope.row.id)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -54,7 +55,7 @@
                     </el-col>
                 </el-row>
                 <el-form-item label="内容">
-                    <el-transfer v-model="templeteForm.subIds" :data="allSub" :button-texts="['移除', '添加']"
+                    <el-transfer v-model="templeteForm.subIds" :data="allSub" :button-texts="['移除', '添加']" :titles="['源','目标']"
                         :props="{ key: 'id', label: 'name' }"></el-transfer>
                 </el-form-item>
             </el-form>
@@ -75,7 +76,7 @@
                     </el-col>
                 </el-row>
                 <el-form-item label="内容">
-                    <el-transfer v-model="editTempleteForm.subIds" :data="allSub" :button-texts="['移除', '添加']"
+                    <el-transfer v-model="editTempleteForm.subIds" :data="allSub" :button-texts="['移除', '添加']" :titles="['源','目标']"
                         :props="{ key: 'id', label: 'name' }"></el-transfer>
                 </el-form-item>
             </el-form>
@@ -88,7 +89,7 @@
 </template>
 
 <script>
-import { saveTemplete, getTempleteList, getRelationId, updateTemplete } from '@/api/templete'
+import { saveTemplete, getTempleteList, getRelationId, updateTemplete, removeTemplete } from '@/api/templete'
 import { getAllSub } from '@/api/sub'
 export default {
     data() {
@@ -126,6 +127,7 @@ export default {
             this.templeteList = res.data.records
             this.total = res.data.total
         },
+        //获取所有子流程数据
         async getAllSub() {
             const res = await getAllSub()
             if (res.code === 200) {
@@ -157,8 +159,14 @@ export default {
         },
         //新增模板
         async addTemplete() {
+            // 校验模板列表
             if (this.templeteForm.subIds.length === 0) {
                 this.$message.error("子流程勾选后需要放置到右边才生效")
+                return
+            }
+            // 校验模板描述
+            if(this.templeteForm.description===''){
+                this.$message.error("模板描述不可为空")
                 return
             }
             const res = await saveTemplete(this.templeteForm)
@@ -187,6 +195,11 @@ export default {
                 this.$message.error("子流程勾选后需要放置到右边才生效")
                 return
             }
+            // 校验模板描述
+            if(this.editTempleteForm.description===''){
+                this.$message.error("模板描述不可为空")
+                return
+            }
             const res = await updateTemplete(this.editTempleteForm)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -195,7 +208,18 @@ export default {
             } else {
                 this.$message.error(res.msg)
             }
+        },
+        //删除模板
+        async deleteTemplete(id){
+            const res = await removeTemplete(id)
+            if(res.code===200){
+                this.$message.success(res.data)
+                this.getTempleteList()
+            }else{
+                this.$message.error(res.msg)
+            }
         }
+        
     }
 }
 </script>

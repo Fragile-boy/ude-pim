@@ -19,3 +19,8 @@ export const saveSub = (obj)=>{
 export const updateSub = (obj)=>{
     return service.put('/sub', obj)
 }
+
+//获取子流程特定难度的对应的计划天数
+export const getPresetDays = (obj)=>{
+    return service.get('/subLevel/getPresetDays', {params:obj})
+}

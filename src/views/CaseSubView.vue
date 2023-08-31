@@ -25,9 +25,10 @@
                                                 @click="getCaseByUserId(scope.row.chargeId[index], item)">
                                                 {{ item }}
                                             </el-tag>
+
                                         </el-col>
                                     </el-row>
-
+                                    <el-tag v-if="scope.row.chargeId.length === 0">暂无负责人</el-tag>
                                 </template>
                             </el-table-column>
 
@@ -164,14 +165,12 @@
                                 </el-card>
                             </el-form-item>
                             <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
-                            <el-form-item prop="newContent" label="增加备注:"
-                                v-if="user.type === 1">
+                            <el-form-item prop="newContent" label="增加备注:" v-if="user.type === 1">
                                 <el-input type="textarea" v-model="commitForm.newContent"></el-input>
                             </el-form-item>
                         </el-form>
                         <span slot="footer" class="dialog-footer">
-                            <el-button type="primary" @click="submitCommitForm"
-                                v-if="user.type === 1">提交</el-button>
+                            <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1">提交</el-button>
                             <el-button @click="commitVisible = false">取 消</el-button>
                         </span>
                     </el-dialog>
@@ -249,8 +248,9 @@ export default {
                 // 预计完成时间
                 if (i === 0)
                     this.subInfo[i].ideaTime = this.subInfo[i].targetTime
-                else
+                else if(typeof(this.subInfo[i - 1].ideaTime)!=='undefined'){
                     this.subInfo[i].ideaTime = timeAdd(this.subInfo[i - 1].ideaTime, this.subInfo[i].planDays)
+                }
                 //实际完成时间
                 this.subInfo[i].finishTime = formatDate(this.subInfo[i].finishTime)
                 this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime)

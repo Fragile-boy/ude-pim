@@ -9,3 +9,8 @@ export const getSubList = (caseId)=>{
 export const getSubByUserId = (userId)=>{
     return service.get(`/caseSub/director/${userId}`)
 }
+
+//插入数据
+export const insertRelation = (obj)=>{
+    return service.post('/caseSub/saveRelation',obj)
+}
