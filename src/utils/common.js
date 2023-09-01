@@ -49,7 +49,8 @@ export function getStatus(startTime, planTime, finishTime) {
 export function timeAdd() {
     var result = new Date(arguments[0])
     for (var i = 1; i < arguments.length; i++) {
-        result.setDate(result.getDate() + arguments[i] - 1)
+        if(arguments[i]!==null)
+            result.setDate(result.getDate() + arguments[i] - 1)
     }
     return formatDate(result)
 }

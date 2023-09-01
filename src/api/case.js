@@ -24,3 +24,8 @@ export const editCase = (caseObj) => {
 export const getById = (id)=>{
     return service.get(`/case/${id}`)
 }
+
+// 删除专案
+export const deleteCase= (id)=>{
+    return service.delete(`/case/${id}`)
+}

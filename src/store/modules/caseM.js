@@ -37,8 +37,11 @@ export default {
             res = res.data
             //数据加工
             for (let i = 0; i < res.length; i++) {
-                if(res[i]['startTime']===null)
+                if(res[i]['startTime']===null){
+                    //不直接返回，其他数据显示就会乱码
+                    res[i].status = 4
                     continue
+                }
                 //后端拿到的是字符串格式的数据，转换为时间格式
                 const startTime = new Date(res[i]['startTime'])
                 res[i].startTime = formatDate(startTime)

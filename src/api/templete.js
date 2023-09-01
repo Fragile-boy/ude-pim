@@ -25,3 +25,7 @@ export const removeTemplete=(id)=>{
     return service.delete(`/subTemplate/${id}`)
 }
 
+//获取模板对应的子流程数据
+export const getSubsByTemplateId = (id)=>{
+    return service.get(`subTemplate/getSubs/${id}`)
+}

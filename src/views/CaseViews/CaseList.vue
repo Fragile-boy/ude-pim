@@ -41,8 +41,9 @@
                         <el-button type="primary" icon="el-icon-edit" @click="editCase(scope.row)"></el-button>
                         <el-tooltip v-if="!scope.row.hasSub" effect="dark" content="分配子流程" placement="top">
                             <el-button type="warning" icon="el-icon-setting"
-                                @click="openAddRelationMenu(scope.row.id)"></el-button>
+                                @click="openAddRelationMenu(scope.row)"></el-button>
                         </el-tooltip>
+                        <el-button type="danger" icon="el-icon-delete" @click="deleteCase(scope.row.id)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -91,7 +92,7 @@
 
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="addCase(newFlag)">确 定</el-button>
+                <el-button type="primary" @click="addCase()">确 定</el-button>
                 <el-button @click="addCaseVisible = false">取 消</el-button>
             </span>
         </el-dialog>
@@ -99,7 +100,16 @@
         <!-- 分配子流程主界面 -->
         <el-dialog title="模式选择" :visible.sync="addRelationMenuVisible" width="30%">
             <!-- 子流程添加区域 -->
-            <el-button type="warning">按模板</el-button>
+            <el-col :span="8">
+                <el-dropdown split-button type="warning" @command="openAddRelationSubByTemplate">
+                    按模板
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item v-for="item in templateList" :key="item.id" :command="item.id">{{ item.description
+                        }}</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+            </el-col>
+            <!-- <el-button type="warning"></el-button> -->
             <el-button type="primary" @click="openAddRelationSub()">按流程</el-button>
         </el-dialog>
 
@@ -111,9 +121,10 @@
                 </el-table-column>
                 <el-table-column prop="name" label="名称">
                 </el-table-column>
-                <el-table-column label="难度" show-overflow-tooltip>
+                <el-table-column label="难度">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.level" placeholder="请选择难度" @change="getPresetDays(scope.row)">
+                        <el-select v-model="scope.row.level" :placeholder="curLevel + ''"
+                            @change="getPresetDays(scope.row)">
                             <el-option v-for="item in levelInfo" :key="item" :value="item">
                             </el-option>
                         </el-select>
@@ -121,7 +132,7 @@
                 </el-table-column>
                 <el-table-column label="计划天数">
                     <template slot-scope="scope">
-                        <el-input v-model.number="scope.row.planDays"></el-input>
+                        <el-input v-model="scope.row.planDays" :placeholder="defaultDays[scope.row.id]"></el-input>
                     </template>
                 </el-table-column>
                 <el-table-column label="负责人">
@@ -141,16 +152,53 @@
                 <el-button @click="addRelationSubVisible = false">取 消</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="模板关联子流程" :visible.sync="addTempleteRelationSubVisible" width="50%">
+            <el-table :data="relationTemplateSub">
+                <el-table-column prop="name" label="名称">
+                </el-table-column>
+                <el-table-column label="难度">
+                    <template slot-scope="scope">
+                        <el-select v-model="scope.row.level" :placeholder="curLevel + ''" @change="getPlanDays(scope.row)">
+                            <el-option v-for="item in levelInfo" :key="item" :value="item">
+                            </el-option>
+                        </el-select>
+                    </template>
+                </el-table-column>
+                <el-table-column label="计划天数">
+                    <template slot-scope="scope">
+                        <el-input v-model.number="scope.row.planDays"
+                            :placeholder="defaultDays[scope.row.id] + ''"></el-input>
+                    </template>
+                </el-table-column>
+                <el-table-column label="负责人">
+                    <template slot-scope="scope">
+                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择负责人">
+                            <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                                <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                    :value="item.value">
+                                </el-option>
+                            </el-option-group>
+                        </el-select>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="addRelationByTemplate()">确 定</el-button>
+                <el-button @click="addTempleteRelationSubVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { mapActions, mapState } from 'vuex'
 import { getUserList, getUserStatus } from '@/api/user'
-import { addCase, getList, editCase } from '@/api/case'
+import { addCase, getList, editCase, deleteCase } from '@/api/case'
 import { checkResult } from '@/utils/common'
-import { getAllSub, getPresetDays } from '@/api/sub'
+import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation } from '@/api/caseSub'
+import { getTempleteList, getSubsByTemplateId } from '@/api/templete'
 export default {
     data() {
         return {
@@ -175,6 +223,8 @@ export default {
             newFlag: 0,
             //新增关联子流程表单显示标志位
             addRelationSubVisible: false,
+            //模板新增关联子流程表单显示标志位
+            addTempleteRelationSubVisible: false,
             // 新增专案表单校验规则
             addCaseRules: {
                 name: [
@@ -209,10 +259,14 @@ export default {
             allUser: [],
             //所有子流程数据
             relationSub: [],
+            //所有模板添加子流程数据
+            relationTemplateSub: [],
             // 所有难度数据
             levelInfo: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             //要插入数据库的数据
-            insertInfo: []
+            insertInfo: [],
+            //所有模板数据
+            templateList: []
         }
     },
     computed: {
@@ -278,7 +332,7 @@ export default {
                 // 获得正确的负责人值
                 this.addCaseForm.director = this.addCaseForm.directors[1]
                 this.addCaseForm.createUser = this.user.id
-                if (this.newFlag = 0)
+                if (this.newFlag === 0)
                     var res = await addCase(this.addCaseForm)
                 else
                     var res = await editCase(this.addCaseForm)
@@ -290,9 +344,9 @@ export default {
             })
         },
         //打开添加子流程弹窗口
-        openAddRelationSub() {
+        async openAddRelationSub() {
             //获取子流程数据
-            this.getAllSub()
+            await this.getAllSub()
             //获取负责人列表
             this.getAllUser()
             this.addRelationSubVisible = true
@@ -300,8 +354,19 @@ export default {
         //初始化所有子流程数据
         async getAllSub() {
             const res = await getAllSub()
+            //存储默认的计划天数
+            this.defaultDays = {}
             if (res.code === 200) {
                 this.relationSub = res.data
+                //绑定默认难度下的每个流程的计划天数
+                for (var i = 0; i < this.relationSub.length; i++) {
+                    const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
+                    this.defaultDays[this.relationSub[i].id] = r.data
+                    if (i <= 5) {
+                        this.relationSub[i].chargeId = [this.curDirector]
+                    }
+                }
+                console.log(this.defaultDays)
             } else {
                 this.$message.error(res.msg)
                 return
@@ -318,10 +383,10 @@ export default {
             }
         },
         //获取子流程特定难度的对应的计划天数
-        async getPresetDays(obj) {
-            obj.subId = obj.id
-            const res = await getPresetDays(obj)
-            this.$set(obj, 'planDays', res.data)
+        async getPresetDays(row) {
+            row.subId = row.id
+            const res = await getPresetDay({ subId: row.subId, level: row.level })
+            this.$set(row, 'planDays', res.data)
         },
         //选择子流程后的回调函数
         handleSelectionChange(val) {
@@ -339,10 +404,21 @@ export default {
                 return
             }
             for (var i = 0; i < this.insertInfo.length; i++) {
+                this.insertInfo[i].subId = this.insertInfo[i].id
+                //查看计划天数是否有值，没有则赋值为默认值
                 if (!("planDays" in this.insertInfo[i]) || this.insertInfo[i].planDays <= 0) {
-                    this.$message.error("有阶段的计划天数为空或者小于等于0，请检查输入")
-                    return
+
+                    if (this.defaultDays[this.insertInfo[i].id] === null) {
+                        this.$message.error("部分阶段的计划天数为空或者小于等于0，请检查输入")
+                        return
+                    } else
+                        this.insertInfo[i].planDays = this.defaultDays[this.insertInfo[i].id]
                 }
+                // 难度赋默认值
+                if (!("level" in this.insertInfo[i] || this.insertInfo[i].level === null)) {
+                    this.insertInfo[i].level = this.curLevel
+                }
+
                 this.insertInfo[i].caseId = this.curCaseId
             }
             console.log(this.insertInfo)
@@ -357,12 +433,93 @@ export default {
             }
         },
         //打开添加关联关系菜单界面，并做一些初始化
-        openAddRelationMenu(id) {
-            //获得当前id
-            this.curCaseId = id
+        async openAddRelationMenu(row) {
+            console.log(row)
+            //获得当前id 
+            this.curCaseId = row.id
+            //获取当前难度
+            this.curLevel = row.level
+            //获得当前负责人
+            this.curDirector = row.director
+            //获取模板列表
+            const res = await getTempleteList({ page: 1, pageSize: 20, query: '' })
+            this.templateList = res.data.records
             this.addRelationMenuVisible = true
-        }
-
+        },
+        //删除专案
+        deleteCase(id) {
+            this.$confirm('此操作将永久删除该专案以及关联负责人、子流程信息, 是否继续?', '操作不可逆', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await deleteCase(id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getTableDate()
+                } else {
+                    this.$message.error(res.msg)
+                }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+        },
+        //按模板添加
+        async openAddRelationSubByTemplate(id) {
+            //获取模板对应的子流程数据
+            const res = await getSubsByTemplateId(id)
+            if (res.code === 200) {
+                this.relationTemplateSub = res.data
+                await this.setDefaultRelationSub()
+            } else {
+                this.$message.error(res.msg)
+            }
+            this.addTempleteRelationSubVisible = true
+        },
+        //模板添加进入数据库
+        async addRelationByTemplate() {
+            for (var i = 0; i < this.relationTemplateSub.length; i++) {
+                this.relationTemplateSub[i].subId = this.relationTemplateSub[i].id
+                if (!('level' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].level === null)
+                    this.relationTemplateSub[i].level = this.curLevel
+                if (!('planDays' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].planDays === null)
+                    this.relationTemplateSub[i].planDays = this.defaultDays[this.relationTemplateSub[i].id]
+                this.relationTemplateSub[i].caseId = this.curCaseId
+            }
+            console.log(this.relationTemplateSub)
+            const res = await insertRelation(this.relationTemplateSub)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.addTempleteRelationSubVisible = false
+                this.addRelationMenuVisible = false
+                this.getTableDate()
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        //设置默认值
+        async setDefaultRelationSub() {
+            //存储模板表格默认的计划天数
+            this.defaultDays = {}
+            //绑定默认难度下的每个流程的计划天数
+            for (var i = 0; i < this.relationTemplateSub.length; i++) {
+                const r = await getPresetDay({ subId: this.relationTemplateSub[i].id, level: this.curLevel })
+                this.defaultDays[this.relationTemplateSub[i].id] = r.data
+                if (this.relationTemplateSub[i].id <= 6) {
+                    this.relationTemplateSub[i].chargeId = [this.curDirector]
+                }
+            }
+            
+        },
+        //获取子流程特定难度的对应的计划天数
+        async getPlanDays(row) {
+            row.subId = row.id
+            const res = await getPresetDay({ subId: row.subId, level: row.level })
+            this.$set(row, 'planDays', res.data)
+        },
     }
 }
 </script>
