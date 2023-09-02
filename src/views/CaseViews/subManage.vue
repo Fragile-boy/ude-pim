@@ -3,6 +3,7 @@
         <!-- 面包屑导航区域 -->
         <div>
             <el-breadcrumb separator="/">
+                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
                 <el-breadcrumb-item>专案管理</el-breadcrumb-item>
                 <el-breadcrumb-item>子流程管理</el-breadcrumb-item>
             </el-breadcrumb>
@@ -33,6 +34,7 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-button type="primary" icon="el-icon-edit" @click="openEditSub(scope.row)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" @click="removeSub(scope.row)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -43,10 +45,26 @@
             </el-pagination>
         </el-card>
         <!-- 子流程新增区域 -->
-        <el-dialog title="新增子流程" :visible.sync="addSubFormVisible" width="30%" @close="subForm.name = null">
-            <el-form :model="subForm" label-width="90px">
-                <el-form-item label="子流程名称">
-                    <el-input v-model="subForm.name"></el-input>
+        <el-dialog title="新增子流程" :visible.sync="addSubFormVisible" width="30%" @close="resetFields()">
+            <el-form ref="subFormRef" :model="subForm" label-width="100px" :rules="subFormRules">
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="子流程名称" prop="name">
+                            <el-input v-model="subForm.name"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="子流程序号" prop="sort">
+                            <el-input v-model.number="subForm.sort"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <label
+                        style="display: flex; justify-content: center; font-size: 20px; margin-bottom: 3px;">难度对应执行天数</label>
+                </el-row>
+                <el-form-item v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :label="`难度:${item}`" :key="item">
+                    <el-input :placeholder="item" v-model.number="subForm.l2p[item - 1]"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -58,9 +76,25 @@
 
         <!-- 子流程修改区域 -->
         <el-dialog title="修改子流程" :visible.sync="editSubFormVisible" width="30%" @close="subForm.name = null">
-            <el-form :model="subForm" label-width="90px">
-                <el-form-item label="子流程名称">
-                    <el-input v-model="subForm.name"></el-input>
+            <el-form ref="editSubFormRef" :model="subForm" label-width="90px">
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="子流程名称" prop="name">
+                            <el-input v-model="subForm.name"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="子流程序号" prop="sort">
+                            <el-input v-model.number="subForm.sort"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+                <el-row>
+                    <label
+                        style="display: flex; justify-content: center; font-size: 20px; margin-bottom: 3px;">难度对应执行天数</label>
+                </el-row>
+                <el-form-item v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :label="`难度:${item}`" :key="item">
+                    <el-input :placeholder="item" v-model.number="subForm.l2p[item - 1]"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -72,7 +106,7 @@
 </template>
 
 <script>
-import { getSubList, saveSub, updateSub, getAllSub } from '@/api/sub'
+import { getSubList, saveSub, updateSub, getAllSub, deleteSubWithLevel, getSubWithLevel } from '@/api/sub'
 export default {
     data() {
         return {
@@ -87,7 +121,19 @@ export default {
             editSubFormVisible: false,
             subForm: {
                 //新增子流程名称
-                name: null
+                name: '',
+                sort: '',
+                //level to planDays
+                l2p: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            },
+            //子流程表格校验规则
+            subFormRules: {
+                name: [
+                    { required: true, message: '请输入子流程名称', trigger: 'blur' }
+                ],
+                sort: [
+                    { required: true, message: '请输入子流程序号', trigger: 'blur' }
+                ]
             }
         }
     },
@@ -110,29 +156,36 @@ export default {
             this.getSubList()
         },
         // 新增子流程
-        async addSub(mode) {
+        addSub(mode) {
             this.subForm.id = null
-            if (this.subForm.name === '') {
-                this.$message.error("名称不可为空")
-                return
-            }
-            const res = await saveSub(this.subForm)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                if (mode === 1) {
-                    this.addSubFormVisible = false
-                    this.getSubList()
+            this.$refs.subFormRef.validate(async (valid) => {
+                if (valid) {
+                    if (!this.checkLevel(this.subForm.l2p)) {
+                        this.$message.error("计划天数设定不合理，请检查是否有空值或者非正数值")
+                        return
+                    }
+                    const res = await saveSub(this.subForm)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        if (mode === 1) {
+                            this.addSubFormVisible = false
+                            this.getSubList()
+                        }
+                        else if (mode === 2) {
+                            this.resetFields()
+                        }
+                    } else {
+                        this.$message.error(res.msg)
+                    }
                 }
-                else if (mode === 2) {
-                    this.subForm.name = null
-                }
-            } else {
-                this.$message.error(res.msg)
-            }
+            })
+
         },
         //打开修改子流程表单
         async openEditSub(subObj) {
-            this.subForm = { ...subObj }
+            const res = await getSubWithLevel(subObj.id)
+            console.log(res.data)
+            this.subForm = { ...res.data }
             this.editSubFormVisible = true
         },
         //修改子流程
@@ -141,21 +194,62 @@ export default {
                 this.$message.error("名称不可为空")
                 return
             }
-            const res = await updateSub(this.subForm)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                this.editSubFormVisible = false
-                this.getSubList()
-            } else {
-                this.$message.error(res.msg)
+            this.$refs.editSubFormRef.validate(async (valid) => {
+                if (valid) {
+                    if (!this.checkLevel(this.subForm.l2p)) {
+                        this.$message.error("计划天数设定不合理，请检查是否有空值或者非正数值")
+                        return
+                    }
+                    const res = await updateSub(this.subForm)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.editSubFormVisible = false
+                        this.getSubList()
+                    } else {
+                        this.$message.error(res.msg)
+                    }
+                }
+            })
+        },
+        resetFields() {
+            this.subForm = {
+                //新增子流程名称
+                name: '',
+                sort: '',
+                //level to planDays
+                l2p: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
             }
+        },
+        checkLevel(value) {
+            for (var i = 0; i < 10; i++) {
+                if (value[i] === null || value[i] === '')
+                    return false
+                else if (value[i] <= 0)
+                    return false
+            }
+            return true
+        },
+        //删除子流程
+        removeSub(row) {
+            this.$confirm(`你正在删除 "${row.name}"，此操作将永久删除该子流程以及对应计划天数信息，是否继续`, "危险操作", {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'danger'
+            }).then(async () => {
+                const res = await deleteSubWithLevel(row.id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getSubList()
+                } else
+                    this.$message.error(res.msg)
+            }).catch(() => { })
         }
     }
 }
 </script>
 
 <style lang="less" scoped>
-    .query_and_add{
-        margin-bottom: 10px;
-    }
+.query_and_add {
+    margin-bottom: 10px;
+}
 </style>

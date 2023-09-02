@@ -13,8 +13,11 @@ import UserChart from '@/views/UserViews/UserChart.vue'
 import SubForm from '@/views/SubForm.vue'
 import CheckIndex from '@/views/CheckViews/CheckIndex'
 import checkCommit from '@/views/CheckViews/checkCommit'
+import checkException from '@/views/CheckViews/checkException'
 import checkDelay from '@/views/CheckViews/checkDelay'
 import checkFinish from '@/views/CheckViews/checkFinish'
+import checkStudy from '@/views/CheckViews/checkStudy'
+import checkApply from '@/views/CheckViews/checkApply'
 //延期表单界面
 import DelayView from '@/views/DelayView'
 //专案列表界面
@@ -79,6 +82,11 @@ const routes = [
         name:'userList',
         component:UserList
       },
+      {
+        path:'/exception',
+        name:'/exception',
+        component:checkException
+      },
       //延期申请
       {
         path: '/delay',
@@ -90,6 +98,18 @@ const routes = [
         path: '/finish',
         name: 'finish',
         component: checkFinish
+      },
+      // 技术研究申请 
+      {
+        path: '/study',
+        name: 'study',
+        component: checkStudy
+      },
+      // 专案类申请 
+      {
+        path: '/caseApply',
+        name: 'caseApply',
+        component: checkApply
       },
       //专案分析
       {

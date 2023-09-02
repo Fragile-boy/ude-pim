@@ -3,6 +3,7 @@
         <!-- 面包屑导航区域 -->
         <div>
             <el-breadcrumb separator="/">
+                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
                 <el-breadcrumb-item>专案管理</el-breadcrumb-item>
                 <el-breadcrumb-item>专案列表</el-breadcrumb-item>
             </el-breadcrumb>
@@ -43,7 +44,7 @@
                             <el-button type="warning" icon="el-icon-setting"
                                 @click="openAddRelationMenu(scope.row)"></el-button>
                         </el-tooltip>
-                        <el-button type="danger" icon="el-icon-delete" @click="deleteCase(scope.row.id)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" @click="deleteCase(scope.row)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -447,13 +448,13 @@ export default {
             this.addRelationMenuVisible = true
         },
         //删除专案
-        deleteCase(id) {
-            this.$confirm('此操作将永久删除该专案以及关联负责人、子流程信息, 是否继续?', '操作不可逆', {
+        deleteCase(row) {
+            this.$confirm(`此操作将永久删除 “${row.name}” 专案以及关联负责人、子流程信息, 是否继续?`, '操作不可逆', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const res = await deleteCase(id)
+                const res = await deleteCase(row.id)
                 if (res.code === 200) {
                     this.$message.success(res.data)
                     this.getTableDate()

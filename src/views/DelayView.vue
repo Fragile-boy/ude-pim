@@ -1,40 +1,43 @@
 <template>
-    <el-form ref="form" :model="delayApplyObject" :rules="rules" label-width="90px" class="form">
-        <el-form-item label="专案名称:">
-            <el-form-item>{{ caseName }}</el-form-item>
-        </el-form-item>
+    <div>
+        <el-form ref="form" :model="delayApplyObject" :rules="rules" label-width="90px" class="form">
+            <el-form-item label="专案名称:">
+                <el-form-item>{{ caseName }}</el-form-item>
+            </el-form-item>
 
-        <el-form-item label="子流程:">
-            <el-form-item>{{ subName }}</el-form-item>
-        </el-form-item>
+            <el-form-item label="子流程:">
+                <el-form-item>{{ subName }}</el-form-item>
+            </el-form-item>
 
-        <el-form-item label="延期类型" prop="type">
-            <el-select v-model="delayApplyObject.type" placeholder="请选择延期类型">
-                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
-                </el-option>
-            </el-select>
-        </el-form-item>
+            <el-form-item label="延期类型" prop="type">
+                <el-select v-model="delayApplyObject.type" placeholder="请选择延期类型">
+                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
 
-        <el-form-item label="原因描述:" prop="applyReason">
-            <el-input autosize type="textarea" v-model="delayApplyObject.applyReason" placeholder="请输入延期原因描述"></el-input>
-        </el-form-item>
+            <el-form-item label="原因描述:" prop="applyReason">
+                <el-input autosize type="textarea" v-model="delayApplyObject.applyReason"
+                    placeholder="请输入延期原因描述"></el-input>
+            </el-form-item>
 
-        <el-form-item label="申请天数" prop="applyDays">
-            <el-input v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"></el-input>
-        </el-form-item>
+            <el-form-item label="申请天数" prop="applyDays">
+                <el-input v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"></el-input>
+            </el-form-item>
 
 
-        <el-form-item>
-            <el-button type="primary" @click="submitDelayForm('form')">提交</el-button>
-            <el-button @click="$router.back()">返回</el-button>
-        </el-form-item>
-    </el-form>
+            <el-form-item>
+                <el-button type="primary" @click="submitDelayForm('form')">提交</el-button>
+                <el-button @click="$router.back()">返回</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
-import {checkResult} from '@/utils/common'
-import {saveApply} from '@/api/caseDelayApply'
+import { checkResult } from '@/utils/common'
+import { saveApply } from '@/api/caseDelayApply'
 
 export default {
     data() {
@@ -73,9 +76,9 @@ export default {
     },
     created() {
         console.log(this.$route.query.caseSubId)
-        if(this.$route.query.caseSubId===undefined){
+        if (this.$route.query.caseSubId === undefined) {
             this.$message.warning("请不要搞破坏，按照正确流程操作")
-            setTimeout(()=>this.$router.back(),2000)
+            setTimeout(() => this.$router.back(), 2000)
         }
         this.delayApplyObject.caseSubId = this.$route.query.caseSubId
         this.delayApplyObject.applyId = this.user.id
@@ -93,18 +96,18 @@ export default {
                     flag = 0
                 }
             })
-            if(flag===0)
+            if (flag === 0)
                 return
             // console.log(this.delayApplyObject)
             var res = await saveApply(this.delayApplyObject)
             checkResult(res)
-            if(res.code===200)
-                setTimeout(()=>this.$router.back(),1000)
+            if (res.code === 200)
+                setTimeout(() => this.$router.back(), 1000)
         },
-        validateNumber(rule,value,callback){
-            if(value<0){
+        validateNumber(rule, value, callback) {
+            if (value < 0) {
                 callback(new Error("不能是负数"))
-            }else if(value>150){
+            } else if (value > 150) {
                 callback(new Error("申请的次数不能超过15天"))
             }
             callback()

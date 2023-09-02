@@ -1,24 +1,39 @@
 <template>
-    <el-table :data="tableData" style="width: 100%" border>
-        <el-table-column prop="caseName" label="专案" width="300">
-        </el-table-column>
-        <el-table-column prop="subName" label="阶段" width="100">
-        </el-table-column>
-        <el-table-column prop="applyName" label="申请人" width="80">
-        </el-table-column>
-        <el-table-column prop="applyTime" label="申请完结时间" width="120">
-        </el-table-column>
-        <el-table-column label="操作" width="300">
-            <template slot-scope="scope">
-                <el-button type="success" @click="handleCheck(scope.row, 1)">通过</el-button>
-                <el-button type="primary" @click="handleCheck(scope.row, 2)">拒绝</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
+    <div>
+        <!-- 面包屑导航区域 -->
+        <div>
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
+                <el-breadcrumb-item>审批流程</el-breadcrumb-item>
+                <el-breadcrumb-item>完结申请</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <el-card>
+            <div class="btns">
+                <el-button type="info" icon="el-icon-s-order"> 历史记录 </el-button>
+            </div>
+            <el-table :data="tableData" style="width: 100%" border>
+                <el-table-column prop="caseName" label="专案">
+                </el-table-column>
+                <el-table-column prop="subName" label="阶段">
+                </el-table-column>
+                <el-table-column prop="applyName" label="申请人">
+                </el-table-column>
+                <el-table-column prop="applyTime" label="申请完结时间">
+                </el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="success" @click="handleCheck(scope.row, 1)">通过</el-button>
+                        <el-button type="primary" @click="handleCheck(scope.row, 2)">拒绝</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
+    </div>
 </template>
 
 <script>
-import { getFinishApplyList, judgeFinishApply} from '@/api/caseFinishApply'
+import { getFinishApplyList, judgeFinishApply } from '@/api/caseFinishApply'
 import { mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 export default {
@@ -73,4 +88,10 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+.btns {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+</style>

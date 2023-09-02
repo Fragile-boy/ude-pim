@@ -14,3 +14,8 @@ export const getSubByUserId = (userId)=>{
 export const insertRelation = (obj)=>{
     return service.post('/caseSub/saveRelation',obj)
 }
+
+//获得异常子流程
+export const exceptionSub = ()=>{
+    return service.get('/caseSub/exceptionSub')
+}

@@ -1,29 +1,44 @@
 <template>
-    <el-table :data="tableData" style="width: 100%">
-        <el-table-column prop="caseName" label="专案" width="240">
-        </el-table-column>
-        <el-table-column prop="subName" label="阶段" width="100">
-        </el-table-column>
-        <el-table-column prop="type" label="延期类型" width="120">
-        </el-table-column>
-        <el-table-column prop="applyReason" label="延期原因">
-        </el-table-column>
-        <el-table-column prop="applyDays" label="申请天数" width="80">
-        </el-table-column>
-        <el-table-column prop="formatPredictTime" label="预计完成时间" width="120">
-        </el-table-column>
-        <el-table-column prop="applyName" label="申请人" width="80">
-        </el-table-column>
-        <el-table-column prop="applyTime" label="申请创建时间" width="120">
-        </el-table-column>
-        <el-table-column label="操作">
+    <div>
+        <!-- 面包屑导航区域 -->
+        <div>
+            <el-breadcrumb separator="/">
+                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
+                <el-breadcrumb-item>审批流程</el-breadcrumb-item>
+                <el-breadcrumb-item>延期申请</el-breadcrumb-item>
+            </el-breadcrumb>
+        </div>
+        <el-card>
+            <div class="btns">
+                <el-button  type="info" icon="el-icon-s-order"> 历史记录 </el-button>
+            </div>
+            <el-table :data="tableData" style="width: 100%" border>
+                <el-table-column prop="caseName" label="专案" width="240">
+                </el-table-column>
+                <el-table-column prop="subName" label="阶段" width="100">
+                </el-table-column>
+                <el-table-column prop="type" label="延期类型" width="120">
+                </el-table-column>
+                <el-table-column prop="applyReason" label="延期原因">
+                </el-table-column>
+                <el-table-column prop="applyDays" label="申请天数" width="80">
+                </el-table-column>
+                <el-table-column prop="formatPredictTime" label="预计完成时间" width="120">
+                </el-table-column>
+                <el-table-column prop="applyName" label="申请人" width="80">
+                </el-table-column>
+                <el-table-column prop="applyTime" label="申请创建时间" width="120">
+                </el-table-column>
+                <el-table-column label="操作">
 
-            <template slot-scope="scope">
-                <el-button type="success" @click="handleCheck(scope.row, 1)">通过</el-button>
-                <el-button type="primary" @click="handleCheck(scope.row, 2)">拒绝</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
+                    <template slot-scope="scope">
+                        <el-button type="success" @click="handleCheck(scope.row, 1)">通过</el-button>
+                        <el-button type="primary" @click="handleCheck(scope.row, 2)">拒绝</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
+    </div>
 </template>
 
 <script>
@@ -36,7 +51,7 @@ export default {
             tableData: []
         }
     },
-    computed:{
+    computed: {
         ...mapState(['user'])
     },
     created() {
@@ -46,7 +61,7 @@ export default {
         async getDelay() {
             var res = await getApplyList()
             this.tableData = res.data
-            this.tableData.map(item=>{
+            this.tableData.map(item => {
                 item.applyTime = formatDate(item.createTime)
                 item.formatPredictTime = formatDate(item.predictTime)
             })
@@ -58,21 +73,21 @@ export default {
                 flag = await this.$prompt('请输入原因', '您正在拒绝申请', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
-                }).then(({value})=>{
-                    if(value===''||value===null){
+                }).then(({ value }) => {
+                    if (value === '' || value === null) {
                         this.$message.error("请输入拒绝原因")
                         return 0
                     }
                     row.rejectReason = value
                     return 1
-                }).catch(()=>{
+                }).catch(() => {
                     //如果点击取消，则什么也不做
                     return 0
                 })
             }
-            if(flag!==0){
+            if (flag !== 0) {
                 row.status = status
-                row.checkUser=this.user.id
+                row.checkUser = this.user.id
                 // console.log(row)
                 await judgeApply(row)
                 this.$message.success("审核已完成")
@@ -83,4 +98,10 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+    .btns{
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    }
+</style>
