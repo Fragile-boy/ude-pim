@@ -56,7 +56,8 @@
                     </el-col>
                 </el-row>
                 <el-form-item label="内容">
-                    <el-transfer v-model="templeteForm.subIds" :data="allSub" :button-texts="['移除', '添加']" :titles="['源','目标']"
+                    <el-transfer target-order="push" class="custom-transfer" v-model="templeteForm.subIds" :data="allSub"
+                        :button-texts="['移除', '添加']" :titles="['源', '目标']"
                         :props="{ key: 'id', label: 'name' }"></el-transfer>
                 </el-form-item>
             </el-form>
@@ -77,7 +78,8 @@
                     </el-col>
                 </el-row>
                 <el-form-item label="内容">
-                    <el-transfer v-model="editTempleteForm.subIds" :data="allSub" :button-texts="['移除', '添加']" :titles="['源','目标']"
+                    <el-transfer target-order="push" v-model="editTempleteForm.subIds" :data="allSub"
+                        :button-texts="['移除', '添加']" :titles="['源', '目标']"
                         :props="{ key: 'id', label: 'name' }"></el-transfer>
                 </el-form-item>
             </el-form>
@@ -166,7 +168,7 @@ export default {
                 return
             }
             // 校验模板描述
-            if(this.templeteForm.description===''){
+            if (this.templeteForm.description === '') {
                 this.$message.error("模板描述不可为空")
                 return
             }
@@ -186,6 +188,7 @@ export default {
             this.$set(this.editTempleteForm, 'description', temObj.description);
             const res = await getRelationId(temObj.id)
             // this.editTempleteForm.subIds = res.data
+            console.log(res.data)
             this.$set(this.editTempleteForm, 'subIds', res.data);
             this.editTempleteFormVisible = true
             console.log(this.editTempleteForm)
@@ -197,7 +200,7 @@ export default {
                 return
             }
             // 校验模板描述
-            if(this.editTempleteForm.description===''){
+            if (this.editTempleteForm.description === '') {
                 this.$message.error("模板描述不可为空")
                 return
             }
@@ -211,16 +214,28 @@ export default {
             }
         },
         //删除模板
-        async deleteTemplete(id){
-            const res = await removeTemplete(id)
-            if(res.code===200){
-                this.$message.success(res.data)
-                this.getTempleteList()
-            }else{
-                this.$message.error(res.msg)
-            }
+        deleteTemplete(id) {
+            this.$confirm('此操作将永久删除该模板, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await removeTemplete(id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getTempleteList()
+                } else {
+                    this.$message.error(res.msg)
+                }
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            });
+
         }
-        
+
     }
 }
 </script>

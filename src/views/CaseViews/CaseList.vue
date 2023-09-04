@@ -120,6 +120,8 @@
                 @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55">
                 </el-table-column>
+                <el-table-column prop="realSort" label="序号">
+                </el-table-column>
                 <el-table-column prop="name" label="名称">
                 </el-table-column>
                 <el-table-column label="难度">
@@ -267,7 +269,9 @@ export default {
             //要插入数据库的数据
             insertInfo: [],
             //所有模板数据
-            templateList: []
+            templateList: [],
+            //序号数据
+            case_sub_sort: 0
         }
     },
     computed: {
@@ -392,11 +396,26 @@ export default {
         //选择子流程后的回调函数
         handleSelectionChange(val) {
             this.insertInfo = val
-            console.log(this.insertInfo)
+            var sort = 1;
+            //清空原来的realSort
+            for (var j = 0; j < this.relationSub.length; j++) {
+                this.relationSub[j].realSort = null
+            }
+            for (var i = 0; i < this.insertInfo.length; i++) {
+                for (var j = 0; j < this.relationSub.length; j++) {
+                    if (this.relationSub[j].id === this.insertInfo[i].id) {
+                        this.relationSub[j].realSort = sort
+                        sort++
+                        break
+                    }
+                }
+            }
         },
         //关联窗口关闭后回调函数
         addRelationSubClose() {
             this.relationSub = []
+            //elementUI的bug，关闭窗口的时候会触发一次handleSelectionChange
+            this.case_sub_sort = -1
         },
         //插入数据库
         async addRelation() {
@@ -513,7 +532,7 @@ export default {
                     this.relationTemplateSub[i].chargeId = [this.curDirector]
                 }
             }
-            
+
         },
         //获取子流程特定难度的对应的计划天数
         async getPlanDays(row) {
