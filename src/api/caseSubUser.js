@@ -6,5 +6,10 @@ export const countUser = (caseSubId) => {
 
 //移除负责人
 export const removeDirector = (obj) => {
-    return service.delete(`/caseSubUser`, { params: obj })
+    return service.delete(`/caseSubUser`, {params:obj})
+}
+
+//添加负责人
+export const setDirector = (obj) => {
+    return service.post('/caseSubUser/setDirector', obj)
 }

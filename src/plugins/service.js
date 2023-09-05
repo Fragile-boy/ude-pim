@@ -3,9 +3,12 @@ import axios from "axios";
 import { Message } from "element-ui";
 
 const service = axios.create({
-  baseURL: "http://localhost",
+  baseURL: "http://192.168.1.176:80",
   timeout: 1000 * 60,
   withCredentials: true,
+  headers:{
+    'Content-Type':'application/json',
+  }
 });
 
 

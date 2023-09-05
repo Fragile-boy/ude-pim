@@ -19,3 +19,7 @@ export const insertRelation = (obj)=>{
 export const exceptionSub = ()=>{
     return service.get('/caseSub/exceptionSub')
 }
+
+export const updateCaseSub=(obj)=>{
+    return service.put('/caseSub/updateCaseSub',obj)
+}
