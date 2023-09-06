@@ -1,5 +1,5 @@
 <template>
-    <div class="subView" style="text-align: center;">
+    <div class="subView">
         <!-- 面包屑导航区域 -->
         <div>
             <el-breadcrumb separator="/">
@@ -177,70 +177,89 @@
                             <el-button @click="commitVisible = false">取 消</el-button>
                         </span>
                     </el-dialog>
-                    <!-- 显示修改框 -->
-                    <el-dialog title="提示" :visible.sync="editCaseSubVisible" width="40%">
-                        <el-form :model="curCaseSubObj" label-width="100px">
-                            <el-row>
-                                <el-col :span="12">
-                                    <el-form-item label="修改难度">
-                                        <el-select v-model="curCaseSubObj.level" :placeholder="curCaseSubObj?curCaseSubObj.level:'请选择难度'">
-                                            <el-option v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="item"
-                                                :label="item" :value="item">
-                                            </el-option>
-                                        </el-select>
-                                    </el-form-item>
-                                </el-col>
-                                <el-col :span="12">
-                                    <el-form-item label="计划天数">
-                                        <el-input v-model="curCaseSubObj.planDays"></el-input>
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
 
-
-                            <!-- 开始时间 -->
-                            <el-form-item label="开始时间">
-                                <el-date-picker v-model="curCaseSubObj.startTime" type="date" placeholder="开始日期">
-                                </el-date-picker>
-                            </el-form-item>
-
-                            <!-- 结束时间 -->
-
-                            <el-form-item label="结束时间">
-                                <el-date-picker v-model="curCaseSubObj.finishTime" type="date" placeholder="结束时间">
-                                </el-date-picker>
-                            </el-form-item>
-
-
-                            <el-row>
-                                <!-- 外界因素延期 -->
-                                <el-col :span="12">
-                                    <el-form-item label="外界延期">
-                                        <el-input v-model="curCaseSubObj.unforcedDays"></el-input>
-                                    </el-form-item>
-                                </el-col>
-                                <!-- 人为因素延期 -->
-                                <el-col :span="12">
-                                    <el-form-item label="人为延期">
-                                        <el-input v-model="curCaseSubObj.applyDelay"></el-input>
-                                    </el-form-item>
-                                </el-col>
-                            </el-row>
-
-                            <el-form-item label="负责人">
-                                <el-transfer :button-texts="['移除', '添加']" :titles="['源', '目标']"
-                                    :props="{ key: 'id', label: 'name' }" target-order="push" v-model="curCaseSubObj.chargeId"></el-transfer>
-                            </el-form-item>
-
-                        </el-form>
-                        <span slot="footer" class="dialog-footer">
-                            <el-button @click="editCaseSubVisible = false">取 消</el-button>
-                            <el-button type="primary" @click="editCaseSubVisible = false">修 改</el-button>
-                        </span>
-                    </el-dialog>
                 </div>
             </div>
         </el-card>
+
+        <!-- 显示分配积分比例框 -->
+        <el-dialog title="确定积分比例" :visible.sync="editDirectorRate" width="30%">
+            <el-table :data="directorList" style="width: 100%">
+                <el-table-column prop="name" label="姓名">
+                </el-table-column>
+                <el-table-column label="比例">
+                    <template slot-scope="scope">
+                        <el-input type="number" v-model.number="scope.row.value"></el-input>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editDirectorRate = false">取 消</el-button>
+                <el-button type="primary" @click="submitDirectorRate()">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 显示修改框 -->
+        <el-dialog title="编辑子阶段" :visible.sync="editCaseSubVisible" width="50%">
+            <el-form ref="editCaseSubRef" :model="curCaseSubObj" label-width="90px">
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="修改难度">
+                            <el-select v-model="curCaseSubObj.level"
+                                :placeholder="curCaseSubObj ? curCaseSubObj.level + '' : '请选择难度'" @change="getPlanDays()">
+                                <el-option v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="item" :label="item"
+                                    :value="item">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="计划天数">
+                            <el-input v-model="curCaseSubObj.planDays"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
+                <!-- 开始时间 -->
+                <el-form-item label="开始时间">
+                    <el-date-picker v-model="curCaseSubObj.startTime" type="date" placeholder="开始日期">
+                    </el-date-picker>
+                </el-form-item>
+
+                <!-- 结束时间 -->
+
+                <el-form-item label="结束时间">
+                    <el-date-picker v-model="curCaseSubObj.finishTime" type="date" placeholder="结束时间">
+                    </el-date-picker>
+                </el-form-item>
+
+                <el-row>
+                    <!-- 外界因素延期 -->
+                    <el-col :span="12">
+                        <el-form-item label="外界延期">
+                            <el-input v-model="curCaseSubObj.unforcedDays"></el-input>
+                        </el-form-item>
+                    </el-col>
+                    <!-- 人为因素延期 -->
+                    <el-col :span="12">
+                        <el-form-item label="人为延期">
+                            <el-input v-model="curCaseSubObj.applyDelay"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
+                <el-form-item label="负责人">
+                    <el-transfer v-model="curCaseSubObj.chargeId" :data="editUser" :button-texts="['移除', '添加']"
+                        :titles="['源', '目标']" :props="{ key: 'id', label: 'name' }"></el-transfer>
+                </el-form-item>
+
+            </el-form>
+
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editCaseSubVisible = false">取 消</el-button>
+                <el-button type="primary" @click="enableEdit()">修 改</el-button>
+            </span>
+        </el-dialog>
 
         <!-- 显示指定负责人窗口 -->
         <el-dialog title="阶段暂无负责人" :visible.sync="setDirectorVisible" width="30%">
@@ -263,10 +282,11 @@
 import { formatDate, getStatus, timeAdd } from '@/utils/common'
 import { getSubList, getSubByUserId, updateCaseSub } from '@/api/caseSub'
 import { mapState } from 'vuex'
-import { removeDirector, countUser, setDirector } from '@/api/caseSubUser'
+import { removeDirector, countUser, setDirector, finishSubWithValue } from '@/api/caseSubUser'
 import { getDelayByStatus } from '@/api/caseDelayApply'
 import { getById, saveCommit } from '@/api/caseSubCommit';
 import { getUserList } from '@/api/user'
+import { getPresetDay } from '@/api/sub'
 
 export default {
     data() {
@@ -314,13 +334,18 @@ export default {
                     children: []
                 }
             ],
+            //穿梭框显示的科员
+            editUser: [],
             //存储指定负责人的时候的id
             directors: null,
             //打开指定负责人界面的时候，标识是给哪个子流程指定
             curCaseSub: null,
             //修改专案子流程界面的显示
             editCaseSubVisible: false,
-            curCaseSubObj:{}
+            curCaseSubObj: {},
+            //显示分配子流程积分比例界面
+            editDirectorRate: false,
+            directorList: []
         }
     },
     computed: {
@@ -491,13 +516,21 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const res = await updateCaseSub({ id: row.id, finishTime: formatDate(new Date()) + " 00:00:00" })
-                if (res.code === 200) {
-                    this.$message.success(res.data)
-                    this.getSubInfo(this.caseId)
-                } else {
-                    this.$message.error(res.msg)
+                const res = await countUser(row.id)
+                this.directorList = res.data
+                if(this.directorList.length!==0)
+                    this.initEditDirectorRate(row)
+                else{
+                    //没有负责人
+                    const res = await updateCaseSub({ id: row.id, finishTime: formatDate(new Date()) + " 00:00:00" })
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.getSubInfo(this.caseId)
+                    } else {
+                        this.$message.error(res.msg)
+                    }
                 }
+
             }).catch((error) => {
                 console.log(error)
                 this.$message({
@@ -545,6 +578,7 @@ export default {
         async getAllUser() {
             const res = await getUserList()
             if (res.code === 200) {
+                this.editUser = res.data
                 res.data.forEach((item) => {
                     this.allUser[item.status].children.push(item)
                 })
@@ -574,11 +608,59 @@ export default {
             }
         },
         //打开编辑专案表单
-        openEditCaseSub(row){
-            console.log(row)
-            this.curCaseSubObj =  {...row}
-            console.log(this.curCaseSubObj)
+        openEditCaseSub(row) {
+            this.curCaseSubObj = { ...row }
             this.editCaseSubVisible = true
+        },
+        //修改专案子流程表单
+        async enableEdit() {
+            //处理日期格式
+            if (this.curCaseSubObj.startTime !== null) {
+                this.curCaseSubObj.startTime = formatDate(this.curCaseSubObj.startTime) + " 00:00:00"
+            }
+            if (this.curCaseSubObj.finishTime !== null) {
+                this.curCaseSubObj.finishTime = formatDate(this.curCaseSubObj.finishTime) + " 00:00:00"
+            }
+            console.log(this.curCaseSubObj)
+            var res = await updateCaseSub(this.curCaseSubObj)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.getSubInfo(this.caseId)
+                this.editCaseSubVisible = false
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        //修改难度后同步计划天数
+        async getPlanDays() {
+            const res = await getPresetDay({ subId: this.curCaseSubObj.subId, level: this.curCaseSubObj.level })
+            if (res.code === 200)
+                this.$set(this.curCaseSubObj, 'planDays', res.data)
+            else
+                this.$message.error(res.msg)
+        },
+        //打开分配比例界面
+        async initEditDirectorRate(row) {
+            this.editDirectorRate = true
+        },
+        //提交积分比例（插入比例数据，修改子流程完结状态）
+        async submitDirectorRate(){
+            //检查积分比例是否合理
+            var sum = 0;
+            this.directorList.forEach(item=>{
+                sum+=item.value
+            })
+            if(sum!==1){
+                this.$message.error("积分总和不为1，请检查积分比例")
+                return
+            }
+            const res = await finishSubWithValue(this.directorList)
+            if(res.code===200){
+                this.$message.success(res.data)
+                this.editDirectorRate = false
+                this.getSubInfo(this.caseId)
+            }else
+                this.$message.error(res.msg)
         }
     }
 }

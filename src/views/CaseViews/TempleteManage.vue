@@ -135,6 +135,7 @@ export default {
             const res = await getAllSub()
             if (res.code === 200) {
                 this.allSub = res.data
+                console.log(this.allSub)
             } else {
                 this.$message.error(res.msg)
                 return
