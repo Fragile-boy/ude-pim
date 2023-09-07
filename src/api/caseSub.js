@@ -5,6 +5,11 @@ export const getSubList = (caseId)=>{
     return service.get(`caseSub/list/${caseId}`)
 }
 
+//根据专案id获取以负责人为基本单位的列表数据
+export const listFocusPerson = (caseId)=>{
+    return service.get(`caseSub/listFocusPerson/${caseId}`)
+}
+
 //根据科员id获取其未完成的子流程列表
 export const getSubByUserId = (userId)=>{
     return service.get(`/caseSub/director/${userId}`)

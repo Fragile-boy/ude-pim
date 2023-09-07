@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFind from '@/views/NotFind.vue'
 import CaseSubView from '@/views/CaseSubView.vue'
+import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
 import UserView from '@/views/UserViews/UserView.vue'
 import UserNotice from '@/views/UserViews/UserNotice.vue'
 import User4Case from '@/views/UserViews/User4Case.vue'
@@ -57,6 +58,12 @@ const routes = [
         path: '/case2sub',
         name: 'case-sub',
         component: CaseSubView
+      },
+      // 按个人分的子流程详情页
+      {
+        path: '/case2person',
+        name: 'case-person',
+        component: CasePersonView
       },
       // 专案列表
       {

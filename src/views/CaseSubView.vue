@@ -30,14 +30,16 @@
                                         </el-col>
 
                                         <el-col :span="3">
-                                            <el-tag v-if="scope.row.directorRate!=null"  type="warning" class="chargeNameTag">
-                                                积分比例：{{ scope.row.directorRate[index] }}
+                                            <el-tag v-if="scope.row.directorRate != null" type="warning"
+                                                class="chargeNameTag">
+                                                积分比例：{{ (scope.row.directorRate[index]).toFixed() }} %
                                             </el-tag>
                                         </el-col>
 
                                         <el-col :span="3">
-                                            <el-tag v-if="scope.row.directorRate!=null"  type="warning" class="chargeNameTag">
-                                                积分：{{ (scope.row.directorRate[index]*scope.row.value).toFixed(2) }}
+                                            <el-tag v-if="scope.row.directorRate != null" type="warning"
+                                                class="chargeNameTag">
+                                                积分：{{ ((scope.row.directorRate[index] * scope.row.value*1.0)/100).toFixed(2) }}
                                             </el-tag>
                                         </el-col>
                                     </el-row>
@@ -214,7 +216,7 @@
                 </el-table-column>
                 <el-table-column label="比例">
                     <template slot-scope="scope">
-                        <el-input type="number" v-model="scope.row.value"></el-input>
+                        <el-input type="number" v-model="scope.row.value" placeholder="例：33，单位%"></el-input>
                     </template>
                 </el-table-column>
             </el-table>
@@ -275,7 +277,16 @@
 
                 <el-form-item label="负责人">
                     <el-transfer v-model="curCaseSubObj.chargeId" :data="editUser" :button-texts="['移除', '添加']"
-                        :titles="['源', '目标']" :props="{ key: 'id', label: 'name' }"></el-transfer>
+                        :titles="['源', '目标']" :props="{ key: 'id', label: 'name' }"
+                        v-if="curCaseSubObj.finishTime === null">
+                    </el-transfer>
+                    <div v-else>
+                        <el-tag class="chargeNameTag">专案子阶段结束状态下，不可修改负责人</el-tag>
+                        <div>
+                            <el-tag class="chargeNameTag" type="warning" v-for="item in curCaseSubObj.chargeName"
+                                :key="item">{{ item }}</el-tag>
+                        </div>
+                    </div>
                 </el-form-item>
 
             </el-form>
@@ -517,7 +528,7 @@ export default {
         //移除子流程负责人
         async removeDirector(row, index) {
             if (row.finishTime !== null) {
-                this.$message.error('该专案已经结束，负责人信息不可再变更');
+                this.$message.error('该阶段已经结束，负责人信息不可再变更');
                 return
             }
             if (row.chargeId.length === 1) {
@@ -682,8 +693,8 @@ export default {
                 sum += +item.value
             })
             // console.log(sum)
-            if (sum !== 1) {
-                this.$message.error("积分总和不为1，请检查积分比例")
+            if (sum !== 100) {
+                this.$message.error("积分总和不为100，请检查积分比例")
                 return
             }
             const res = await submitDirectorValue(this.directorList)
@@ -714,6 +725,8 @@ export default {
                         });
 
                     })
+                }else{
+                    this.getSubInfo(this.caseId)
                 }
             } else
                 this.$message.error(res.msg)

@@ -61,8 +61,16 @@
             </el-table-column>
             <el-table-column label="操作" width="120">
                 <template slot-scope="scope">
-                    <el-button size="middle" type="info" @click="showSub(scope.row)">查看详情</el-button>
+                    <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
+                        <el-button type="info" size="mini" icon="el-icon-info" round
+                            @click="showSub(scope.row)"></el-button>
+                    </el-tooltip>
+                    <el-tooltip effect="dark" content="个人详情" placement="top" :enterable="false">
+                        <el-button type="danger" size="mini" icon="el-icon-s-custom" round
+                            @click="showPerson(scope.row)"></el-button>
+                    </el-tooltip>
                 </template>
+
             </el-table-column>
         </el-table>
         <!-- 分页区域 -->
@@ -167,6 +175,16 @@ export default {
         showSub(row) {
             this.$router.push({
                 name: 'case-sub',
+                query: {
+                    caseId: row.id,
+                    caseName: row.name
+                }
+            })
+        },
+        //跳转到按个人分类的界面
+        showPerson(row){
+            this.$router.push({
+                name: 'case-person',
                 query: {
                     caseId: row.id,
                     caseName: row.name
