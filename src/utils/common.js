@@ -55,11 +55,11 @@ export function timeAdd() {
     return formatDate(result)
 }
 
-//时间相见
+//时间相减，默认第二个大
 export function timeSub(time1, time2) {
     time1 = new Date(time1)
     time2 = new Date(time2)
-    return Math.ceil((time2 - time1) / (1000 * 24 * 3600))
+    return Math.ceil((time2 - time1) / (1000 * 24 * 3600))+1
 }
 
 

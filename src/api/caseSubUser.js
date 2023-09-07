@@ -16,6 +16,6 @@ export const setDirector = (obj) => {
 }
 
 // 完结状态，并赋值积分比例
-export const finishSubWithValue = (obj) => {
-    return service.put('/caseSubUser/finishSubWithValue', obj)
+export const submitDirectorValue = (obj) => {
+    return service.put('/caseSubUser/submitDirectorValue', obj)
 }

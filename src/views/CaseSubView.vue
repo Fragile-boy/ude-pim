@@ -15,17 +15,30 @@
                 <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
                 <div class="table">
                     <div class="subTable">
-                        <el-table :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
+                        <el-table :cell-style="setCellColor" :data="subInfo" stripe border
+                            @cell-dblclick="handleDoubleClick">
 
                             <el-table-column type="expand">
                                 <template slot-scope="scope">
                                     <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
-                                        <el-col :span="4">
+                                        <el-col :span="2">
                                             <el-tag class="chargeNameTag" closable @close="removeDirector(scope.row, index)"
                                                 @click="getCaseByUserId(scope.row.chargeId[index], item)">
                                                 {{ item }}
                                             </el-tag>
 
+                                        </el-col>
+
+                                        <el-col :span="3">
+                                            <el-tag v-if="scope.row.directorRate!=null"  type="warning" class="chargeNameTag">
+                                                积分比例：{{ scope.row.directorRate[index] }}
+                                            </el-tag>
+                                        </el-col>
+
+                                        <el-col :span="3">
+                                            <el-tag v-if="scope.row.directorRate!=null"  type="warning" class="chargeNameTag">
+                                                积分：{{ (scope.row.directorRate[index]*scope.row.value).toFixed(2) }}
+                                            </el-tag>
                                         </el-col>
                                     </el-row>
                                     <el-tag v-if="scope.row.chargeId.length === 0">暂无负责人</el-tag>
@@ -39,6 +52,9 @@
                             </el-table-column>
 
                             <el-table-column prop="level" label="难度" width="50">
+                            </el-table-column>
+
+                            <el-table-column prop="value" label="积分" width="60">
                             </el-table-column>
 
                             <el-table-column prop="startTime" label="开始时间" width="100">
@@ -60,6 +76,9 @@
                             </el-table-column>
 
                             <el-table-column prop="planDays" label="计划时间" width="110">
+                            </el-table-column>
+
+                            <el-table-column prop="executionDays" label="执行天数" width="110">
                             </el-table-column>
 
                             <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
@@ -98,6 +117,12 @@
                                     <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
                                         <el-button type="primary" size="mini" icon="el-icon-edit" round
                                             @click="openEditCaseSub(scope.row)"></el-button>
+                                    </el-tooltip>
+                                    <el-tooltip
+                                        v-if="scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
+                                        effect="dark" content="分配比例" placement="top" :enterable="false">
+                                        <el-button type="warning" size="mini" icon="el-icon-setting" round
+                                            @click="initEditDirectorRate(scope.row)"></el-button>
                                     </el-tooltip>
                                 </template>
                             </el-table-column>
@@ -189,7 +214,7 @@
                 </el-table-column>
                 <el-table-column label="比例">
                     <template slot-scope="scope">
-                        <el-input type="number" v-model.number="scope.row.value"></el-input>
+                        <el-input type="number" v-model="scope.row.value"></el-input>
                     </template>
                 </el-table-column>
             </el-table>
@@ -279,10 +304,10 @@
 </template>
 
 <script>
-import { formatDate, getStatus, timeAdd } from '@/utils/common'
-import { getSubList, getSubByUserId, updateCaseSub } from '@/api/caseSub'
+import { formatDate, getStatus, timeAdd, timeSub } from '@/utils/common'
+import { getSubList, getSubByUserId, updateCaseSub, startOrFinish } from '@/api/caseSub'
 import { mapState } from 'vuex'
-import { removeDirector, countUser, setDirector, finishSubWithValue } from '@/api/caseSubUser'
+import { removeDirector, countUser, setDirector, submitDirectorValue } from '@/api/caseSubUser'
 import { getDelayByStatus } from '@/api/caseDelayApply'
 import { getById, saveCommit } from '@/api/caseSubCommit';
 import { getUserList } from '@/api/user'
@@ -381,8 +406,20 @@ export default {
                 //实际完成时间
                 this.subInfo[i].finishTime = formatDate(this.subInfo[i].finishTime)
                 this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime)
+                //执行天数
+                if (this.subInfo[i].startTime !== null) {
+                    this.subInfo[i].executionDays = timeSub(this.subInfo[i].startTime, this.subInfo[i].finishTime === null ? new Date() : this.subInfo[i].finishTime)
+                    // 减去外界因素延期
+                    this.subInfo[i].executionDays -= this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
+                }
+                //计算积分
+                if (this.subInfo[i].finishTime !== null) {
+                    this.subInfo[i].value = (this.subInfo[i].planDays * (this.subInfo[i].planDays * 1.0 / this.subInfo[i].executionDays) ** (2 / 3)).toFixed(2)
+                    // if(this.subInfo[i].subName==='配電')
+                    if (this.subInfo[i].subId === 9)
+                        this.subInfo[i].value *= 2
+                }
             }
-            this.pieInfo = this.subInfo
         },
         //显示负责人手头的子流程
         async handleDoubleClick(row, column) {
@@ -479,6 +516,10 @@ export default {
         },
         //移除子流程负责人
         async removeDirector(row, index) {
+            if (row.finishTime !== null) {
+                this.$message.error('该专案已经结束，负责人信息不可再变更');
+                return
+            }
             if (row.chargeId.length === 1) {
                 this.$message.warning('当前阶段仅剩一个负责人，请先增加负责人再删除')
                 return
@@ -510,35 +551,21 @@ export default {
             })
         },
         //手动点了完结阶段
-        finish(row) {
-            this.$confirm('此操作将完结该阶段, 是否继续?', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(async () => {
-                const res = await countUser(row.id)
-                this.directorList = res.data
-                if(this.directorList.length!==0)
-                    this.initEditDirectorRate(row)
-                else{
-                    //没有负责人
-                    const res = await updateCaseSub({ id: row.id, finishTime: formatDate(new Date()) + " 00:00:00" })
-                    if (res.code === 200) {
-                        this.$message.success(res.data)
-                        this.getSubInfo(this.caseId)
-                    } else {
-                        this.$message.error(res.msg)
-                    }
+        async finish(row) {
+
+            // 多个负责人就弹出分配比例，先分配比例再结束
+            if (row.chargeId.length !== 0)
+                this.initEditDirectorRate(row)
+            else {
+                //没有负责人就直接结束
+                const res = await startOrFinish({ id: row.id, finishTime: formatDate(new Date()) + " 00:00:00" })
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getSubInfo(this.caseId)
+                } else {
+                    this.$message.error(res.msg)
                 }
-
-            }).catch((error) => {
-                console.log(error)
-                this.$message({
-                    type: 'info',
-                    message: '已取消完结'
-                });
-
-            })
+            }
         },
         //手动点了开始阶段
         async launch(row) {
@@ -598,7 +625,7 @@ export default {
         // 无负责人启动
         async launchSub(id) {
             //直接开始
-            var res = await updateCaseSub({ id: id, startTime: formatDate(new Date()) + " 00:00:00" })
+            var res = await startOrFinish({ id: id, startTime: formatDate(new Date()) + " 00:00:00" })
             if (res.code === 200) {
                 this.$message.success(res.data)
                 this.setDirectorVisible = false
@@ -641,26 +668,64 @@ export default {
         },
         //打开分配比例界面
         async initEditDirectorRate(row) {
+            //获得负责人列表
+            const res = await countUser(row.id)
+            this.directorList = res.data
+            this.curCaseSubObj = { ...row }
             this.editDirectorRate = true
         },
         //提交积分比例（插入比例数据，修改子流程完结状态）
-        async submitDirectorRate(){
+        async submitDirectorRate() {
             //检查积分比例是否合理
             var sum = 0;
-            this.directorList.forEach(item=>{
-                sum+=item.value
+            this.directorList.forEach(item => {
+                sum += +item.value
             })
-            if(sum!==1){
+            // console.log(sum)
+            if (sum !== 1) {
                 this.$message.error("积分总和不为1，请检查积分比例")
                 return
             }
-            const res = await finishSubWithValue(this.directorList)
-            if(res.code===200){
+            const res = await submitDirectorValue(this.directorList)
+            if (res.code === 200) {
                 this.$message.success(res.data)
                 this.editDirectorRate = false
-                this.getSubInfo(this.caseId)
-            }else
+                //如果没有结束，就弹框提示是否结束
+                if (this.curCaseSubObj.finishTime === null) {
+                    this.$confirm('此操作将完结该阶段, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(async () => {
+
+                        const res = await startOrFinish({ id: this.curCaseSubObj.id, finishTime: formatDate(new Date()) + " 00:00:00" })
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                            this.getSubInfo(this.caseId)
+                        } else {
+                            this.$message.error(res.msg)
+                        }
+
+                    }).catch((error) => {
+                        console.log(error)
+                        this.$message({
+                            type: 'info',
+                            message: '已取消完结'
+                        });
+
+                    })
+                }
+            } else
                 this.$message.error(res.msg)
+        },
+        //设置单元格颜色
+        setCellColor({ row, column, rowIndex, columnIndex }) {
+            if (columnIndex === 5)
+                return 'background-color:#fceadb'
+            else if (columnIndex === 6)
+                return 'background-color:#e1bbb8'
+            else if (columnIndex === 7)
+                return 'background-color:#C6DEF8'
         }
     }
 }
@@ -670,7 +735,6 @@ export default {
 .el-page-header {
     margin-bottom: 10px;
 }
-
 
 
 .chargeName {
