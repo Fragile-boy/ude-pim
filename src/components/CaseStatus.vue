@@ -1,30 +1,22 @@
 <template>
-    <div class="status">
-        <div class="cards">
-            <a href="#">
-                <el-card shadow="hover" class="sub_card">
-                    子阶段审核
-                </el-card>
-            </a>
+    <div class="cards">
+        <el-card shadow="always" class="sub_card">
+            <label class="cardName">专案类</label>
+            <hr>
+            <a href="#">查看详情</a>
+        </el-card>
 
-            <a href="#">
-                <el-card shadow="hover" class="delay_card">
-                    延期审核
-                </el-card>
-            </a>
+        <el-card shadow="always" class="temporary_card">
+            <label class="cardName">临时事务</label>
+            <hr>
+            <a href="#">查看详情</a>
+        </el-card>
 
-            <a href="#">
-                <el-card shadow="hover" class="finish_card">
-                    完结审核
-                </el-card>
-            </a>
-
-            <a href="#">
-                <el-card shadow="hover" class="research_card">
-                    技术研究审核
-                </el-card>
-            </a>
-        </div>
+        <el-card shadow="always" class="research_card">
+            <label class="cardName">技术研究</label>
+            <hr>
+            <a href="#">查看详情</a>
+        </el-card>
     </div>
 </template>
 
@@ -34,38 +26,35 @@ export default {
 }
 </script>
 
-<style scoped>
-.status {
-    display: flex;
-    justify-content: space-between;
+<style lang="less" scoped>
+a {
+    color: aliceblue;
 }
 
 .cards {
     display: flex;
-    width: 800px;
+    justify-content: space-between;
     color: white;
 }
 
 .el-card {
     color: white;
     border-radius: 20px;
-    width: 200px;
+    width: 550px;
+    height: 150px;
+
+    .cardName {
+        font-size: 30px;
+    }
 }
 
-.cards a{
-    text-decoration: none;
-}
 
 .sub_card {
     background-color: rgb(13, 110, 253);
 }
 
-.delay_card {
+.temporary_card {
     background-color: rgb(255, 193, 7);
-}
-
-.finish_card {
-    background-color: rgb(220, 53, 69);
 }
 
 .research_card {

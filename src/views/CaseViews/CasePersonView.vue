@@ -19,12 +19,20 @@
                 <el-table-column prop="finishTime" label="结束时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行天数"></el-table-column>
-                <el-table-column label="执行状态"></el-table-column>
+                <el-table-column label="执行状态">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" v-if="scope.row.status === 0">正在执行</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.status === 1" type="success">正常完成</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.status === 2" type="danger">已延误</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.status === 3" type="warning">延误完成</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.status === 4">未开始</el-tag>
+                    </template>
+                </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" content="计算并复制个人总积分" placement="top">
-                            <el-button class="copy-button" type="primary" icon="el-icon-copy-document" @click="computeSumValue(scope.$index)"
-                                round></el-button>
+                            <el-button class="copy-button" type="primary" icon="el-icon-copy-document"
+                                @click="computeSumValue(scope.$index)" round></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -56,6 +64,26 @@ export default {
             if (res.code === 200) {
                 this.case2person = res.data
                 for (var i = 0; i < this.case2person.length; i++) {
+                    //执行状态
+                    //未开始
+                    if (this.case2person[i].startTime === null)
+                        this.case2person[i].status = 4
+                    else if (this.case2person[i].finishTime === null) {
+                        // 已延误
+                        if (timeSub(this.case2person[i].startTime, new Date()) > this.case2person[i].planDays)
+                            this.case2person[i].status = 2
+                        else {
+                            //正在执行
+                            this.case2person[i].status = 0
+                        }
+
+                    } else {
+                        //正常完成
+                        if (timeSub(this.case2person[i].startTime, this.case2person[i].finishTime) <= this.case2person[i].planDays)
+                            this.case2person[i].status = 1
+                        else
+                            this.case2person[i].status = 3
+                    }
                     //如果结束时间不为空
                     if (this.case2person[i].finishTime !== null) {
                         this.case2person[i].executionDays = timeSub(this.case2person[i].startTime, this.case2person[i].finishTime)
@@ -67,6 +95,7 @@ export default {
                         this.case2person[i].value = (this.case2person[i].sumValue * this.case2person[i].directorRate / 100).toFixed(2)
                     }
                 }
+                console.log(this.case2person)
             } else {
                 this.$message.error(res.msg)
             }
@@ -84,26 +113,25 @@ export default {
         async computeSumValue(index) {
             var userId = this.case2person[index].userId
             var res = 0
-            while (typeof (this.case2person[index].value) !== 'undefined' && this.case2person[index].userId === userId) {
+            while (this.case2person[index] != null && 'value' in this.case2person[index] && this.case2person[index].userId === userId) {
                 res += +this.case2person[index].value
                 index++
             }
+            res = res.toFixed(2)
 
             const clipboard = new Clipboard('.copy-button', {
-                text: () => res+'',
+                text: () => res + '',
             });
 
             clipboard.on('success', () => {
-                this.$message.success(`计算结果：${res}，值已复制到粘贴板中`);
-                console.log("1")
                 // 这里可以添加复制成功后的提示信息
+                this.$message.success(`计算结果：${res}，值已复制到粘贴板中`);
                 clipboard.destroy();
             });
 
             clipboard.on('error', () => {
-                console.log("2")
-                this.$message.success(`复制失败`);
                 // 这里可以添加复制失败后的提示信息
+                this.$message.success(`复制失败`);
                 clipboard.destroy();
             });
         },

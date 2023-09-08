@@ -1,27 +1,36 @@
 <template>
-    <div class="singleBox" style="text-align: center;"
+    <div shadow="always" class="singleBox"
         :class="{ 'normal': leftDay >= 0, 'appliedDelay': leftDay < 0 && leftDelay >= 0, 'delay': leftDay < 0 && leftDelay < 0 }">
-        <label class="caseName">{{ data.caseName }}</label>
-        <div class="caseSubStatus" min-width="500px">
+
+
+        <div class="info_area">
+            <div class="caseName">{{ data.caseName }}</div>
             <div class="subName">{{ data.subName }}</div>
-            <el-progress type="circle" text-color="#ffffff" :stroke-width="15" :percentage="leftRate" :color="showColor"
+            <el-tooltip class="item" effect="dark" content="申请延期" placement="left">
+                <el-button size="mini" type="warning" icon="el-icon-timer" round @click="openDelayApply(data)"></el-button>
+            </el-tooltip>
+            <el-tooltip class="item" effect="dark" content="完结" placement="left">
+                <el-button size="mini" type="success" icon="el-icon-success" round @click="finishCaseSub(data)"></el-button>
+            </el-tooltip>
+        </div>
+
+        <div class="chart_area">
+            <el-progress type="circle" text-color="#ffffff" :stroke-width="10" :percentage="leftRate" :color="showColor"
                 :format="showText"></el-progress>
         </div>
 
-        <div class="operation">
-            <el-button size="medium" type="danger" icon="el-icon-timer" round @click="openDelayApply(data)">申请延期</el-button>
-            <el-button size="medium" type="success" icon="el-icon-success" round @click="finishCaseSub(data)">完结</el-button>
-        </div>
+
 
         <!-- 日期选择组件 -->
         <el-dialog title="请选择完结日期" :visible.sync="isDatePickerVisible">
-            <el-date-picker v-model="selectedFinishDate" type="date" placeholder="请选择完结时间" value-format="yyyy-MM-dd HH:mm:ss"
-                :picker-options="pickerOptions"></el-date-picker>
+            <el-date-picker v-model="selectedFinishDate" type="date" placeholder="请选择完结时间"
+                value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions"></el-date-picker>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="isDatePickerVisible = false">取 消</el-button>
                 <el-button type="primary" @click="confirmFinishDate">确 定</el-button>
             </div>
         </el-dialog>
+
     </div>
 </template>
 
@@ -165,7 +174,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .normal {
     background-color: #A4D8DD;
 }
@@ -180,47 +189,30 @@ export default {
 }
 
 .singleBox {
-    border: 1px solid grey;
-    padding-left: 20px;
-    padding-right: 20px;
-    margin-left: 20px;
-    border-radius: 30px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-}
-
-.singleBox label {
-    font-size: 30px;
-    padding-left: 50px;
-    padding-right: 50px;
-}
-
-
-.singleBox .caseSubStatus {
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
-}
-
-.singleBox .el-progress {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 10px;
     margin-right: 10px;
-    margin-top: 5px;
-}
 
-.singleBox .subName {
-    background-color: #81EEA4;
-    color: white;
-    width: 30%;
-    height: 60px;
-    line-height: 60px;
-    font-size: 20px;
-    margin-top: 30px;
-    border-radius: 30px;
-}
+    >.el-button{
+        margin:0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-
-
-.singleBox .operation {
-    margin-top: -20px;
-    margin-left: -140px;
+    >.info_area {
+        color:#000;
+        > .item{
+            display: block;
+        }
+        display: flex;
+        flex-direction: column;
+        margin-right: 10px;
+        justify-content: space-between;
+        align-items: normal;
+    }
 }
 </style>

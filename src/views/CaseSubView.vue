@@ -39,7 +39,8 @@
                                         <el-col :span="3">
                                             <el-tag v-if="scope.row.directorRate != null" type="warning"
                                                 class="chargeNameTag">
-                                                积分：{{ ((scope.row.directorRate[index] * scope.row.value*1.0)/100).toFixed(2) }}
+                                                积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) / 100).toFixed(2)
+                                                }}
                                             </el-tag>
                                         </el-col>
                                     </el-row>
@@ -93,7 +94,7 @@
                                 :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                                 :filter-method="filterTag" filter-placement="bottom-end">
                                 <template slot-scope="scope">
-                                    <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
+                                    <el-tag effect="dark" :type="showtype(scope.row.status)" disable-transitions>{{
                                         number2status(scope.row.status)
                                     }}</el-tag>
                                 </template>
@@ -479,6 +480,8 @@ export default {
                 return "danger"
             else if (tag === 3)
                 return "warning"
+            else if (tag === 4)
+                return 'info'
         },
 
         number2status(status) {
@@ -725,7 +728,7 @@ export default {
                         });
 
                     })
-                }else{
+                } else {
                     this.getSubInfo(this.caseId)
                 }
             } else
@@ -739,6 +742,10 @@ export default {
                 return 'background-color:#e1bbb8'
             else if (columnIndex === 7)
                 return 'background-color:#C6DEF8'
+            else if (columnIndex === 8)
+                return 'background-color:#B9BFBF'
+            else if (columnIndex === 9)
+                return 'background-color:#B4EBB1'
         }
     }
 }

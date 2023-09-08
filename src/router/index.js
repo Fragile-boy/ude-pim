@@ -89,6 +89,7 @@ const routes = [
         name:'userList',
         component:UserList
       },
+      // 异常状态的专案子阶段
       {
         path:'/exception',
         name:'/exception',
@@ -123,7 +124,19 @@ const routes = [
         path: '/caseAnalysis',
         name: 'caseAnalysis',
         component: caseData
-      }
+      },
+      {
+        // 信息中心页
+        path: '/user/index',
+        name: 'userNotice',
+        component: UserNotice
+      },
+      {
+        // 子流程进度页
+        path: '/user/progress',
+        name: 'user4case',
+        component: User4Case
+      },
     ]
   },
   // 个人管理页
@@ -133,18 +146,8 @@ const routes = [
     component: UserView,
     redirect: '/user/1',
     children: [
-      {
-        // 信息中心页
-        path: '/user/1',
-        name: 'userNotice',
-        component: UserNotice
-      },
-      {
-        // 子流程进度页
-        path: '/user/2',
-        name: 'user4case',
-        component: User4Case
-      },
+      
+      
       {
         // 工作总览表格页
         path: '/user/3',

@@ -4,7 +4,8 @@
     <el-header>
       <img src="@/assets/logo.png" alt="">
       <span>新技研进度管理系统</span>
-      <el-button @click="logout">退出</el-button>
+      <el-button @click="logout">{{ user.name }}<i class="el-icon-switch-button
+"></i></el-button>
     </el-header>
     <!-- 主体区域 -->
     <el-container>
@@ -25,13 +26,16 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 import { logout } from '@/api/login'
 export default {
   data() {
     return {
       isCollapse: false
     }
+  },
+  computed: {
+    ...mapState(['user'])
   },
   methods: {
     toggleCollapse() {

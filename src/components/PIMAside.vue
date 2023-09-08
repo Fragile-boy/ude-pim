@@ -11,10 +11,10 @@
                 <i class="el-icon-s-platform"></i>
                 <span>专案管理</span>
             </template>
-            <el-menu-item index="index"><i class="el-icon-s-tools"></i>主页</el-menu-item>
-            <el-menu-item index="caseList"><i class="el-icon-s-tools"></i>专案列表</el-menu-item>
-            <el-menu-item index="subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
-            <el-menu-item index="templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
+            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>主页</el-menu-item>
+            <el-menu-item index="/caseList"><i class="el-icon-s-tools"></i>专案列表</el-menu-item>
+            <el-menu-item index="/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
+            <el-menu-item index="/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
         </el-submenu>
 
         <el-submenu index="2">
@@ -31,15 +31,6 @@
 
         <el-submenu index="3">
             <template slot="title">
-                <i class="el-icon-s-cooperation"></i>
-                <span>权限管理</span>
-            </template>
-            <el-menu-item><i class="el-icon-s-tools"></i>权限管理</el-menu-item>
-            <el-menu-item><i class="el-icon-s-tools"></i>角色列表</el-menu-item>
-        </el-submenu>
-
-        <el-submenu index="4">
-            <template slot="title">
                 <i class="el-icon-s-data"></i>
                 <span>数据统计</span>
             </template>
@@ -47,7 +38,7 @@
             <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item>
         </el-submenu>
 
-        <el-submenu index="5">
+        <el-submenu index="4">
             <template slot="title">
                 <i class="el-icon-s-custom"></i>
                 <span>部员管理</span>
@@ -55,6 +46,19 @@
             <el-menu-item index="/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
             <el-menu-item><i class="el-icon-s-tools"></i>部员专案管理</el-menu-item>
         </el-submenu>
+
+        <el-submenu index="5">
+            <template slot="title">
+                <i class="el-icon-user"></i>
+                <span>个人中心</span>
+            </template>
+            <el-menu-item index="/user/index"><i class="el-icon-s-tools"></i>个人总览</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>消息中心</el-menu-item>
+            <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+        </el-submenu>
+
+        <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
     </el-menu>
 </template>
 
@@ -97,5 +101,10 @@ export default {
 <style scoped>
 .el-menu {
     border-right: none;
+}
+
+a{
+    text-decoration: none;
+    color:white;
 }
 </style>
