@@ -15,8 +15,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="comment" label="备注"></el-table-column>
-                <el-table-column prop="caseName" label="专案"></el-table-column>
-                <el-table-column prop="subName" label="阶段"></el-table-column>
+                <el-table-column prop="description" label="描述"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="presetTime" label="预计时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
@@ -35,11 +34,41 @@
             </el-table>
         </el-card>
 
-        <el-dialog title="提示" :visible.sync="applyDelayVisible" width="30%" :before-close="handleClose">
-            <span>这是一段信息</span>
+        <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%">
+            <el-form ref="form"  :model="delayApplyObject" label-width="90px" class="form">
+                <el-form-item label="专案名称">
+                    <el-input v-model="delayApplyObject.caseName" disabled></el-input>
+                </el-form-item>
+
+                <el-form-item label="阶段">
+                    <el-input v-model="delayApplyObject.subName" disabled></el-input>
+                </el-form-item>
+
+                <el-form-item label="延期类型" prop="type">
+                    <el-select v-model="delayApplyObject.type" placeholder="请选择延期类型">
+                        <el-option v-for="item in ['外界因素延期','人为因素延期']" :key="item" :label="item" :value="item">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="原因描述:" prop="applyReason">
+                    <el-input autosize type="textarea" v-model="delayApplyObject.applyReason"
+                        placeholder="请输入延期原因描述"></el-input>
+                </el-form-item>
+
+                <el-form-item label="申请天数" prop="applyDays">
+                    <el-input v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"></el-input>
+                </el-form-item>
+
+
+                <el-form-item>
+                    <el-button type="primary" @click="submitDelayForm('form')">提交</el-button>
+                    <el-button @click="$router.back()">返回</el-button>
+                </el-form-item>
+            </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button @click="dialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+                <el-button @click="applyDelayVisible = false">取 消</el-button>
+                <el-button type="primary" @click="applyDelayVisible = false">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -47,37 +76,38 @@
 
 <script>
 import { mapState } from 'vuex'
-import { getSubById, timeSub } from '@/utils/common'
+import { timeSub } from '@/utils/common'
+import { taskList } from '@/api/task'
 export default {
     name: 'case4me',
     data() {
         return {
             userInfo: [],
-            applyDelayVisible:false
+            applyDelayVisible: false,
+            delayApplyObject:{}
         }
     },
     created() {
-        this.getSubByUserId(this.user)
+        this.getTaskByUserId(this.user)
     },
     computed: {
         ...mapState(['user'])
     },
     methods: {
-        async getSubByUserId(user) {
-            const res = await getSubById(user.id)
-            this.userInfo = res
+        async getTaskByUserId(user) {
+            const res = await taskList(user.id)
+            this.userInfo = res.data
 
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
                 //分为已延误和未延误
                 var today = new Date()
-                today.setHours(0, 0, 0, 0)
                 //还未截止
                 if (today <= new Date(this.userInfo[i].presetTime)) {
                     //已经执行了多少天
                     var costDay = timeSub(this.userInfo[i].startTime, today)
                     // 已经执行了多少天/总共多少天
-                    this.userInfo[i].percentage = Math.ceil(costDay / this.userInfo[i].planDays * 100)
+                    this.userInfo[i].percentage = costDay*1.0 / this.userInfo[i].planDays * 100
                 } else {
                     //已经延期了多少天
                     var delayDay = timeSub(this.userInfo[i].presetTime, today)
@@ -92,18 +122,22 @@ export default {
                 this.userInfo[i].comment = this.percentageText(this.userInfo[i])
                 if (this.userInfo[i].percentage > 100)
                     this.userInfo[i].percentage = 100
-                console.log(this.userInfo)
             }
         },
 
         percentageText(row) {
+            console.log(row)
             if ('leftDelay' in row) {
                 if (row.leftDelay >= 0) {
                     return `延期剩余${row.leftDelay}天`
                 }
-                return `已延误${-row.leftDelay}天`
+                return `已延误${row.applyDelay-row.leftDelay}天`
             }
             return `已执行${row.executionDays}天`
+        },
+        openDelayApply(row) {
+            this.applyDelayVisible = true
+            this.delayApplyObject = {...row}
         }
     }
     // computed:{
@@ -121,4 +155,5 @@ li {
 ul {
     display: flex;
 }
+
 </style>
