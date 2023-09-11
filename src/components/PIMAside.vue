@@ -2,7 +2,7 @@
     <el-menu background-color="#343743" 
     text-color="#fff" 
     active-text-color="#409eff" 
-    default-active="index"
+    :default-active="$route.path"
     :collapse="isCollapse"
     :collapse-transition="false"
     router>
@@ -22,11 +22,11 @@
                 <i class="el-icon-s-operation"></i>
                 <span>审批流程</span>
             </template>
-            <el-menu-item index="exception"><i class="el-icon-s-tools"></i>异常专案处理</el-menu-item>
-            <el-menu-item index="delay"><i class="el-icon-s-tools"></i>延期申请</el-menu-item>
-            <el-menu-item index="finish"><i class="el-icon-s-tools"></i>完结申请</el-menu-item>
-            <el-menu-item index="study"><i class="el-icon-s-tools"></i>技术研究申请</el-menu-item>
-            <el-menu-item index="caseApply"><i class="el-icon-s-tools"></i>专案类申请</el-menu-item>
+            <el-menu-item index="/exception"><i class="el-icon-s-tools"></i>异常专案处理</el-menu-item>
+            <el-menu-item index="/delay"><i class="el-icon-s-tools"></i>延期申请</el-menu-item>
+            <el-menu-item index="/finish"><i class="el-icon-s-tools"></i>完结申请</el-menu-item>
+            <el-menu-item index="/study"><i class="el-icon-s-tools"></i>技术研究申请</el-menu-item>
+            <el-menu-item index="/caseApply"><i class="el-icon-s-tools"></i>专案类申请</el-menu-item>
         </el-submenu>
 
         <el-submenu index="3">

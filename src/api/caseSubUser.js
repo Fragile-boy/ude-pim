@@ -19,3 +19,8 @@ export const setDirector = (obj) => {
 export const submitDirectorValue = (obj) => {
     return service.put('/caseSubUser/submitDirectorValue', obj)
 }
+
+//修改或者添加任务描述
+export const updateDescription=(obj)=>{
+    return service.put('/caseSubUser/updateDescription',obj)
+}

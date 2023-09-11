@@ -34,3 +34,7 @@ export const updateCaseSub=(obj)=>{
 export const startOrFinish=(obj)=>{
     return service.put('/caseSub/startOrFinish',obj)
 }
+
+export const unfinishedSubList=(obj)=>{
+    return service.get(`/caseSub/unfinishedSubList`,{params:obj})
+}

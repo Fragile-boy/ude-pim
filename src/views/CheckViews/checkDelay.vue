@@ -10,24 +10,29 @@
         </div>
         <el-card>
             <div class="btns">
-                <el-button  type="info" icon="el-icon-s-order"> 历史记录 </el-button>
+                <el-button type="info" icon="el-icon-s-order"> 历史记录 </el-button>
             </div>
             <el-table :data="tableData" style="width: 100%" border>
-                <el-table-column prop="caseName" label="专案" width="240">
+                <el-table-column label="类型">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                        <el-tag effect="dark" type="info" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                    </template>
                 </el-table-column>
-                <el-table-column prop="subName" label="阶段" width="100">
+                <el-table-column prop="description" label="描述">
                 </el-table-column>
-                <el-table-column prop="type" label="延期类型" width="120">
+                <el-table-column prop="delayType" label="延期类型">
                 </el-table-column>
                 <el-table-column prop="applyReason" label="延期原因">
                 </el-table-column>
-                <el-table-column prop="applyDays" label="申请天数" width="80">
+                <el-table-column prop="applyDays" label="申请天数">
                 </el-table-column>
-                <el-table-column prop="formatPredictTime" label="预计完成时间" width="120">
+                <el-table-column prop="formatPredictTime" label="预计完成时间">
                 </el-table-column>
-                <el-table-column prop="applyName" label="申请人" width="80">
+                <el-table-column prop="applyName" label="申请人">
                 </el-table-column>
-                <el-table-column prop="applyTime" label="申请创建时间" width="120">
+                <el-table-column prop="applyTime" label="申请创建时间">
                 </el-table-column>
                 <el-table-column label="操作">
 
@@ -99,9 +104,9 @@ export default {
 </script>
 
 <style scoped>
-    .btns{
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 15px;
-    }
+.btns {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
 </style>

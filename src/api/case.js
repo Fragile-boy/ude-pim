@@ -29,3 +29,8 @@ export const getById = (id)=>{
 export const deleteCase= (id)=>{
     return service.delete(`/case/${id}`)
 }
+
+//获取所有未完成的专案列表
+export const unFinishedCaseList = ()=>{
+    return service.get("/case/unFinishedCaseList")
+}

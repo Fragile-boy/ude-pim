@@ -43,7 +43,7 @@
             <el-table-column>
               <template slot-scope="scope">
                 <el-tag effect="dark" type="success" v-if="scope.row.type === 0">专案类</el-tag>
-                <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
+                <el-tag effect="dark" type="info" v-if="scope.row.type === 1">临时事务</el-tag>
                 <el-tag effect="dark" v-if="scope.row.type === 2">技术研究</el-tag>
               </template>
             </el-table-column>
