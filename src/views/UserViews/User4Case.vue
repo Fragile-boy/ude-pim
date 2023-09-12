@@ -14,7 +14,7 @@
                 </el-col>
 
                 <el-col :span="3">
-                    <el-button type="primary" icon="el-icon-plus">申请技术研究</el-button>
+                    <el-button type="primary" icon="el-icon-plus" @click="applyTaskVisible = true">申请技术研究</el-button>
                 </el-col>
             </el-row>
             <br>
@@ -102,7 +102,8 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="申请参与专案子流程" :visible.sync="applyCaseSubVisible" width="40%" @close="$refs.applyCaseSubFormRef.resetFields()">
+        <el-dialog title="申请参与专案子流程" :visible.sync="applyCaseSubVisible" width="40%"
+            @close="$refs.applyCaseSubFormRef.resetFields()">
             <el-form ref="applyCaseSubFormRef" :rules="applyCaseSubRules" :model="applyCaseSubUser" label-width="100px">
                 <el-row>
                     <el-col :span="12">
@@ -134,6 +135,28 @@
                 <el-button type="primary" @click="submitApplyCaseSub()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="申请任务" :visible.sync="applyTaskVisible" width="30%" @close="$refs.applyTaskFormRef.resetFields()">
+            <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="80px">
+                <el-form-item label="任务类型" prop="type">
+                    <el-select v-model="applyTask.type" placeholder="请选择任务类型">
+                        <el-option v-for="item in [{ label: '技术研究', value: 2 }, { label: '临时事务', value: 1 }]"
+                            :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="任务描述" prop="description">
+                    <el-input type="textarea" placeholder="请输入任务描述" v-model="applyTask.description"></el-input>
+                </el-form-item>
+                <el-form-item label="预估时间" prop="planDays">
+                    <el-input type="number" placeholder="请输入预估完成时间（天）" v-model.number="applyTask.planDays"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="applyTaskVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitApplyTask()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -146,7 +169,8 @@ import { taskList } from '@/api/task'
 import { saveApply } from '@/api/caseDelayApply'
 import { saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
-import {saveApplyCaseSub} from '@/api/applyCaseSub'
+import { saveApplyCaseSub } from '@/api/applyCaseSub'
+import {saveApplyTask} from '@/api/applyTask'
 
 export default {
     name: 'case4me',
@@ -154,6 +178,13 @@ export default {
         var checkDays = (rule, value, callback) => {
             if (value <= 0 || value > 15)
                 callback(new Error("申请天数必须在1-15之间"))
+            callback()
+        }
+        var checkPlandays = (rule, value, callback) => {
+            if (value === null || value === '')
+                callback(new Error("申请天数不能为空"))
+            if (value < 1)
+                callback(new Error("申请天数必须大于1"))
             callback()
         }
         return {
@@ -172,15 +203,27 @@ export default {
                     { required: true, message: '请选择延期类型', trigger: 'change' }
                 ]
             },
-            applyCaseSubRules:{
-                caseId:[
-                    {required:true, message:'请选择专案',trigger:'change'}
+            applyCaseSubRules: {
+                caseId: [
+                    { required: true, message: '请选择专案', trigger: 'change' }
                 ],
-                caseSubId:[
-                    {required:true,message:"请选择子流程",trigger:'blur'}
+                caseSubId: [
+                    { required: true, message: "请选择子流程", trigger: 'blur' }
                 ],
-                description:[
-                    {required:true,message:'请填写工作内容描述',trigger:'blur'}
+                description: [
+                    { required: true, message: '请填写工作内容描述', trigger: 'blur' }
+                ]
+            },
+            applyTaskRules: {
+                type: [
+                    { required: true, message: '请选择任务类型', trigger: 'blur' }
+                ],
+                description: [
+                    { required: true, message: '请填写任务内容描述', trigger: 'blur' }
+                ],
+                planDays: [
+                    { required: true, message: '申请天数不能为空', trigger: 'blur' },
+                    { validator: checkPlandays, trigger: 'blur' }
                 ]
             },
             //完结的时候确认工作内容
@@ -193,7 +236,10 @@ export default {
             //所有未完成的专案列表
             unFinishedCaseList: [],
             //所有未完成的子流程列表
-            unfinishedSubList: []
+            unfinishedSubList: [],
+            //专案研究显示
+            applyTaskVisible: false,
+            applyTask: {}
         }
     },
     created() {
@@ -216,6 +262,7 @@ export default {
                 this.userInfo[i].presetTime = presetTime
                 //分为已延误和未延误
                 var today = new Date()
+                today.setHours(0, 0, 0, 0)
                 //还未截止
                 if (today <= this.userInfo[i].presetTime) {
                     //已经执行了多少天
@@ -223,8 +270,8 @@ export default {
                     // 已经执行了多少天/总共多少天
                     this.userInfo[i].percentage = costDay * 1.0 / this.userInfo[i].planDays * 100
                 } else {
-                    //已经延期了多少天
-                    var delayDay = timeSub(this.userInfo[i].presetTime, today)
+                    //已经延期了多少天(这里不能算预计时间当天，所以必须要-1)
+                    var delayDay = timeSub(this.userInfo[i].presetTime, today) - 1
                     //计算延误期限
                     this.userInfo[i].leftDelay = this.userInfo[i].applyDelay - delayDay
                     //判断是否在延期期限内
@@ -337,7 +384,7 @@ export default {
                 this.$message.error(res.error)
             }
         },
-        async getUnfinishedCaseList(){
+        async getUnfinishedCaseList() {
             const res = await unFinishedCaseList()
             if (res.code === 200) {
                 this.unFinishedCaseList = res.data
@@ -352,7 +399,7 @@ export default {
         //专案变化的回调函数
         async getUnfinishedSubList() {
             this.applyCaseSubUser.caseSubId = null
-            const res = await unfinishedSubList({caseId:this.applyCaseSubUser.caseId,userId:this.user.id})
+            const res = await unfinishedSubList({ caseId: this.applyCaseSubUser.caseId, userId: this.user.id })
             if (res.code === 200) {
                 this.unfinishedSubList = res.data
             } else {
@@ -361,23 +408,38 @@ export default {
             }
         },
         // 子流程变化的回调函数
-        flushCaseSubId(){
+        flushCaseSubId() {
             this.$forceUpdate()
         },
         //申请子流程
-        submitApplyCaseSub(){
-            this.$refs.applyCaseSubFormRef.validate(async (valid)=>{
-                if(valid){
+        submitApplyCaseSub() {
+            this.$refs.applyCaseSubFormRef.validate(async (valid) => {
+                if (valid) {
                     this.applyCaseSubUser.applyId = this.user.id
                     const res = await saveApplyCaseSub(this.applyCaseSubUser)
-                    if(res.code===200){
+                    if (res.code === 200) {
                         this.$message.success(res.data)
                         this.applyCaseSubVisible = false
+                    } else {
+                        this.$message.error(res.msg)
+                    }
+                }
+            })
+        },
+        submitApplyTask() {
+            this.$refs.applyTaskFormRef.validate(async (valid) => {
+                if (valid) {
+                    this.applyTask.applyId = this.user.id
+                    const res = await saveApplyTask(this.applyTask)
+                    if(res.code===200){
+                        this.applyTaskVisible = false
+                        this.$message.success(res.data)
                     }else{
                         this.$message.error(res.msg)
                     }
                 }
             })
+
         }
     }
 }

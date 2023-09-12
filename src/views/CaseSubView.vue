@@ -48,49 +48,46 @@
                                 </template>
                             </el-table-column>
 
-                            <el-table-column prop="subName" label="子流程" width="120">
+                            <el-table-column prop="subName" label="子流程">
                             </el-table-column>
 
-                            <el-table-column prop="number" label="专案下序号" width="100">
+                            <el-table-column prop="level" label="难度">
                             </el-table-column>
 
-                            <el-table-column prop="level" label="难度" width="50">
+                            <el-table-column prop="value" label="积分">
                             </el-table-column>
 
-                            <el-table-column prop="value" label="积分" width="60">
-                            </el-table-column>
-
-                            <el-table-column prop="startTime" label="开始时间" width="100">
+                            <el-table-column prop="startTime" label="开始时间">
                             </el-table-column>
 
                             <!-- 阶段目标时间：实际开始时间+预设时间 -->
-                            <el-table-column prop="targetTime" label="阶段目标时间" width="110">
+                            <el-table-column prop="targetTime" label="阶段目标时间">
                             </el-table-column>
 
                             <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
-                            <el-table-column prop="standardTime" label="目标完成时间" width="110">
+                            <el-table-column prop="standardTime" label="目标完成时间">
                             </el-table-column>
 
                             <!-- 理想完成时间：所有流程都正常结束的时间 -->
-                            <el-table-column prop="ideaTime" label="预计完成时间" width="110">
+                            <el-table-column prop="ideaTime" label="预计完成时间">
                             </el-table-column>
 
-                            <el-table-column prop="finishTime" label="实际结束时间" width="110">
+                            <el-table-column prop="finishTime" label="实际结束时间">
                             </el-table-column>
 
-                            <el-table-column prop="planDays" label="计划时间" width="110">
+                            <el-table-column prop="planDays" label="计划时间">
                             </el-table-column>
 
-                            <el-table-column prop="executionDays" label="执行天数" width="110">
+                            <el-table-column prop="executionDays" label="执行天数">
                             </el-table-column>
 
-                            <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
+                            <el-table-column prop="unforcedDays" label="外界因素延期">
                             </el-table-column>
 
-                            <el-table-column prop="applyDelay" label="人为因素延期" width="110">
+                            <el-table-column prop="applyDelay" label="人为因素延期">
                             </el-table-column>
 
-                            <el-table-column prop="status" label="执行状态" width="100"
+                            <el-table-column prop="status" label="执行状态"
                                 :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
                                 :filter-method="filterTag" filter-placement="bottom-end">
                                 <template slot-scope="scope">
@@ -211,13 +208,18 @@
         </el-card>
 
         <!-- 显示分配积分比例框 -->
-        <el-dialog title="确定积分比例" :visible.sync="editDirectorRate" width="30%">
+        <el-dialog title="确定积分比例" :visible.sync="editDirectorRate" width="40%">
             <el-table :data="directorList" style="width: 100%">
                 <el-table-column prop="name" label="姓名">
                 </el-table-column>
                 <el-table-column label="比例">
                     <template slot-scope="scope">
                         <el-input type="number" v-model="scope.row.value" placeholder="例：33，单位%"></el-input>
+                    </template>
+                </el-table-column>
+                <el-table-column label="工作描述">
+                    <template slot-scope="scope">
+                        <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
                     </template>
                 </el-table-column>
             </el-table>
@@ -442,15 +444,25 @@ export default {
 
         },
         async getUnforcedDays(row) {
-            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '外界因素延期' })
+            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '外界因素延期' })
             this.delayList = res.data
-            this.delayList.map(item => item.predictTime = formatDate(item.predictTime))
+            this.delayList.map(item => {
+                item.predictTime = formatDate(item.predictTime)
+                item.type = "外界因素延期"
+                item.caseName = row.caseName
+                item.subName = row.subName
+            })
             this.delayDrawer = true
         },
         async getApplyDelay(row) {
-            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, type: '人为因素延期' })
+            var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '人为因素延期' })
             this.delayList = res.data
-            this.delayList.map(item => item.predictTime = formatDate(item.predictTime))
+            this.delayList.map(item => {
+                item.predictTime = formatDate(item.predictTime)
+                item.type = "人为因素延期"
+                item.caseName = row.caseName
+                item.subName = row.subName
+            })
             this.delayDrawer = true
         },
         async getCaseByUserId(id, name) {
@@ -461,10 +473,11 @@ export default {
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].startTime = formatDate(this.userInfo[i].startTime)
                 const presetTime = new Date(this.userInfo[i].startTime)
-                this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays))
+                //要算开始当天，所以必须-1
+                this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays-1))
                 this.userInfo[i].status = getStatus(this.userInfo[i].startTime, this.userInfo[i].presetTime, this.userInfo[i].finishTime)
-                this.userInfo[i].deadLine = Math.floor(this.userInfo[i].status == 0 ? (new Date(this.userInfo[i].presetTime) - new Date().setHours(0, 0, 0, 0)) / (1000 * 3600 * 24) :
-                    (new Date(new Date().setHours(0, 0, 0, 0) - new Date(this.userInfo[i].presetTime))) / (1000 * 3600 * 24))
+                //如果是还没有完成，时间相减正常算，如果已经延期，则要-1，比如9.2截止，9.1那天还剩2天，9.3那天延期1天
+                this.userInfo[i].deadLine = this.userInfo[i].status === 0 ? timeSub(new Date(),this.userInfo[i].presetTime) :timeSub(this.userInfo[i].presetTime,new Date())-1
             }
             this.drawer = true
         },
@@ -736,15 +749,15 @@ export default {
         },
         //设置单元格颜色
         setCellColor({ row, column, rowIndex, columnIndex }) {
-            if (columnIndex === 5)
+            if (columnIndex === 4)
                 return 'background-color:#fceadb'
-            else if (columnIndex === 6)
+            else if (columnIndex === 5)
                 return 'background-color:#e1bbb8'
-            else if (columnIndex === 7)
+            else if (columnIndex === 6)
                 return 'background-color:#C6DEF8'
-            else if (columnIndex === 8)
+            else if (columnIndex === 7)
                 return 'background-color:#B9BFBF'
-            else if (columnIndex === 9)
+            else if (columnIndex === 8)
                 return 'background-color:#B4EBB1'
         }
     }

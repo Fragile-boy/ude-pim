@@ -59,6 +59,8 @@ export function timeAdd() {
 export function timeSub(time1, time2) {
     time1 = new Date(time1)
     time2 = new Date(time2)
+    time1.setHours(0,0,0,0)
+    time2.setHours(0,0,0,0)
     return Math.floor((time2 - time1) / (1000 * 24 * 3600))+1
 }
 

@@ -8,14 +8,26 @@
                 <el-breadcrumb-item>完结申请</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
-        <el-card>
+        <el-card v-if="checkHistoryVisible === false">
             <div class="btns">
-                <el-button type="info" icon="el-icon-s-order"> 历史记录 </el-button>
+                <el-row>
+                    <el-col :span="4" :offset="9">
+                        <h1>审核完结申请</h1>
+                    </el-col>
+                    <el-col :span="2" :offset="9">
+                    <el-button type="info" icon="el-icon-s-order" @click="openHistory()"> 历史记录 </el-button>
+                </el-col>
+                </el-row>
             </div>
             <el-table :data="tableData" style="width: 100%" border>
-                <el-table-column prop="caseName" label="专案">
+                <el-table-column label="类型">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                        <el-tag effect="dark" type="info" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                    </template>
                 </el-table-column>
-                <el-table-column prop="subName" label="阶段">
+                <el-table-column prop="description" label="描述">
                 </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
                 </el-table-column>
@@ -29,23 +41,88 @@
                 </el-table-column>
             </el-table>
         </el-card>
+        <!-- 显示分配积分比例框 -->
+        <el-dialog title="确定积分比例" :visible.sync="editDirectorRate" width="40%">
+            <el-table :data="directorList" style="width: 100%">
+                <el-table-column prop="name" label="姓名">
+                </el-table-column>
+                <el-table-column label="比例">
+                    <template slot-scope="scope">
+                        <el-input type="number" v-model="scope.row.value" placeholder="例：33，单位%"></el-input>
+                    </template>
+                </el-table-column>
+                <el-table-column label="工作描述">
+                    <template slot-scope="scope">
+                        <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editDirectorRate = false">取 消</el-button>
+                <el-button type="primary" @click="submitDirectorRate()">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 显示审核记录的图层 -->
+        <el-card v-if="checkHistoryVisible">
+            <el-page-header @back="checkHistoryVisible = false" content="完结审核历史记录"></el-page-header>
+            <el-table :data="checkedApplyList" style="width: 100%">
+                <el-table-column label="结果">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" type="success" v-if="scope.row.status === 1">通过</el-tag>
+                        <el-tag effect="dark" type="danger" v-else-if="scope.row.status === 2">拒绝</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="rejectReason" label="拒绝原因">
+                </el-table-column>
+                <el-table-column prop="applyName" label="申请人">
+                </el-table-column>
+                <el-table-column prop="createTime" label="申请时间">
+                </el-table-column>
+                <el-table-column prop="description" label="描述">
+                </el-table-column>
+                <el-table-column prop="checkName" label="审核人">
+                </el-table-column>
+                <el-table-column prop="checkTime" label="审核时间">
+                </el-table-column>
+            </el-table>
+            <el-pagination style="margin-top: 10px;" @size-change="handleSizeChange" @current-change="handleCurrentChange"
+                :current-page="queryInfo.page" :page-sizes="[5, 8, 10, 15]" :page-size="queryInfo.pageSize"
+                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            </el-pagination>
+        </el-card>
     </div>
 </template>
 
 <script>
-import { getFinishApplyList, judgeFinishApply } from '@/api/caseFinishApply'
+import { getFinishApplyList, judgeFinishApply, endHistory } from '@/api/caseFinishApply'
 import { mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
+import { countUser, submitDirectorValue } from '@/api/caseSubUser'
 export default {
     data() {
         return {
-            tableData: []
+            tableData: [],
+            editDirectorRate: false,
+            curObj: {},
+            directorList: [],
+            //审核记录
+            checkHistoryVisible: false,
+            queryInfo: {
+                page: 1,
+                pageSize: 5
+            },
+            total: 0,
+            //已审核的列表
+            checkedApplyList: []
         }
     },
     computed: {
         ...mapState(['user'])
     },
     created() {
+        const pageSize = +localStorage.getItem("pim_check_finish_pageSize")
+        this.queryInfo.pageSize = pageSize === 0 ? 5 : pageSize
         this.getFinish()
     },
     methods: {
@@ -57,41 +134,126 @@ export default {
             })
         },
         async handleCheck(row, status) {
-            //这里catch的return不能结束方法的执行，他表示该promise对象的返回值，所以用外部标志位来决定是否执行后面的逻辑
-            var flag = 1
-            if (status === 2) {
-                flag = await this.$prompt('请输入原因', '您正在拒绝申请', {
+            row.status = status
+            row.checkUser = this.user.id
+            this.curObj = { ...row }
+            //通过
+            if (status === 1) {
+                //意味着这是一个任务
+                if (row.type !== null) {
+                    this.$confirm('您正在通过该任务的完结申请, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(async () => {
+                        const res = await judgeFinishApply(this.curObj)
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                            setTimeout(() => this.getFinish(), 500)
+                        } else {
+                            this.$message.error(res.msg)
+                        }
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消操作'
+                        });
+                    });
+                    return
+                }
+                //打开界面，获取信息
+                const res = await countUser(row.caseSubId)
+                if (res.code !== 200) {
+                    this.$message.error(res.msg)
+                    return
+                }
+                this.directorList = res.data
+                this.editDirectorRate = true
+            } else if (status === 2) {
+                this.$prompt('请输入原因', '您正在拒绝申请', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
-                }).then(({ value }) => {
+                }).then(async ({ value }) => {
                     if (value === '' || value === null) {
                         this.$message.error("请输入拒绝原因")
-                        return 0
+                        return
                     }
+                    row.status = status
+                    row.checkUser = this.user.id
                     row.rejectReason = value
-                    return 1
+                    const res = await judgeFinishApply(row)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        setTimeout(() => this.getFinish(), 500)
+                    } else {
+                        this.$message.error(res.msg)
+                    }
                 }).catch(() => {
                     //如果点击取消，则什么也不做
-                    return 0
+                    return
                 })
             }
-            if (flag !== 0) {
-                row.status = status
-                row.checkUser = this.user.id
-                console.log(row)
-                await judgeFinishApply(row)
-                this.$message.success("审核已完成")
-                setTimeout(() => this.$router.go(0), 1000)
+        },
+        //提交积分比例（插入比例数据，修改子流程完结状态）
+        async submitDirectorRate() {
+            //检查积分比例是否合理
+            var sum = 0;
+            this.directorList.forEach(item => {
+                sum += +item.value
+            })
+            // console.log(sum)
+            if (sum !== 100) {
+                this.$message.error("积分总和不为100，请检查积分比例")
+                return
             }
+            const res = await submitDirectorValue(this.directorList)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.editDirectorRate = false
+                this.$confirm('您正在通过该阶段的完结申请, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    const res = await judgeFinishApply(this.curObj)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        setTimeout(() => this.getFinish(), 500)
+                    } else {
+                        this.$message.error(res.msg)
+                    }
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消操作'
+                    });
+                });
+            } else {
+                this.$message.error(res.msg)
+                return
+            }
+        },
+        openHistory() {
+            this.checkHistoryVisible = true
+            this.checkHistory()
+        },
+        async checkHistory() {
+            const res = await endHistory(this.queryInfo)
+            this.total = res.data.total
+            this.checkedApplyList = res.data.records
+        },
+        handleSizeChange(value) {
+            localStorage.setItem("pim_check_finish_pageSize", value)
+            this.queryInfo.pageSize = value
+            this.queryInfo.page = 1
+            this.checkHistory()
+        },
+        handleCurrentChange(value) {
+            this.queryInfo.page = value
+            this.checkHistory()
         }
     }
 }
 </script>
 
-<style scoped>
-.btns {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 15px;
-}
-</style>
+<style scoped></style>

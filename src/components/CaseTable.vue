@@ -32,27 +32,27 @@
         <el-table :data="pageInfo" border stripe max-height=600 :default-sort="{ prop: 'doingDay', order: 'descending' }">
             <el-table-column type="index" label="编号" width="50">
             </el-table-column>
-            <el-table-column prop="name" label="任务名" width="245">
+            <el-table-column prop="name" label="任务名" width="260">
             </el-table-column>
-            <el-table-column prop="level" label="难度" width="50">
+            <el-table-column prop="level" label="难度" >
             </el-table-column>
-            <el-table-column prop="directorName" label="负责人" width="70">
+            <el-table-column prop="directorName" label="负责人" >
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间" width="110">
+            <el-table-column prop="startTime" label="开始时间" >
             </el-table-column>
-            <el-table-column prop="presetTime" label="预计完成时间" width="110">
+            <el-table-column prop="presetTime" label="预计完成时间" >
             </el-table-column>
-            <el-table-column prop="finishTime" label="实际完成时间" width="110">
+            <el-table-column prop="finishTime" label="实际完成时间" >
             </el-table-column>
-            <el-table-column prop="planDay" label="计划天数" width="90">
+            <el-table-column prop="planDay" label="计划天数" >
             </el-table-column>
-            <el-table-column prop="doingDay" label="执行天数" width="90">
+            <el-table-column prop="doingDay" label="执行天数" >
             </el-table-column>
-            <el-table-column prop="unforcedDay" label="外界因素延期" width="110">
+            <el-table-column prop="unforcedDay" label="外界因素延期" >
             </el-table-column>
-            <el-table-column prop="curStage" label="当前阶段" width="120">
+            <el-table-column prop="curStage" label="当前阶段" >
             </el-table-column>
-            <el-table-column prop="status" label="执行状态" width="100">
+            <el-table-column prop="status" label="执行状态" >
                 <template slot-scope="scope">
                     <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
                     }}</el-tag>

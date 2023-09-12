@@ -11,3 +11,7 @@ export const getFinishApplyList = (obj)=>{
 export const judgeFinishApply = (obj)=>{
     return service.put('/caseSubFinishApply/judgeApply',obj)
 }
+
+export const endHistory = (obj)=>{
+    return service.get('/caseSubFinishApply/history',{params:obj})
+}

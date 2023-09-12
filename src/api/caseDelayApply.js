@@ -16,3 +16,7 @@ export const judgeApply = (params) => {
 export const getDelayByStatus = (params) => {
     return service.post('/caseSubDelayApply/byUserAndStatus', params)
 }
+
+export const delayHistory = (obj)=>{
+    return service.get('/caseSubDelayApply/history',{params:obj})
+}
