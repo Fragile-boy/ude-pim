@@ -102,7 +102,7 @@
                                 <template slot-scope="scope">
                                     <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
                                         <el-button type="info" size="mini" icon="el-icon-info" round
-                                            @click="openCommitView(scope.row)"></el-button>
+                                            @click="openCommentView(scope.row)"></el-button>
                                     </el-tooltip>
                                     <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
                                         v-if="scope.row.startTime === null">
@@ -509,7 +509,7 @@ export default {
             else if (status === 4)
                 return "未开始"
         },
-        async openCommitView(caseSub) {
+        async openCommentView(caseSub) {
             this.commitVisible = true
             this.commitForm.subName = caseSub.subName
             this.commitForm.caseSubId = caseSub.id

@@ -35,6 +35,18 @@ export const startOrFinish=(obj)=>{
     return service.put('/caseSub/startOrFinish',obj)
 }
 
+
+//获取专案id下，非userId负责的，所有尚未完成的子流程
 export const unfinishedSubList=(obj)=>{
     return service.get(`/caseSub/unfinishedSubList`,{params:obj})
+}
+
+//数据分析调用接口，获取当月所有完成的子流程
+export const analysis=(obj)=>{
+    return service.get("/caseSub/analysis",{params:obj})
+}
+
+//计划完成的总数
+export const planFinishCount=(obj)=>{
+    return service.get("/caseSub/planFinishCount",{params:obj})
 }

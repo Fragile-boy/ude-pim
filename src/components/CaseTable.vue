@@ -149,8 +149,9 @@ export default {
         ...mapState('caseM', ['caseList', 'queryList'])
     },
     created() {
+        var pageSize=+localStorage.getItem('pim_caseTable_pageSize')
+        this.page=pageSize===0?7:pageSize
         this.caseInfo = this.caseList
-        console.log(this.caseInfo)
         this.getTableDate()
     },
     watch: {
@@ -267,6 +268,7 @@ export default {
         },
         //页面大小发生变化
         handleSizeChange(val) {
+            localStorage.setItem('pim_caseTable_pageSize',val)
             this.size = val
             this.page = 1
             this.getTableDate()
