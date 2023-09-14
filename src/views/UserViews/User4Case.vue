@@ -21,7 +21,7 @@
             <br>
             <!-- 执行任务的详情 -->
             <el-table :data="userInfo">
-                <el-table-column label="进度">
+                <el-table-column label="进度" width="260">
                     <template slot-scope="scope">
                         <el-progress :stroke-width="24" :percentage="scope.row.percentage"
                             :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'"></el-progress>
@@ -37,8 +37,10 @@
                 </el-table-column>
                 <el-table-column prop="description" label="描述"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
-                <el-table-column prop="presetTime" label="预计时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column prop="executionDays" label="执行时间"></el-table-column>
+                <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
+                <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" content="申请延期" placement="left">
@@ -53,6 +55,19 @@
                 </el-table-column>
             </el-table>
         </el-card>
+
+        <br>
+        <div class="charts-area">
+            <el-card class="pie-chart">
+                <h1>任务类别</h1><span>(近半年)</span>
+                <div id="taskType" style="width: 100%; height: 400px;"></div>
+            </el-card>
+            <el-card class="bar-chart">
+                <h1>任务达成</h1><span>(近半年)</span>
+                <div id="taskAchieve" style="width: 100%; height: 400px"></div>
+            </el-card>
+        </div>
+
 
         <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%" @close="closeApplyDelay">
             <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="90px" class="form">
@@ -165,12 +180,12 @@ import { mapState } from 'vuex'
 import { timeSub, formatDate } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList } from '@/api/caseSub'
-import { taskList } from '@/api/task'
+import { taskList, recentTaskList, recentHalfYear } from '@/api/task'
 import { saveApply } from '@/api/caseDelayApply'
 import { saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
 import { saveApplyCaseSub } from '@/api/applyCaseSub'
-import {saveApplyTask} from '@/api/applyTask'
+import { saveApplyTask } from '@/api/applyTask'
 
 export default {
     name: 'case4me',
@@ -239,12 +254,16 @@ export default {
             unfinishedSubList: [],
             //专案研究显示
             applyTaskVisible: false,
-            applyTask: {}
+            applyTask: {},
         }
     },
     created() {
         this.getTaskByUserId(this.user)
         this.getUnfinishedCaseList()
+    },
+    mounted() {
+        this.initPie(),
+            this.initBur()
     },
     computed: {
         ...mapState(['user'])
@@ -268,7 +287,7 @@ export default {
                     //已经执行了多少天
                     var costDay = timeSub(this.userInfo[i].startTime, today)
                     // 已经执行了多少天/总共多少天
-                    this.userInfo[i].percentage = costDay * 1.0 / this.userInfo[i].planDays * 100
+                    this.userInfo[i].percentage = costDay * 1.0 / (this.userInfo[i].planDays + +this.userInfo[i].unforcedDays) * 100
                 } else {
                     //已经延期了多少天(这里不能算预计时间当天，所以必须要-1)
                     var delayDay = timeSub(this.userInfo[i].presetTime, today) - 1
@@ -294,7 +313,8 @@ export default {
                 }
                 return `已延误${row.applyDelay - row.leftDelay}天`
             }
-            return `已执行${row.executionDays}天`
+            //算上今天，剩余天数+1
+            return `执行剩余${row.planDays + +row.unforcedDays + 1 - row.executionDays}天`
         },
         //打开dialog时的回调函数
         openDelayApply(row) {
@@ -431,27 +451,185 @@ export default {
                 if (valid) {
                     this.applyTask.applyId = this.user.id
                     const res = await saveApplyTask(this.applyTask)
-                    if(res.code===200){
+                    if (res.code === 200) {
                         this.applyTaskVisible = false
                         this.$message.success(res.data)
-                    }else{
+                    } else {
                         this.$message.error(res.msg)
                     }
                 }
             })
 
+        },
+        //初始化饼状图
+        async initPie() {
+            const res = await recentTaskList(this.user.id)
+            var typePie = this.$echarts.init(document.getElementById('taskType'))
+            typePie.setOption({
+                legend: {
+                    orient: 'vertical',
+                    right: 0,
+                    top: 'top'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '<h4>{b}:{c}</h4><br><h4>比例:{d}%<h4>'
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        stillShowZeroSum: false,
+                        data: res.data,
+                        radius: '90%',
+                        itemStyle: {
+                            color: function (params) {
+                                if (params.data.name === "专案类")
+                                    return '#67c23a'
+                                else if (params.data.name === "临时事务")
+                                    return '#e6a23c'
+                                else if (params.data.name === "技术研究")
+                                    return '#409eff'
+                            }
+                        },
+                    },
+
+                ]
+            })
+        },
+        //初始化柱状图
+        async initBur() {
+            var burInfo = this.$echarts.init(document.getElementById('taskAchieve'))
+            const { data: res } = await recentHalfYear(this.user.id)
+            var names = Object.keys(res)
+            names = names.filter(item => item !== 'months').map((item) => {
+                if (item === 'finishCount')
+                    item = '完成任务（件）'
+                else if (item === 'finishDaysCount')
+                    item = '完成任务时长（天）'
+                else if (item === 'taskAchieveRate')
+                    item = '任务达成率'
+                else if (item === 'timeAchieveRate')
+                    item = '时长达成率'
+                return item
+            })
+            burInfo.setOption({
+                legend: {
+                    orient: 'vertical',
+                    data: names,
+                    top: 'top',
+                    right: 0
+                },
+                grid: {
+                    top: '6%',       //柱状图距离父容器div顶端的距离
+                    left: '2%',      //柱状图距离父容器div左端的距离
+                    right: '15%',    //柱状图距离父容器div右端的距离
+                    bottom: '0%',    //柱状图距离父容器div底端的距离
+                    containLabel: true  //grid 区域是否包含坐标轴的刻度标签
+                },
+                xAxis: {
+                    data: res.months
+                },
+                yAxis: [
+                    {
+                        type: "value",
+                        nameTextStyle: {
+                            padding: [0, 50, -50, 200]
+                        },
+                        min: 0,
+                        max: this.calMax(res.finishDaysCount),
+                        splitNumber: 6,
+                        interval: ((this.calMax(res.finishDaysCount) - 0) / 6).toFixed(),
+                    },
+                    {
+                        type: "value",
+                        nameTextStyle: {
+                            padding: [0, 50, -50, 200]
+                        },
+                        min: 0,
+                        max: this.calMax(res.timeAchieveRate),
+                        splitNumber: 6,
+                        interval: ((this.calMax(res.timeAchieveRate) - 0) / 6).toFixed(),
+                        axisLabel: {
+                            formatter: function (v) {
+                                return v.toFixed(2) + '%'; //0表示小数为0位，1表示1位小数，2表示2位小数
+                            }
+                        }
+                    }],
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        var result = params[0].axisValue + '<br/>';
+                        params.forEach(function (item) {
+                            if (item.seriesName.includes('率'))
+                                result += item.marker + item.seriesName + ': ' + item.value + '%<br/>';
+                            else
+                                result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
+                        });
+                        return result;
+                    }
+                },
+                series: [
+                    {
+                        name: names[0],
+                        type: 'bar',
+                        data: res.finishCount,
+                        label: {
+                            show: true, //开启显示
+                            position: 'top', //在上方显示
+                        },
+                    },
+                    {
+                        name: names[1],
+                        type: 'bar',
+                        data: res.finishDaysCount,
+                    },
+                    {
+                        name: names[2],
+                        type: 'line',
+                        data: res.taskAchieveRate,
+                        yAxisIndex: 1,
+                    },
+                    {
+                        name: names[3],
+                        type: 'line',
+                        data: res.timeAchieveRate,
+                        yAxisIndex: 1,
+                    },
+                ]
+            })
+
+        },
+        // 获取最大值方法
+        calMax(arr) {
+            var max = Math.max.apply(null, arr); // 获取最大值方法
+            var maxint = Math.ceil(max / 5); // 向上以5的倍数取整
+            var maxval = maxint * 5 + 5; // 最终设置的最大值
+            return maxval; // 输出最大值
+        },
+        // 获取最小值方法
+        calMin(arr) {
+            var min = Math.min.apply(null, arr); // 获取最小值方法
+            var minint = Math.floor(min / 1); // 向下以1的倍数取整
+            var minval = minint * 1 - 5; // 最终设置的最小值
+            return minval; // 输出最小值
         }
     }
 }
 </script>
 
-<style scoped>
-li {
-    list-style: none;
-    display: inline;
-}
-
-ul {
+<style lang="less" scoped>
+.charts-area {
+    width: 100%;
     display: flex;
+
+    .el-card,
+    .pie-charts {
+        width: 30%;
+        margin-right: 5px;
+    }
+
+    .bar-chart {
+        width: 70%;
+    }
 }
 </style>
