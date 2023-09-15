@@ -126,16 +126,22 @@ const routes = [
         component: caseData
       },
       {
-        // 信息中心页
+        // 个人总览页
         path: '/user/index',
         name: 'userNotice',
         component: UserNotice
       },
       {
-        // 子流程进度页
+        // 执行任务页
         path: '/user/progress',
         name: 'user4case',
         component: User4Case
+      },
+      {
+        // 数据统计页
+        path: '/user/chart',
+        name: 'userChart',
+        component: UserChart
       },
     ]
   },

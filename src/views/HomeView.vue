@@ -59,6 +59,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
+
 .home-container {
   height: 100%;
 }
@@ -76,6 +77,8 @@ export default {
 
 .el-aside {
   background-color: #333744;
+  display: inline-block; //将右侧内联元素变成块级，滚动条出现在下拉列表上
+  overflow: hidden; //隐藏滚动条
 }
 
 .el-main {

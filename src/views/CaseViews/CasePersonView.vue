@@ -148,4 +148,8 @@ export default {
 }
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.el-page-header{
+    margin-bottom: 10px;
+}
+</style>

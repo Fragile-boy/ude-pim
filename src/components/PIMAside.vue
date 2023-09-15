@@ -34,8 +34,8 @@
                 <i class="el-icon-s-data"></i>
                 <span>数据统计</span>
             </template>
-            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案数据分析</el-menu-item>
-            <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item>
+            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
+            <!-- <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item> -->
         </el-submenu>
 
         <el-submenu index="4">
@@ -55,7 +55,7 @@
             <el-menu-item index="/user/index"><i class="el-icon-s-tools"></i>个人总览</el-menu-item>
             <el-menu-item><i class="el-icon-s-tools"></i>消息中心</el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
-            <el-menu-item><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+            <el-menu-item index="/user/chart"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
         </el-submenu>
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
@@ -99,6 +99,7 @@ export default {
 </script>
 
 <style scoped>
+
 .el-menu {
     border-right: none;
 }
