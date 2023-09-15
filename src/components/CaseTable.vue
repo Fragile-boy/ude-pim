@@ -75,7 +75,7 @@
         </el-table>
         <!-- 分页区域 -->
         <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
-            @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 7, 10, 20]" :page-size="size"
+            @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 9,10, 20]" :page-size="size"
             layout="total, sizes, prev, pager, next" :total="total">
         </el-pagination>
     </div>
@@ -89,7 +89,7 @@ export default {
         return {
             pageInfo: [],
             page: 1,
-            size: 7,
+            size: 9,
             total: 0,
             queryText: '',
             caseInfo: [],
@@ -150,7 +150,7 @@ export default {
     },
     created() {
         var pageSize=+localStorage.getItem('pim_caseTable_pageSize')
-        this.page=pageSize===0?7:pageSize
+        this.pageSize=pageSize===0?10:pageSize
         this.caseInfo = this.caseList
         this.getTableDate()
     },

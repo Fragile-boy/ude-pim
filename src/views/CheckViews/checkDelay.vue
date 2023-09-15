@@ -149,12 +149,26 @@ export default {
                     //如果点击取消，则什么也不做
                 })
             } else {
-                const res = await judgeApply(row)
-                if (res.code === 200) {
-                    this.$message.success("已通过审核")
-                    this.getDelay()
-                } else
-                    this.$message.error(res.msg)
+                this.$prompt('请再次核查申请天数', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    inputValue: row.applyDays,
+                    inputPattern: /[1-9]\d?/,
+                    inputErrorMessage: '申请天数至少包含一位数字,且第一位不能为0'
+                }).then(async ({ value }) => {
+                    row.applyDays = +value
+                    const res = await judgeApply(row)
+                    if (res.code === 200) {
+                        this.$message.success("已通过审核")
+                        this.getDelay()
+                    } else
+                        this.$message.error(res.msg)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '取消通过'
+                    });
+                });
             }
         },
         openHistory() {

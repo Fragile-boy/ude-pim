@@ -34,7 +34,10 @@
             @click="showSubList = finishSubList">显示所有</el-button>
           <el-button type="warning" round v-else @click="showPart()">部分显示</el-button>
           <el-tooltip class="item" effect="dark" content="设定达成率上界" placement="top">
-            <el-button icon="el-icon-setting" type="primary" round @click="changeTopRate"></el-button>
+            <el-button icon="el-icon-top" type="success" round @click="changeTopRate"></el-button>
+          </el-tooltip>
+          <el-tooltip class="item" effect="dark" content="不良阈值下限" placement="top">
+            <el-button icon="el-icon-bottom" type="danger" round @click="changeBottomRate"></el-button>
           </el-tooltip>
         </el-col>
       </el-row>
@@ -142,6 +145,7 @@ export default {
       commentVisible: false,
       //最高上限显示
       showTopRate: 0.7,
+      showBottomRate: 0.4,
       statisticsObj: {
         planFinishCount: 0,
         finishCount: 0,
@@ -151,6 +155,12 @@ export default {
     }
   },
   created() {
+    const topRate = +localStorage.getItem("pim_statistic_topRate")
+    if (topRate !== 0)
+      this.showTopRate = topRate
+    const bottomRate = +localStorage.getItem("pim_statistic_bottomRate")
+    if (bottomRate !== 0)
+      this.showBottomRate = bottomRate
     this.getFinishSubList()
   },
   methods: {
@@ -196,9 +206,9 @@ export default {
       return defaultYear
     },
     setCellColor({ row, column, rowIndex, columnIndex }) {
-      if (row.achievingRate >= 0.7)
+      if (row.achievingRate >= this.showTopRate)
         return 'background-color:#ABEFBA'
-      else if (row.achievingRate >= 0.4)
+      else if (row.achievingRate >= this.showBottomRate)
         return 'background-color:#EFEAAB'
       else
         return 'background-color:#F1B9CB'
@@ -230,13 +240,37 @@ export default {
       this.$prompt('请输入达成率上界，低于此达成率的阶段才显示', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
+        inputValue: this.showTopRate,
         inputPattern: /^0.\d+/,
         inputErrorMessage: '达成率必须是0-1之间的小数'
       }).then(({ value }) => {
+        localStorage.setItem("pim_statistic_topRate", value)
         this.showTopRate = value
         this.$message({
           type: 'success',
           message: '当前达成率上界是: ' + value
+        });
+        this.showPart()
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消输入'
+        });
+      });
+    },
+    changeBottomRate() {
+      this.$prompt('请输入不良阈值下限，低于此达成率的阶段会标红显示', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputValue: this.showBottomRate,
+        inputPattern: /^0.\d+/,
+        inputErrorMessage: '达成率必须是0-1之间的小数'
+      }).then(({ value }) => {
+        localStorage.setItem("pim_statistic_bottomRate", value)
+        this.showBottomRate = value
+        this.$message({
+          type: 'success',
+          message: '当前不良阈值下限是: ' + value
         });
         this.showPart()
       }).catch(() => {
