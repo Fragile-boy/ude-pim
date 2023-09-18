@@ -30,6 +30,8 @@ import subManage from '@/views/CaseViews/subManage'
 import TempleteManage from '@/views/CaseViews/TempleteManage'
 //部员列表界面
 import UserList from '@/views/UserViews/UserList'
+import UserProjectManagement from '@/views/UserViews/UserProjectManagement'
+
 import caseData from '@/views/dataViews/caseData'
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
@@ -84,12 +86,8 @@ const routes = [
         name: 'templeteManage',
         component: TempleteManage
       },
-      //部员列表
-      {
-        path: '/userList',
-        name: 'userList',
-        component: UserList
-      },
+
+
       // 异常状态的专案子阶段
       {
         path: '/exception',
@@ -120,12 +118,30 @@ const routes = [
         name: 'caseApply',
         component: checkApply
       },
+
+
       //专案分析
       {
         path: '/caseAnalysis',
         name: 'caseAnalysis',
         component: caseData
       },
+
+
+      //部员列表
+      {
+        path: '/userList',
+        name: 'userList',
+        component: UserList
+      },
+      {
+        // 部员专案管理页
+        path: '/userProject',
+        name:'userProjectManagement',
+        component:UserProjectManagement
+      },
+
+
       {
         // 个人总览页
         path: '/user/index',
@@ -150,6 +166,7 @@ const routes = [
         name: 'userChart',
         component: UserChart
       },
+      
     ]
   },
   // 个人管理页

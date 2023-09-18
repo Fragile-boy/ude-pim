@@ -44,7 +44,8 @@
                 <span>部员管理</span>
             </template>
             <el-menu-item index="/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
-            <el-menu-item><i class="el-icon-s-tools"></i>部员专案管理</el-menu-item>
+            <el-menu-item index="/userProject"><i class="el-icon-s-tools"></i>部员专案统计</el-menu-item>
+            <el-menu-item><i class="el-icon-s-tools"></i>部员专案分析</el-menu-item>
         </el-submenu>
 
         <el-submenu index="5">

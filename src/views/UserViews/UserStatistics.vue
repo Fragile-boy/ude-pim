@@ -13,7 +13,36 @@
           <el-button type="warning" icon="el-icon-right" @click="openCharts">图表统计</el-button>
         </el-col>
 
-        <el-col :span="6" :offset="14">
+        <el-col :span="3" :offset="8">
+          <el-select v-model="curType" placeholder="请选择任务类型" clearable>
+            <el-option v-for="item in [{
+              value: 0,
+              label: '专案类'
+            }, {
+              value: 1,
+              label: '临时事务'
+            }, {
+              value: 2,
+              label: '技术研究'
+            }]" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
+        </el-col>
+
+        <el-col :span="3">
+          <el-select v-model="finishType" placeholder="完成情况" clearable>
+            <el-option v-for="item in [{
+              value: 0,
+              label: '正常'
+            }, {
+              value: 1,
+              label: '延误'
+            }]" :key="item.value" :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
+        </el-col>
+
+        <el-col :span="6">
           <el-date-picker v-model="start_stop_time" type="daterange" align="left" unlink-panels range-separator="——"
             start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions" value-format="yyyy-MM-dd">
           </el-date-picker>
@@ -41,7 +70,7 @@
         <el-table-column prop="executionDays" sortable label="执行时间"></el-table-column>
         <el-table-column prop="unforcedDays" sortable label="外因延期"></el-table-column>
         <el-table-column prop="applyDelay" sortable label="人为延期"></el-table-column>
-        <el-table-column prop="achievingRate" sortable label="达成率"></el-table-column>
+        <el-table-column prop="achievingRate" sortable label="达成率(%)"></el-table-column>
         <el-table-column label="是否延误">
           <template slot-scope="scope">
             <el-tag effect="dark" type="danger" v-if="scope.row.isDelay">延误</el-tag>
@@ -55,24 +84,28 @@
         @current-change="handleCurrentChange" :current-page.sync="pageInfo.page" :page-sizes="[8, 10, 15, 20]"
         :page-size="pageInfo.pageSize" layout="total, sizes, prev, pager, next" :total="total">
       </el-pagination>
-    </el-card>
 
-    <!-- 图表区域 -->
-    <el-dialog title="提示" :visible.sync="userChartVisible" width="100%">
-      <div class="charts-area">
-        <el-card class="pie-chart">
-          <h2>任务类别</h2>
-          <div id="taskType" style="width: 100%; height: 400px;"></div>
-        </el-card>
-        <el-card class="bar-chart">
-          <h2>任务达成</h2>
-          <div id="taskAchieve" style="width: 100%; height: 400px"></div>
-        </el-card>
+      <!-- 显示统计信息 -->
+      <div class="statistics_container">
+        <el-row :gutter="20">
+          <el-col :span="5">
+            <el-statistic :value="statisticsObj.executionDays" title="总执行时长"></el-statistic>
+          </el-col>
+          <el-col :span="5">
+            <el-statistic :value="statisticsObj.delayDays" title="总延误时长"></el-statistic>
+          </el-col>
+          <el-col :span="5">
+            <el-statistic :value="statisticsObj.sumTask" title="完成任务总件数"></el-statistic>
+          </el-col>
+          <el-col :span="5">
+            <el-statistic :precision="2" suffix="%" :value="statisticsObj.taskAchievingRate" title="任务按期达成率"></el-statistic>
+          </el-col>
+          <el-col :span="4">
+            <el-statistic :precision="2" suffix="%" :value="statisticsObj.avgAchievingRate" title="平均达成率"></el-statistic>
+          </el-col>
+        </el-row>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="userChartVisible = false">关 闭</el-button>
-      </span>
-    </el-dialog>
+    </el-card>
   </div>
 </template>
 
@@ -129,9 +162,20 @@ export default {
           }
         }]
       },
-      //图表图层显示
-      userChartVisible: false,
-      typePie: null
+      //当前查看的任务类型
+      curType: null,
+      //完成的情况
+      finishType: null,
+      //统计信息
+      statisticsObj:{
+        executionDays:0,
+        delayDays:0,
+        //记录延误了多少件任务
+        delayTask:0,
+        sumTask:0,
+        taskAchievingRate:0,
+        avgAchievingRate:0,
+      }
     }
   },
   created() {
@@ -150,9 +194,23 @@ export default {
         this.total = this.allTaskList.length
         this.allTaskList.forEach(s => {
           s.executionDays = timeSub(s.startTime, s.finishTime)
-          s.achievingRate = ((s.planDays + +s.unforcedDays) / s.executionDays).toFixed(2)
-          s.isDelay = s.achievingRate < 1
+          //累加执行时长
+          this.statisticsObj.executionDays+=s.executionDays
+          s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
+          s.isDelay = s.achievingRate < 100
+          if(s.isDelay){
+            //累加延误时长
+            this.statisticsObj.delayDays+=s.executionDays-(s.planDays + +s.unforcedDays)
+            this.statisticsObj.delayTask++
+          }
         })
+
+        //计算其他统计信息
+        this.statisticsObj.sumTask = this.allTaskList.length
+        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask===0?0:this.statisticsObj.delayTask*100/this.statisticsObj.sumTask
+        this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask===0?0:(this.statisticsObj.executionDays-this.statisticsObj.delayDays)*100/this.statisticsObj.executionDays
+
+        //筛选信息
         this.filterList = this.allTaskList
         this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
       } else {
@@ -188,13 +246,27 @@ export default {
       this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
     },
     filter() {
-      if (this.start_stop_time === null) {
-        this.getFinishedTaskList()
-        return
+      this.filterList = this.allTaskList
+      //日期筛选
+      if (this.start_stop_time !== null) {
+        const start = this.start_stop_time[0]
+        const end = this.start_stop_time[1]
+        this.filterList = this.filterList.filter(item => item.finishTime >= start && item.finishTime <= end)
       }
-      const start = this.start_stop_time[0]
-      const end = this.start_stop_time[1]
-      this.filterList = this.allTaskList.filter(item => item.finishTime >= start && item.finishTime <= end)
+
+      //任务类型筛选
+      if (this.curType !== null && this.curType !== '') {
+        if (this.curType === 0)
+          this.filterList = this.filterList.filter(i => i.caseSubId)
+        else
+          this.filterList = this.filterList.filter(i => i.type === this.curType)
+      }
+
+      //完成情况筛选
+      if (this.finishType !== null && this.finishType !== '') {
+        this.filterList = this.filterList.filter(i => +i.isDelay === this.finishType)
+      }
+
       this.pageInfo.page = 1
       this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
       this.total = this.filterList.length
@@ -207,7 +279,7 @@ export default {
           start_stop_time: this.start_stop_time
         }
       })
-    }
+    },
   }
 }
 </script>
@@ -216,4 +288,8 @@ export default {
 .el-row {
   margin-bottom: 10px;
 }
+.statistics_container{
+  margin-top: 30px;
+}
+
 </style>
