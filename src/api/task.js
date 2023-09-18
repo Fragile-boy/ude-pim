@@ -14,3 +14,7 @@ export const recentTaskList=(id)=>{
 export const recentHalfYear=(id)=>{
     return service.get('/task/taskList/recentHalfYear',{params:{userId:id}})
 }
+
+export const allFinishTask=(id)=>{
+    return service.get(`/task/allFinishTask/${id}`)
+}

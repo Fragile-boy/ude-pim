@@ -59,11 +59,11 @@
         <br>
         <div class="charts-area">
             <el-card class="pie-chart">
-                <h1>任务类别</h1><span>(近半年)</span>
+                <h2>任务类别</h2><span>(近半年)</span>
                 <div id="taskType" style="width: 100%; height: 400px;"></div>
             </el-card>
             <el-card class="bar-chart">
-                <h1>任务达成</h1><span>(近半年)</span>
+                <h2>任务达成</h2><span>(近半年)</span>
                 <div id="taskAchieve" style="width: 100%; height: 400px"></div>
             </el-card>
         </div>

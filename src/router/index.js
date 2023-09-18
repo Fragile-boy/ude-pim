@@ -10,6 +10,7 @@ import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
 import UserView from '@/views/UserViews/UserView.vue'
 import UserNotice from '@/views/UserViews/UserNotice.vue'
 import User4Case from '@/views/UserViews/User4Case.vue'
+import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
 import SubForm from '@/views/SubForm.vue'
 import CheckIndex from '@/views/CheckViews/CheckIndex'
@@ -67,33 +68,33 @@ const routes = [
       },
       // 专案列表
       {
-        path:'/caseList',
-        name:'caseList',
-        component:CaseList
+        path: '/caseList',
+        name: 'caseList',
+        component: CaseList
       },
       //子流程管理
       {
-        path:'/subManage',
-        name:'subManage',
-        component:subManage
+        path: '/subManage',
+        name: 'subManage',
+        component: subManage
       },
       //模板管理
       {
-        path:'/templeteManage',
-        name:'templeteManage',
-        component:TempleteManage
+        path: '/templeteManage',
+        name: 'templeteManage',
+        component: TempleteManage
       },
       //部员列表
       {
-        path:'/userList',
-        name:'userList',
-        component:UserList
+        path: '/userList',
+        name: 'userList',
+        component: UserList
       },
       // 异常状态的专案子阶段
       {
-        path:'/exception',
-        name:'/exception',
-        component:checkException
+        path: '/exception',
+        name: '/exception',
+        component: checkException
       },
       //延期申请
       {
@@ -139,6 +140,12 @@ const routes = [
       },
       {
         // 数据统计页
+        path: '/user/statistics',
+        name: 'userStatistics',
+        component: UserStatistics
+      },
+      {
+        // 图表统计页
         path: '/user/chart',
         name: 'userChart',
         component: UserChart
@@ -152,14 +159,6 @@ const routes = [
     component: UserView,
     redirect: '/user/1',
     children: [
-      
-      
-      {
-        // 工作总览表格页
-        path: '/user/3',
-        name: 'userchart',
-        component: UserChart
-      },
     ]
   },
   // 登录页

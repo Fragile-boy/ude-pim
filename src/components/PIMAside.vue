@@ -55,7 +55,7 @@
             <el-menu-item index="/user/index"><i class="el-icon-s-tools"></i>个人总览</el-menu-item>
             <el-menu-item><i class="el-icon-s-tools"></i>消息中心</el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
-            <el-menu-item index="/user/chart"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+            <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
         </el-submenu>
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
