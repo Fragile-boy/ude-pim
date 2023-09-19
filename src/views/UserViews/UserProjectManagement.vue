@@ -29,6 +29,19 @@
                     </el-select>
                 </el-col>
 
+                <el-col :span="3">
+                    <el-select v-model="finishType" placeholder="完成情况" clearable>
+                        <el-option v-for="item in [{
+                            value: 0,
+                            label: '正常'
+                        }, {
+                            value: 1,
+                            label: '延误'
+                        }]" :key="item.value" :label="item.label" :value="item.value">
+                        </el-option>
+                    </el-select>
+                </el-col>
+
                 <el-col :span="6">
                     <el-date-picker v-model="start_stop_time" type="daterange" align="left" unlink-panels
                         range-separator="——" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions"
@@ -40,7 +53,7 @@
                     <el-button type="primary" @click="filter()">查询</el-button>
                 </el-col>
 
-                <el-col :span="3" :offset="8">
+                <el-col :span="3" :offset="5">
                     <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
                         <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                             <el-option v-for="item in group.children" :key="item.value" :label="item.label"
@@ -81,6 +94,29 @@
                 @current-change="handleCurrentChange" :current-page.sync="pageInfo.page" :page-sizes="[8, 10, 15, 20]"
                 :page-size="pageInfo.pageSize" layout="total, sizes, prev, pager, next" :total="total">
             </el-pagination>
+
+            <!-- 显示统计信息 -->
+            <div class="statistics_container">
+                <el-row :gutter="20">
+                    <el-col :span="5">
+                        <el-statistic :value="statisticsObj.executionDays" title="总执行时长"></el-statistic>
+                    </el-col>
+                    <el-col :span="5">
+                        <el-statistic :value="statisticsObj.delayDays" title="总延误时长"></el-statistic>
+                    </el-col>
+                    <el-col :span="5">
+                        <el-statistic :value="statisticsObj.sumTask" title="完成任务总件数"></el-statistic>
+                    </el-col>
+                    <el-col :span="5">
+                        <el-statistic :precision="2" suffix="%" :value="statisticsObj.taskAchievingRate"
+                            title="任务按期达成率"></el-statistic>
+                    </el-col>
+                    <el-col :span="4">
+                        <el-statistic :precision="2" suffix="%" :value="statisticsObj.avgAchievingRate"
+                            title="总达成率"></el-statistic>
+                    </el-col>
+                </el-row>
+            </div>
         </el-card>
     </div>
 </template>
@@ -141,6 +177,18 @@ export default {
             },
             //当前查看的类型
             curType: null,
+            //完成的情况
+            finishType: null,
+            //统计信息
+            statisticsObj: {
+                executionDays: 0,
+                delayDays: 0,
+                //记录延误了多少件任务
+                delayTask: 0,
+                sumTask: 0,
+                taskAchievingRate: 0,
+                avgAchievingRate: 0,
+            },
             //负责人的级联选择器
             directorOptions: [
                 {
@@ -176,9 +224,23 @@ export default {
                 this.total = this.allTaskList.length
                 this.allTaskList.forEach(s => {
                     s.executionDays = timeSub(s.startTime, s.finishTime)
-                    s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed(0)
+                    //累加执行时长
+                    this.statisticsObj.executionDays += s.executionDays
+                    s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
                     s.isDelay = s.achievingRate < 100
+                    if (s.isDelay) {
+                        //累加延误时长
+                        this.statisticsObj.delayDays += s.executionDays - (s.planDays + +s.unforcedDays)
+                        this.statisticsObj.delayTask++
+                    }
                 })
+
+                //计算其他统计信息
+                this.statisticsObj.sumTask = this.allTaskList.length
+                this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask-this.statisticsObj.delayTask)*100/this.statisticsObj.sumTask
+                this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.executionDays - this.statisticsObj.delayDays) * 100 / this.statisticsObj.executionDays
+
+                //筛选信息
                 this.filterList = this.allTaskList
                 this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
             } else {
@@ -214,13 +276,27 @@ export default {
             this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
         },
         filter() {
-            if (this.start_stop_time === null) {
-                this.getFinishedTaskList()
-                return
+            this.filterList = this.allTaskList
+            //日期筛选
+            if (this.start_stop_time !== null) {
+                const start = this.start_stop_time[0]
+                const end = this.start_stop_time[1]
+                this.filterList = this.filterList.filter(item => item.finishTime >= start && item.finishTime <= end)
             }
-            const start = this.start_stop_time[0]
-            const end = this.start_stop_time[1]
-            this.filterList = this.allTaskList.filter(item => item.finishTime >= start && item.finishTime <= end)
+
+            //任务类型筛选
+            if (this.curType !== null && this.curType !== '') {
+                if (this.curType === 0)
+                    this.filterList = this.filterList.filter(i => i.caseSubId)
+                else
+                    this.filterList = this.filterList.filter(i => i.type === this.curType)
+            }
+
+            //完成情况筛选
+            if (this.finishType !== null && this.finishType !== '') {
+                this.filterList = this.filterList.filter(i => +i.isDelay === this.finishType)
+            }
+
             this.pageInfo.page = 1
             this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
             this.total = this.filterList.length
@@ -246,29 +322,17 @@ export default {
         handleUserChange() {
             this.start_stop_time = null
             this.curType = null
-            this.getFinishedTaskList()
+            this.statisticsObj = {
+                executionDays: 0,
+                delayDays: 0,
+                //记录延误了多少件任务
+                delayTask: 0,
+                sumTask: 0,
+                taskAchievingRate: 0,
+                avgAchievingRate: 0,
+            },
+                this.getFinishedTaskList()
         },
-        //选中类型变化后的回调函数
-        handleTypeChange() {
-            //先初始化filterList()
-            if (this.start_stop_time) {
-                const start = this.start_stop_time[0]
-                const end = this.start_stop_time[1]
-                this.filterList = this.allTaskList.filter(item => item.finishTime >= start && item.finishTime <= end)
-            } else {
-                this.filterList = this.allTaskList
-            }
-            if (this.curType === '') {
-                this.filterList = this.filterList
-            }
-            else if (this.curType === 0) {
-                this.filterList = this.filterList.filter(i => i.caseSubId)
-            } else
-                this.filterList = this.filterList.filter(i => i.type === this.curType)
-            this.pageInfo.page = 1
-            this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
-            this.total = this.filterList.length
-        }
     }
 }
 </script>
@@ -276,5 +340,9 @@ export default {
 <style lang="less" scoped>
 .el-row {
     margin-bottom: 10px;
+}
+
+.statistics_container {
+    margin-top: 30px;
 }
 </style>

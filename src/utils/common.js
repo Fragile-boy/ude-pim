@@ -3,6 +3,16 @@ import { Message } from 'element-ui';
 
 // 公共方法，提高代码复用率
 
+
+//格式化为后端时间
+export function format4back(date){
+    var res = formatDate(date)
+    if(res===null)
+        return res
+    res+=" 00:00:00"
+    return res
+}
+
 //格式化时间
 export function formatDate(date) {
     if (date === null)

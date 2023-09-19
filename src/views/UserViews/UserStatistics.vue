@@ -101,7 +101,7 @@
             <el-statistic :precision="2" suffix="%" :value="statisticsObj.taskAchievingRate" title="任务按期达成率"></el-statistic>
           </el-col>
           <el-col :span="4">
-            <el-statistic :precision="2" suffix="%" :value="statisticsObj.avgAchievingRate" title="平均达成率"></el-statistic>
+            <el-statistic :precision="2" suffix="%" :value="statisticsObj.avgAchievingRate" title="总达成率"></el-statistic>
           </el-col>
         </el-row>
       </div>
@@ -207,7 +207,7 @@ export default {
 
         //计算其他统计信息
         this.statisticsObj.sumTask = this.allTaskList.length
-        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask===0?0:this.statisticsObj.delayTask*100/this.statisticsObj.sumTask
+        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask===0?0:(this.statisticsObj.sumTask-this.statisticsObj.delayTask)*100/this.statisticsObj.sumTask
         this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask===0?0:(this.statisticsObj.executionDays-this.statisticsObj.delayDays)*100/this.statisticsObj.executionDays
 
         //筛选信息

@@ -32,7 +32,7 @@
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.type === 0">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
-                        <el-tag effect="dark" type="info" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="description" label="描述"></el-table-column>
@@ -43,13 +43,19 @@
                 <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-tooltip class="item" effect="dark" content="申请延期" placement="left">
+                        <el-tooltip class="item" effect="dark" content="申请延期" placement="left" v-if="!scope.row.delayChecking">
                             <el-button size="mini" type="warning" icon="el-icon-timer" round
                                 @click="openDelayApply(scope.row)"></el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="完结" placement="right">
+                        <el-tooltip class="item" effect="dark" content="审核中" placement="left" v-else>
+                            <el-button size="mini" type="primary" icon="el-icon-timer" round></el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="完结" placement="right" v-if="!scope.row.finishChecking">
                             <el-button size="mini" type="success" icon="el-icon-success" round
                                 @click="tryFinish(scope.row)"></el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="完结审核中" placement="top" v-else>
+                            <el-button size="mini" type="primary" icon="el-icon-success" round></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -172,17 +178,26 @@
                 <el-button type="primary" @click="submitApplyTask()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="选择完结日期" :visible.sync="selectFinishTimeVisible" width="30%">
+            <el-date-picker v-model="curTask.createTime" type="date" placeholder="选择完结日期" value-format="yyyy-MM-dd HH:mm:ss" @input="changeTime">
+            </el-date-picker>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="selectFinishTimeVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitFinish()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { mapState } from 'vuex'
-import { timeSub, formatDate } from '@/utils/common'
+import { timeSub, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear } from '@/api/task'
 import { saveApply } from '@/api/caseDelayApply'
-import { saveFinishApply } from '@/api/caseFinishApply'
+import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
 import { saveApplyCaseSub } from '@/api/applyCaseSub'
 import { saveApplyTask } from '@/api/applyTask'
@@ -255,10 +270,21 @@ export default {
             //专案研究显示
             applyTaskVisible: false,
             applyTask: {},
+            //当前申请完结的任务
+            curTask:{},
+            //完结选择时间弹窗
+            selectFinishTimeVisible:false,
+            //当前用户的所有延期申请信息
+            delayApplyList:[],
+            //当前用户的所有完结申请信息
+            finishApplyList:[],
         }
     },
     created() {
-        this.getTaskByUserId(this.user)
+        // 获取申请的列表
+        // this.getDelayApplyList()
+        // this.getFinishApplyList()
+        this.getTaskByUserId()
         this.getUnfinishedCaseList()
     },
     mounted() {
@@ -269,8 +295,24 @@ export default {
         ...mapState(['user'])
     },
     methods: {
-        async getTaskByUserId(user) {
-            const res = await taskList(user.id)
+        async getDelayApplyList(){
+            const res = await getDelayListByUserId(this.user.id)
+            if(res.code===200){
+                this.delayApplyList = res.data
+            }else{
+                this.$message.error(res.msg)
+            }
+        },
+        async getFinishApplyList(){
+            const res = await getFinishListByUserId(this.user.id)
+            if(res.code===200){
+                this.finishApplyList = res.data
+            }else{
+                this.$message.error(res.msg)
+            }
+        },
+        async getTaskByUserId() {
+            const res = await taskList(this.user.id)
             this.userInfo = res.data
             console.log(this.userInfo)
 
@@ -338,6 +380,7 @@ export default {
                         this.$message.success(res.data)
                         this.delayApplyObject = {}
                         this.applyDelayVisible = false
+                        this.getTaskByUserId()
                     } else
                         this.$message.error(res.msg)
                 }
@@ -358,11 +401,11 @@ export default {
                         //打开更新工作描述窗口
                         this.openUpdateDescription(res.data)
                     } else {
-                        this.submitFinish(row)
+                        this.openSelectFinishTIme(row)
                     }
                 }
             } else {
-                this.submitFinish(row)
+                this.openSelectFinishTIme(row)
             }
         },
         //打开更新工作描述窗口
@@ -370,21 +413,26 @@ export default {
             this.updateDescriptionVisible = true
             this.directors = info
         },
+        //打开填写完结日期的窗口
+        openSelectFinishTIme(row){
+            this.curTask = {...row}
+            this.curTask.createTime = format4back(new Date())
+            this.selectFinishTimeVisible = true
+        },
+        //强制更新完结时间组件
+        changeTime(){
+            this.$forceUpdate()
+        },
         //完结任务
-        async submitFinish(row) {
-            this.$confirm('此操作将提交完结申请, 是否继续?', '完结提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(async () => {
-                row.applyId = this.user.id
-                const res = await saveFinishApply(row)
-                if (res.code === 200) {
-                    this.$message.success(res.data)
-                } else
-                    this.$message.error(res.msg)
-            })
-
+        async submitFinish() {
+            this.curTask.applyId = this.user.id
+            const res = await saveFinishApply(this.curTask)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.selectFinishTimeVisible = false
+                this.getTaskByUserId()
+            } else
+                this.$message.error(res.msg)
         },
         //提交各负责人的工作描述
         async submitDirectorJobDescription() {
@@ -398,7 +446,7 @@ export default {
             if (res.code === 200) {
                 this.$message.success(res.data)
                 this.updateDescriptionVisible = false
-                setTimeout(() => this.submitFinish({ caseSubId: this.directors[0].caseSubId }), 500)
+                setTimeout(() => this.openSelectFinishTIme({ caseSubId: this.directors[0].caseSubId }), 500)
 
             } else {
                 this.$message.error(res.error)
@@ -612,7 +660,7 @@ export default {
             var minint = Math.floor(min / 1); // 向下以1的倍数取整
             var minval = minint * 1 - 5; // 最终设置的最小值
             return minval; // 输出最小值
-        }
+        },
     }
 }
 </script>

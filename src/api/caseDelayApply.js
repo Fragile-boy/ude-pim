@@ -20,3 +20,8 @@ export const getDelayByStatus = (params) => {
 export const delayHistory = (obj)=>{
     return service.get('/caseSubDelayApply/history',{params:obj})
 }
+
+//根据id获取正在申请的延期列表
+export const getDelayListByUserId = (id)=>{
+    return service.get(`/caseSubDelayApply/checkList/${id}`)
+}
