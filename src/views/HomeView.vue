@@ -16,7 +16,7 @@
       </el-aside>
       <!-- 右侧内容区域 -->
       <el-main>
-        <keep-alive :include="['indexPage','userStatistics']">
+        <keep-alive :include="['indexPage','userStatistics','caseTracking']">
           <router-view></router-view>
         </keep-alive>
 

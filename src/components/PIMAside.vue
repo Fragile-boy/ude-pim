@@ -11,8 +11,8 @@
                 <i class="el-icon-s-platform"></i>
                 <span>专案管理</span>
             </template>
-            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>主页</el-menu-item>
-            <el-menu-item index="/caseList"><i class="el-icon-s-tools"></i>专案列表</el-menu-item>
+            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
+            <el-menu-item index="/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
             <el-menu-item index="/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
             <el-menu-item index="/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
         </el-submenu>
@@ -45,7 +45,7 @@
             </template>
             <el-menu-item index="/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
             <el-menu-item index="/userProject"><i class="el-icon-s-tools"></i>部员专案统计</el-menu-item>
-            <el-menu-item><i class="el-icon-s-tools"></i>部员专案分析</el-menu-item>
+            <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
         </el-submenu>
 
         <el-submenu index="5">

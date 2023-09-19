@@ -202,7 +202,7 @@ export default {
                     children: []
                 }
             ],
-            curUser: {},
+            curUser: null,
         }
     },
     created() {

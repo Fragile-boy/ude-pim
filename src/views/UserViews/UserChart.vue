@@ -184,18 +184,32 @@ export default {
                         name: names[1],
                         type: 'bar',
                         data: this.barInfo.finishDaysCount,
+                        label: {
+                            show: true, //开启显示
+                            position: 'top', //在上方显示
+                        },
                     },
                     {
                         name: names[2],
                         type: 'line',
                         data: this.barInfo.taskAchieveRate,
                         yAxisIndex: 1,
+                        label: {
+                            show: true, //开启显示
+                            position: 'top', //在上方显示
+                            formatter:'{c}%'
+                        },
                     },
                     {
                         name: names[3],
                         type: 'line',
                         data: this.barInfo.timeAchieveRate,
                         yAxisIndex: 1,
+                        label: {
+                            show: true, //开启显示
+                            position: 'top', //在上方显示
+                            formatter:'{c}%'
+                        },
                     },
                 ]
             })

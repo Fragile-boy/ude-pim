@@ -1,38 +1,52 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import IndexView from '../views/IndexView.vue'
+
+// 主页设计
 import HomeView from '../views/HomeView.vue'
+
+// 登录界面
 import LoginView from '../views/LoginView.vue'
+
+// 404未找到界面
 import NotFind from '@/views/NotFind.vue'
-import CaseSubView from '@/views/CaseSubView.vue'
+
+
+// 专案管理界面
+
+import IndexView from '../views/IndexView.vue'
 import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
-import UserView from '@/views/UserViews/UserView.vue'
-import UserNotice from '@/views/UserViews/UserNotice.vue'
-import User4Case from '@/views/UserViews/User4Case.vue'
-import UserStatistics from '@/views/UserViews/UserStatistics.vue'
-import UserChart from '@/views/UserViews/UserChart.vue'
-import SubForm from '@/views/SubForm.vue'
-import CheckIndex from '@/views/CheckViews/CheckIndex'
-import checkCommit from '@/views/CheckViews/checkCommit'
-import checkException from '@/views/CheckViews/checkException'
-import checkDelay from '@/views/CheckViews/checkDelay'
-import checkFinish from '@/views/CheckViews/checkFinish'
-import checkStudy from '@/views/CheckViews/checkStudy'
-import checkApply from '@/views/CheckViews/checkApply'
-//延期表单界面
-import DelayView from '@/views/DelayView'
+import CaseSubView from '@/views/CaseSubView.vue'
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
 //子流程管理界面
 import subManage from '@/views/CaseViews/subManage'
 //模板管理界面
 import TempleteManage from '@/views/CaseViews/TempleteManage'
-//部员列表界面
-import UserList from '@/views/UserViews/UserList'
-import UserProjectManagement from '@/views/UserViews/UserProjectManagement'
 
+
+// 审批流程界面
+import checkException from '@/views/CheckViews/checkException'
+import checkDelay from '@/views/CheckViews/checkDelay'
+import checkFinish from '@/views/CheckViews/checkFinish'
+import checkStudy from '@/views/CheckViews/checkStudy'
+import checkApply from '@/views/CheckViews/checkApply'
+
+// 数据统计界面
 import caseData from '@/views/dataViews/caseData'
+
+//部员管理界面
+import UserList from '@/views/ManageViews/UserList'
+import UserProjectManagement from '@/views/ManageViews/UserProjectManagement'
+import UserProjectTracking from '@/views/ManageViews/UserProjectTracking'
+
+
+// 个人中心界面
+import UserNotice from '@/views/UserViews/UserNotice.vue'
+import User4Case from '@/views/UserViews/User4Case.vue'
+import UserStatistics from '@/views/UserViews/UserStatistics.vue'
+import UserChart from '@/views/UserViews/UserChart.vue'
+
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
 
@@ -140,7 +154,12 @@ const routes = [
         name:'userProjectManagement',
         component:UserProjectManagement
       },
-
+      {
+        // 部员专案追踪页
+        path: '/userProjectTracking',
+        name:'userProjectTracking',
+        component:UserProjectTracking
+      },
 
       {
         // 个人总览页
@@ -169,46 +188,11 @@ const routes = [
       
     ]
   },
-  // 个人管理页
-  {
-    path: '/user',
-    name: 'user',
-    component: UserView,
-    redirect: '/user/1',
-    children: [
-    ]
-  },
   // 登录页
   {
     path: '/login',
     name: 'login',
     component: LoginView
-  },
-  // 子流程评论表单页
-  {
-    path: '/subForm',
-    name: 'subForm',
-    component: SubForm
-  },
-  //审批管理页
-  {
-    path: '/check',
-    name: "check",
-    component: CheckIndex,
-    redirect: '/commit',
-    children: [
-      {
-        path: '/commit',
-        name: 'commit',
-        component: checkCommit
-      },
-    ]
-  },
-  //阶段申请延期页
-  {
-    path: '/delayApply',
-    name: 'delayApple',
-    component: DelayView
   },
   {
     path: '*',

@@ -66,11 +66,11 @@
         <div class="charts-area">
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
-                <div id="taskType" style="width: 100%; height: 400px;"></div>
+                <div id="taskType" style="width: 100%; height: 300px;"></div>
             </el-card>
             <el-card class="bar-chart">
                 <h2>任务达成</h2><span>(近半年)</span>
-                <div id="taskAchieve" style="width: 100%; height: 400px"></div>
+                <div id="taskAchieve" style="width: 100%; height: 300px"></div>
             </el-card>
         </div>
 
@@ -594,9 +594,9 @@ export default {
                             padding: [0, 50, -50, 200]
                         },
                         min: 0,
-                        max: this.calMax(res.timeAchieveRate),
+                        max: Math.max(this.calMax(res.timeAchieveRate),this.calMax(res.taskAchieveRate)),
                         splitNumber: 6,
-                        interval: ((this.calMax(res.timeAchieveRate) - 0) / 6).toFixed(),
+                        interval: ((Math.max(this.calMax(res.timeAchieveRate),this.calMax(res.taskAchieveRate)) - 0) / 6).toFixed(),
                         axisLabel: {
                             formatter: function (v) {
                                 return v.toFixed(2) + '%'; //0表示小数为0位，1表示1位小数，2表示2位小数
