@@ -23,6 +23,8 @@ import CaseList from '@/views/CaseViews/CaseList'
 import subManage from '@/views/CaseViews/subManage'
 //模板管理界面
 import TempleteManage from '@/views/CaseViews/TempleteManage'
+//任务管理界面
+import TaskManage from '@/views/CaseViews/TaskManage'
 
 
 // 审批流程界面
@@ -100,8 +102,13 @@ const routes = [
         name: 'templeteManage',
         component: TempleteManage
       },
-
-
+      //任务管理
+      {
+        path: '/taskManage',
+        name: 'taskManage',
+        component: TaskManage
+      },
+      
       // 异常状态的专案子阶段
       {
         path: '/exception',

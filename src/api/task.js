@@ -18,3 +18,16 @@ export const recentHalfYear=(id)=>{
 export const allFinishTask=(id)=>{
     return service.get(`/task/allFinishTask/${id}`)
 }
+
+
+export const allTaskList=(id)=>{
+    return service.get('/task/taskList',{params:{userId:id}})
+}
+
+export const updateTask=(obj)=>{
+    return service.put('/task/updateTask',obj)
+}
+
+export const addTask = (obj)=>{
+    return service.post('/task/addTask',obj)
+}
