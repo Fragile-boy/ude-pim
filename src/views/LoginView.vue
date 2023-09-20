@@ -80,6 +80,7 @@ export default {
                         localStorage.setItem("userLogin", JSON.stringify(this.loginForm))
                     }
                     this.setUser(res.data)
+                    localStorage.setItem("token",res.data.id)
                     this.$message({
                         message: "登录成功",
                         type: 'success',

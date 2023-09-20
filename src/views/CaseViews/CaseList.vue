@@ -140,7 +140,7 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择">
+                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择" @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                     :value="item.value">
@@ -540,6 +540,10 @@ export default {
             const res = await getPresetDay({ subId: row.subId, level: row.level })
             this.$set(row, 'planDays', res.data)
         },
+        //负责人变化强制刷新
+        selectChange(){
+            this.$forceUpdate()
+        }
     }
 }
 </script>

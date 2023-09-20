@@ -12,6 +12,15 @@ const service = axios.create({
 });
 
 
+//添加请求拦截器
+service.interceptors.request.use((res)=>{
+  let token = localStorage.getItem("token")
+  if(token){
+    res.headers['authorization'] = token
+  }
+  return res
+})
+
 // 添加响应拦截器
 service.interceptors.response.use((res) => {
   // 2xx 范围内的状态码都会触发该函数。
