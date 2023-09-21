@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="applyList" border>
+            <el-table :data="taskList" border>
                 <el-table-column label="类别">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
@@ -78,7 +78,7 @@
 <script>
 import { applyList, judgeApply, applyHistoryList } from '@/api/applyTask'
 import { timeAdd } from '@/utils/common'
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 export default {
     data() {
         return {
@@ -95,21 +95,14 @@ export default {
     created() {
         var pageSize = +localStorage.getItem("pim_check_apply_task_pageSize")
         this.queryInfo.pageSize = pageSize == 0 ? 7 : pageSize
-        this.getApplyList()
+        this.getTaskList()
     },
     computed: {
-        ...mapState(['user'])
+        ...mapState(['user']),
+        ...mapState('apply',['taskList'])
     },
     methods: {
-        async getApplyList() {
-            const res = await applyList()
-            if (res.code === 200) {
-                this.applyList = res.data
-                this.applyList.forEach(item => item.predictTime = timeAdd(item.createTime, item.planDays))
-            } else {
-                this.$message.error(res.msg)
-            }
-        },
+        ...mapActions('apply',['getTaskList']),
         judgeApply(row, status) {
             row.status = status
             row.checkUser = this.user.id

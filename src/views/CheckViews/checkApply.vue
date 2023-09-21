@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="applyList" border>
+            <el-table :data="caseSubList" border>
                 <el-table-column prop="caseName" label="专案"></el-table-column>
                 <el-table-column prop="subName" label="子流程"></el-table-column>
                 <el-table-column prop="description" label="工作描述"></el-table-column>
@@ -67,8 +67,8 @@
 </template>
 
 <script>
-import { applyList, judgeApply, applyHistoryList } from '@/api/applyCaseSub'
-import { mapState } from 'vuex'
+import { judgeApply, applyHistoryList } from '@/api/applyCaseSub'
+import { mapActions, mapState } from 'vuex'
 export default {
     data() {
         return {
@@ -85,20 +85,14 @@ export default {
     created() {
         var pageSize = +localStorage.getItem("pim_check_apply_caseSub_pageSize")
         this.queryInfo.pageSize = pageSize == 0 ? 7 : pageSize
-        this.getApplyList()
+        this.getCaseSubApplyList()
     },
     computed: {
-        ...mapState(['user'])
+        ...mapState(['user']),
+        ...mapState('apply', ['caseSubList'])
     },
     methods: {
-        async getApplyList() {
-            const res = await applyList()
-            if (res.code === 200) {
-                this.applyList = res.data
-            } else {
-                this.$message.error(res.msg)
-            }
-        },
+        ...mapActions('apply',['getCaseSubApplyList']),
         judgeApply(row, status) {
             row.status = status
             row.checkUser = this.user.id
@@ -112,7 +106,7 @@ export default {
                     const res = await judgeApply(row)
                     if (res.code === 200) {
                         this.$message.success(res.data)
-                        this.getApplyList()
+                        this.getCaseSubApplyList()
                     } else {
                         this.$message.error(res.msg)
                     }
@@ -131,11 +125,12 @@ export default {
                     const res = await judgeApply(row)
                     if (res.code === 200) {
                         this.$message.success(res.data)
-                        this.getApplyList()
+                        this.getCaseSubApplyList()
                     } else {
                         this.$message.error(res.msg)
                     }
-                }).catch(() => {
+                }).catch((error) => {
+                    console.log(error)
                     this.$message({
                         type: 'info',
                         message: '取消操作'

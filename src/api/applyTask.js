@@ -4,7 +4,7 @@ export const saveApplyTask = (obj)=>{
     return service.post('/applyTask/saveApplyTask',obj)
 }
 
-export const applyList=()=>{
+export const applyTaskList=()=>{
     return service.get('/applyTask/applyList')
 }
 

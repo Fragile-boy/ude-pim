@@ -19,7 +19,7 @@
                 </el-col>
                 </el-row>
             </div>
-            <el-table :data="tableData" style="width: 100%" border>
+            <el-table :data="finishList" style="width: 100%" border>
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -96,7 +96,7 @@
 
 <script>
 import { getFinishApplyList, judgeFinishApply, endHistory } from '@/api/caseFinishApply'
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 import { countUser, submitDirectorValue } from '@/api/caseSubUser'
 export default {
@@ -118,7 +118,8 @@ export default {
         }
     },
     computed: {
-        ...mapState(['user'])
+        ...mapState(['user']),
+        ...mapState('apply',['finishList'])
     },
     created() {
         const pageSize = +localStorage.getItem("pim_check_finish_pageSize")
@@ -126,13 +127,7 @@ export default {
         this.getFinish()
     },
     methods: {
-        async getFinish() {
-            var res = await getFinishApplyList()
-            this.tableData = res.data
-            this.tableData.map(item => {
-                item.applyTime = formatDate(item.createTime)
-            })
-        },
+        ...mapActions('apply',['getFinish']),
         async handleCheck(row, status) {
             row.status = status
             row.checkUser = this.user.id

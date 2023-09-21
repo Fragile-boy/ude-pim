@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import caseM from '@/store/modules/caseM'
+import log from './modules/log'
+import apply from './modules/apply'
 import { getInfo, setInfo } from '@/utils/storage'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
-  // //开启严格模式
+  // // //开启严格模式
   // strict: true,
   state: {
     user:getInfo()
@@ -29,6 +31,8 @@ export default new Vuex.Store({
     },
   },  
   modules: {
-    caseM
+    caseM,
+    log,
+    apply,
   }
 })

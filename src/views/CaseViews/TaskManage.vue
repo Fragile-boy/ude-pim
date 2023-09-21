@@ -59,9 +59,21 @@
 
 
                 <el-row>
-                    <el-col :span="12">
+                    <el-col :span="10">
                         <el-form-item label="计划天数">
                             <el-input v-model="curTaskObj.planDays"></el-input>
+                        </el-form-item>
+                    </el-col>
+
+                    <el-col :span="12" :offset="2">
+                        <el-form-item label="负责人">
+                            <el-select v-model="curTaskObj.director" placeholder="请选择科员" @change="handleUserChange()">
+                                <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                                    <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                        :value="item.value">
+                                    </el-option>
+                                </el-option-group>
+                            </el-select>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -135,7 +147,7 @@
 </template>
 
 <script>
-import { allTaskList, updateTask,addTask } from '@/api/task';
+import { allTaskList, updateTask, addTask } from '@/api/task';
 import { getUserList } from '@/api/user';
 import { format4back } from '@/utils/common';
 import { mapState } from 'vuex';
@@ -261,10 +273,10 @@ export default {
                 if (valid) {
                     this.addTaskObj.createUser = this.user.id
                     const res = await addTask(this.addTaskObj)
-                    if(res.code===200){
+                    if (res.code === 200) {
                         this.addTaskVisible = false
                         this.$message.success(res.data)
-                    }else{
+                    } else {
                         this.$message.error(res.msg)
                     }
                 }

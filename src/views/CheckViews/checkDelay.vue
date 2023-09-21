@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="tableData" style="width: 100%" border>
+            <el-table :data="delayList" style="width: 100%" border>
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -91,13 +91,12 @@
 
 <script>
 import { getApplyList, judgeApply, delayHistory } from '@/api/caseDelayApply'
-import { mapState } from 'vuex'
+import { mapActions, mapMutations, mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 import { format } from 'echarts'
 export default {
     data() {
         return {
-            tableData: [],
             //审核记录
             checkHistoryVisible: false,
             queryInfo: {
@@ -110,6 +109,7 @@ export default {
         }
     },
     computed: {
+        ...mapState('apply',['delayList']),
         ...mapState(['user'])
     },
     created() {
@@ -118,14 +118,7 @@ export default {
         this.getDelay()
     },
     methods: {
-        async getDelay() {
-            var res = await getApplyList()
-            this.tableData = res.data
-            this.tableData.map(item => {
-                item.applyTime = formatDate(item.createTime)
-                item.formatPredictTime = formatDate(item.predictTime)
-            })
-        },
+        ...mapActions('apply',['getDelay']),
         async handleCheck(row, status) {
             row.status = status
             row.checkUser = this.user.id

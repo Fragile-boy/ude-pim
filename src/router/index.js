@@ -48,6 +48,7 @@ import UserNotice from '@/views/UserViews/UserNotice.vue'
 import User4Case from '@/views/UserViews/User4Case.vue'
 import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
+import UserInfo from '@/views/UserViews/UserInfo.vue'
 
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
@@ -173,6 +174,12 @@ const routes = [
         path: '/user/index',
         name: 'userNotice',
         component: UserNotice
+      },
+      {
+        // 个人总览页
+        path: '/user/info',
+        name: 'userInfo',
+        component: UserInfo
       },
       {
         // 执行任务页

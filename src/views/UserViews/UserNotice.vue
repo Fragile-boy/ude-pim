@@ -167,7 +167,6 @@ export default {
       ]
       this.taskList.forEach(s => {
         typeData[s.type].value += 1
-        console.log(typeof (s.percentage))
         if (+s.percentage === 100)
           statusData[0].value += 1
         else if (+s.percentage >= 60)
