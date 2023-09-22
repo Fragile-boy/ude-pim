@@ -276,6 +276,7 @@ export default {
                     if (res.code === 200) {
                         this.addTaskVisible = false
                         this.$message.success(res.data)
+                        this.getAllTaskList()
                     } else {
                         this.$message.error(res.msg)
                     }

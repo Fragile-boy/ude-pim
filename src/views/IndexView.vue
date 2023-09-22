@@ -16,14 +16,15 @@
 </template>
 
 <script>
-import CasePie from '../components/CasePie'
-import { formatDate, getStatus } from '@/utils/common'
-import { mapState } from 'vuex'
+import { mapActions } from 'vuex'
 export default {
   name: 'indexPage',
   created() {
-    this.$store.dispatch('caseM/getCaseList')
+    this.getCaseList()
   },
+  methods:{
+    ...mapActions('caseM',['getCaseList'])
+  }
 }
 </script>
 

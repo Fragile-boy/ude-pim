@@ -35,7 +35,7 @@ export default {
         var checkUserNumber = (rule, value, callback) => {
             console.log(value)
             if (!/^\d{6}$/.test(value))
-                return callback(new Error("工号是以52开头的6位数字"))
+                return callback(new Error("工号是6位纯数字"))
             else
                 return callback()
         };
@@ -86,7 +86,11 @@ export default {
                         type: 'success',
                         duration: 900
                     })
-                    setTimeout(() => this.$router.push('/home'), 1000)
+
+                    if(res.data.type===1)
+                        setTimeout(() => this.$router.push('/home'), 1000)
+                    else
+                        setTimeout(() => this.$router.push('/user/index'), 1000)
                 } else {
                     this.$message.error(res.msg)
                 }

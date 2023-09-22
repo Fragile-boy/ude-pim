@@ -37,14 +37,29 @@
                 </el-table-column>
                 <el-table-column prop="createTime" label="创建时间">
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column prop="startTime" label="开始时间">
+                </el-table-column>
+                <el-table-column prop="finishTime" label="完结时间">
+                </el-table-column>
+                <el-table-column label="操作" width="240">
                     <template slot-scope="scope">
-                        <el-button type="primary" icon="el-icon-edit" @click="editCase(scope.row)"></el-button>
+                        <el-button type="primary" icon="el-icon-edit" @click="editCase(scope.row)" size="mini"
+                            round></el-button>
                         <el-tooltip v-if="!scope.row.hasSub" effect="dark" content="分配子流程" placement="top">
-                            <el-button type="warning" icon="el-icon-setting"
-                                @click="openAddRelationMenu(scope.row)"></el-button>
+                            <el-button type="warning" icon="el-icon-setting" size="mini"
+                                @click="openAddRelationMenu(scope.row)" round></el-button>
                         </el-tooltip>
-                        <el-button type="danger" icon="el-icon-delete" @click="deleteCase(scope.row)"></el-button>
+                        <el-tooltip effect="dark" content="终止专案" placement="top" v-if="scope.row.finishTime===null&&!scope.row.terminate">
+                            <el-button type="warning" size="mini" icon="el-icon-circle-close" round
+                                @click="terminateCase(scope.row, true)"></el-button>
+                        </el-tooltip>
+                        <el-tooltip effect="dark" content="重启专案" placement="top" v-if="scope.row.finishTime===null&&scope.row.terminate">
+                            <el-button type="success" size="mini" icon="el-icon-success" round
+                                @click="terminateCase(scope.row, false)"></el-button>
+                        </el-tooltip>
+                        <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteCase(scope.row)"
+                            round></el-button>
+
                     </template>
                 </el-table-column>
             </el-table>
@@ -140,7 +155,8 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择" @change="selectChange()">
+                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择"
+                            @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                     :value="item.value">
@@ -197,7 +213,7 @@
 <script>
 import { mapActions, mapState } from 'vuex'
 import { getUserList, getUserStatus } from '@/api/user'
-import { addCase, getList, editCase, deleteCase } from '@/api/case'
+import { addCase, getList, editCase, deleteCase, terminateCase } from '@/api/case'
 import { checkResult } from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation } from '@/api/caseSub'
@@ -541,8 +557,24 @@ export default {
             this.$set(row, 'planDays', res.data)
         },
         //负责人变化强制刷新
-        selectChange(){
+        selectChange() {
             this.$forceUpdate()
+        },
+        async terminateCase(row, status) {
+            this.$confirm(`此操作将${status?'冻结':'重启'} “${row.name}” 专案,${status?'正在执行的阶段数据将丢失，':''} 是否继续?`, '操作不可逆', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                row.terminate = status
+                const res = await terminateCase(row)
+                if (res.code == 200) {
+                    this.$message.success(res.data)
+                    this.getTableDate()
+                } else {
+                    this.$message.error(res.msg)
+                }
+            })
         }
     }
 }
@@ -551,5 +583,4 @@ export default {
 <style lang="less" scoped>
 .case_add {
     margin-bottom: 10px;
-}
-</style>
+}</style>

@@ -19,14 +19,20 @@
           </el-col>
           <!-- 消息区域 -->
           <el-col :span="1" :offset="15">
-            <el-badge :value="12" class="item">
-              <el-button round><i class="el-icon-chat-dot-round"></i></el-button>
+            <el-badge :value="logList.length" :hidden="logList.length===0" class="item">
+              <el-button round @click="$router.push('/user/info')"><i class="el-icon-chat-dot-round"></i></el-button>
             </el-badge>
           </el-col>
           <el-col :span="1">
-            <el-badge :value="12" class="item">
-              <el-button round><i class="el-icon-message-solid"></i></el-button>
-            </el-badge>
+            <el-dropdown @command="handleCommand">
+              <el-button round>
+                <i class="el-icon-setting el-icon-arrow-down"></i>
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item command="editUser">修改资料</el-dropdown-item>
+                <el-dropdown-item command="password">修改密码</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </el-col>
 
         </el-row>
@@ -66,7 +72,7 @@
 
         <!-- 图表 -->
         <el-card class="taskCharts">
-          <div v-if="this.taskList.length!==0">
+          <div v-if="this.taskList.length !== 0">
             <div style="display: inline-block;">
               <h1>任务类型</h1>
               <div id="typePie" style="width: 350px; height: 300px;"></div>
@@ -86,7 +92,8 @@
         <el-card>
           <h2 style="margin-bottom: 10px;">快捷访问</h2>
           <div class="link-container">
-            <el-link type="primary" target="_blank" href="https://scmail.ude-corp.com/">邮件系统<i class="el-icon-s-promotion"></i></el-link>
+            <el-link type="primary" target="_blank" href="https://scmail.ude-corp.com/">邮件系统<i
+                class="el-icon-s-promotion"></i></el-link>
             <el-link type="primary">申请子流程<i class="el-icon-plus"></i></el-link>
             <el-link type="primary">申请技术研究<i class="el-icon-plus"></i></el-link>
             <el-link type="primary">专案主页<i class="el-icon-view"></i></el-link>
@@ -95,23 +102,122 @@
         </el-card>
       </div>
     </div>
+
+    <!-- 修改资料区域 -->
+    <el-dialog title="修改资料" :visible.sync="editUserVisible" width="30%">
+      <el-form ref="editUserRef" :rules="editUserRule" :model="editUser" label-width="80px">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="editUser.name"></el-input>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="12">
+            <el-form-item label="工号" prop="number">
+              <el-input v-model="editUser.number"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="职务" prop="status">
+          <el-select v-model="editUser.status" placeholder="请选择职务">
+            <el-option v-for="item in [{ label: '机构', value: 0 }, { label: '电控', value: 1 }]" :key="item.value"
+              :label="item.label" :value="item.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editUserVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handleEditUser()">确 定</el-button>
+      </span>
+    </el-dialog>
+
+
+    <!-- 修改密码区域 -->
+    <el-dialog title="修改密码" :visible.sync="editPasswordVisible" width="30%">
+      <el-form ref="editPasswordRef" :model="passwordInfo" :rules="passwordInfoRule" label-width="80px">
+        <el-form-item label="新密码" prop="password">
+          <el-input type="password" v-model="passwordInfo.password"></el-input>
+        </el-form-item>
+
+
+        <el-form-item label="确认密码" prop="doublecheck">
+          <el-input type="password" v-model="passwordInfo.doublecheck"></el-input>
+        </el-form-item>
+
+
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editPasswordVisible = false">取 消</el-button>
+        <el-button type="primary" @click="updatePassword()">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 import { taskList } from '@/api/task'
 import { timeSub } from '@/utils/common'
+import {updatePassword} from '@/api/user'
 export default {
   data() {
+    var checkNumber = (rule, value, callback) => {
+      if (!/^\d{6}$/.test(value)) {
+        return callback(new Error('工号必须是6位数字'))
+      }
+      callback()
+    }
+    var checkPassword = (rule, value, callback) => {
+      if (!/^(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(value)) {
+        return callback(new Error('密码必须包含字母、数字，长度大于8'))
+      }
+      callback()
+    }
+
+    var checkSecond = (rule, value, callback) => {
+      if (value !== this.passwordInfo.password) {
+        return callback(new Error('两次密码不一致'))
+      }
+      callback()
+    }
+
     return {
       taskList: [],
       pieChart: null,
-      statusPie: null
+      statusPie: null,
+      editUserVisible: false,
+      editPasswordVisible: false,
+      editUser: {},
+      editUserRule: {
+        name: [
+          { required: true, message: '名字不可为空', trigger: 'blur' },
+          { min: 2, max: 10, message: '名字必须在2-10个字符之间', trigger: 'blur' }
+        ],
+        number: [
+          { validator: checkNumber, trigger: 'blur' }
+        ]
+      },
+      passwordInfo: {
+        password: '',
+        doublecheck: ''
+      },
+      passwordInfoRule: {
+        password: [
+          { validator: checkPassword, trigger: 'blur' }
+        ],
+        doublecheck: [
+          { validator: checkSecond, trigger: 'blur' }
+        ]
+      }
     }
   },
   computed: {
-    ...mapState(['user'])
+    ...mapState(['user']),
+    ...mapState('log', ['logList'])
   },
   created() {
 
@@ -124,6 +230,7 @@ export default {
     this.renderPieChart()
   },
   methods: {
+    ...mapActions(['editUserInfo']),
     async initTaskList() {
       const res = await taskList(this.user.id)
       if (res.code === 200) {
@@ -133,7 +240,6 @@ export default {
           if (this.taskList[i].percentage >= 100)
             this.taskList[i].percentage = 100
         }
-        console.log(this.taskList)
       } else {
         this.$message.error(res.msg)
       }
@@ -174,7 +280,6 @@ export default {
         else
           statusData[2].value += 1
       })
-      console.log(statusData)
       // 计算属性值的数量
       const typeOption = {
         legend: {
@@ -258,6 +363,42 @@ export default {
       this.typePie.setOption(typeOption);
       this.statusPie.setOption(statusOption);
     },
+    //设置按钮
+    handleCommand(command) {
+      if (command === 'editUser') {
+        //修改资料
+        this.editUser = { ...this.user }
+        this.editUserVisible = true
+      } else {
+        this.editPasswordVisible = true
+      }
+    },
+    handleEditUser() {
+      this.$refs.editUserRef.validate(async (valid) => {
+        if (valid) {
+          const res = await this.editUserInfo(this.editUser)
+          if (res.code === 200) {
+            this.$message.success(res.data)
+            this.editUserVisible = false
+          } else {
+            this.$message.error(res.msg)
+          }
+        }
+      })
+
+    },
+    //修改密码
+    updatePassword() {
+      this.$refs.editPasswordRef.validate(async (valid) => {
+        if (valid) {
+          const res = await updatePassword({ password: this.passwordInfo.password, id: this.user.id })
+          if (res.code === 200) {
+            this.$message.success(res.data)
+            this.editPasswordVisible = false
+          }
+        }
+      })
+    }
   }
 }
 </script>
@@ -289,14 +430,15 @@ export default {
 
 .notice-container {
   margin-top: 20px;
-  .link-container{
+
+  .link-container {
     display: flex;
     justify-content: space-between;
     margin-top: 10px;
     margin: 0 30px;
   }
 
-  .el-link{
+  .el-link {
     font-size: 15px;
   }
 }

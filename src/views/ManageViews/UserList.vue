@@ -94,13 +94,13 @@
                 <el-row :gutter="20">
                     <el-col :span="12">
                         <el-form-item label="姓名" prop="name">
-                            <el-input v-model="editForm.name" disabled></el-input>
+                            <el-input v-model="editForm.name"></el-input>
                         </el-form-item>
                     </el-col>
 
                     <el-col :span="12">
                         <el-form-item label="工号" prop="number">
-                            <el-input v-model.number="editForm.number" disabled></el-input>
+                            <el-input v-model.number="editForm.number"></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -126,8 +126,8 @@ import { getUserPage, saveUser,getUserById, updateUser, removeUser } from '@/api
 export default {
     data() {
         var checkNumber = (rule, value, callback) => {
-            if (!/^52\d{4}$/.test(value))
-                return callback(new Error('工号是52开头的6位数字'))
+            if (!/^\d{6}$/.test(value))
+                return callback(new Error('工号是6位纯数字'))
             return callback()
         }
         return {

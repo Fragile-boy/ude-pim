@@ -29,3 +29,9 @@ export const removeUser = (id) => {
 export const getUserStatus = (id) => {
     return service.get(`user/${id}/status`);
 }
+
+export const updatePassword = (obj) => {
+    return service.put('/user/password', obj)
+}
+
+

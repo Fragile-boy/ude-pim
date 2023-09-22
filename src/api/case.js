@@ -34,3 +34,7 @@ export const deleteCase= (id)=>{
 export const unFinishedCaseList = ()=>{
     return service.get("/case/unFinishedCaseList")
 }
+
+export const terminateCase = (obj)=>{
+    return service.put("/case/terminateCase",obj)
+}

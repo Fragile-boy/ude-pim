@@ -44,7 +44,7 @@ import UserProjectTracking from '@/views/ManageViews/UserProjectTracking'
 
 
 // 个人中心界面
-import UserNotice from '@/views/UserViews/UserNotice.vue'
+import UserIndex from '@/views/UserViews/UserIndex.vue'
 import User4Case from '@/views/UserViews/User4Case.vue'
 import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
@@ -172,8 +172,8 @@ const routes = [
       {
         // 个人总览页
         path: '/user/index',
-        name: 'userNotice',
-        component: UserNotice
+        name: 'userIndex',
+        component: UserIndex
       },
       {
         // 个人总览页
@@ -220,10 +220,17 @@ const router = new VueRouter({
 })
 
 //管理员权限界面
-// const authUrls = ['/check', '/commit', '/delay', '/finish']
+const authUrls = ['/check', '/commit', '/delay', '/finish']
 
+function isLogin(){
+  console.log(localStorage.getItem('ude_pim_user'))
+  if(localStorage.getItem('ude_pim_user')!==null)
+    return true
+  return false
+}
 
 router.beforeEach(async (to, from, next) => {
+  console.log(to)
   // if (authUrls.includes(to.path)) {
   //   await store.dispatch('fetchUserData', getInfo())
   //   if (store.state.user.type !== 1) {

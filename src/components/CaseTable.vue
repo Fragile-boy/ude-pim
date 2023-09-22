@@ -54,7 +54,7 @@
             </el-table-column>
             <el-table-column prop="status" label="执行状态" >
                 <template slot-scope="scope">
-                    <el-tag :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
+                    <el-tag effect="dark" :type="showtype(scope.row.status)" disable-transitions>{{ number2status(scope.row.status)
                     }}</el-tag>
                 </template>
 
