@@ -22,7 +22,7 @@
                                 <template slot-scope="scope">
                                     <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
                                         <el-col :span="2">
-                                            <el-tag class="chargeNameTag" closable @close="removeDirector(scope.row, index)"
+                                            <el-tag class="chargeNameTag"
                                                 @click="getCaseByUserId(scope.row.chargeId[index], item)">
                                                 {{ item }}
                                             </el-tag>
@@ -87,9 +87,7 @@
                             <el-table-column prop="applyDelay" label="人为因素延期">
                             </el-table-column>
 
-                            <el-table-column prop="status" label="执行状态"
-                                :filters="[{ text: '正在执行', value: '正在执行' }, { text: '正常完成', value: '正常完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
-                                :filter-method="filterTag" filter-placement="bottom-end">
+                            <el-table-column prop="status" label="执行状态">
                                 <template slot-scope="scope">
                                     <el-tag effect="dark" :type="showtype(scope.row.status)" disable-transitions>{{
                                         number2status(scope.row.status)
@@ -105,21 +103,21 @@
                                             @click="openCommentView(scope.row)"></el-button>
                                     </el-tooltip>
                                     <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
-                                        v-if="scope.row.startTime === null">
+                                        v-if="user.type===1&&scope.row.startTime === null">
                                         <el-button type="success" size="mini" icon="el-icon-video-play" round
                                             @click="launch(scope.row)"></el-button>
                                     </el-tooltip>
                                     <el-tooltip effect="dark" content="结束阶段" placement="top" :enterable="false"
-                                        v-if="scope.row.startTime !== null && scope.row.finishTime === null">
+                                        v-if="user.type===1&&scope.row.startTime !== null && scope.row.finishTime === null">
                                         <el-button type="danger" size="mini" icon="el-icon-success" round
                                             @click="finish(scope.row)"></el-button>
                                     </el-tooltip>
                                     <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
-                                        <el-button type="primary" size="mini" icon="el-icon-edit" round
+                                        <el-button v-if="user.type===1" type="primary" size="mini" icon="el-icon-edit" round
                                             @click="openEditCaseSub(scope.row)"></el-button>
                                     </el-tooltip>
                                     <el-tooltip
-                                        v-if="scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
+                                        v-if="user.type===1&&scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
                                         effect="dark" content="分配比例" placement="top" :enterable="false">
                                         <el-button type="warning" size="mini" icon="el-icon-setting" round
                                             @click="initEditDirectorRate(scope.row)"></el-button>

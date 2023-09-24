@@ -87,7 +87,6 @@ export default {
                     //如果结束时间不为空
                     if (this.case2person[i].finishTime !== null) {
                         this.case2person[i].executionDays = timeSub(this.case2person[i].startTime, this.case2person[i].finishTime)
-                        this.case2person[i].executionDays -= this.case2person[i].unforcedDays === null ? 0 : this.case2person[i].unforcedDays
                         //配电要乘以2
                         this.case2person[i].sumValue = (this.case2person[i].planDays * (this.case2person[i].planDays / this.case2person[i].executionDays) ** (2 / 3)).toFixed(2)
                         if (this.case2person[i].subId === 9)

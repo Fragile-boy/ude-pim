@@ -289,7 +289,9 @@ export default {
     },
     mounted() {
         this.initPie(),
-            this.initBur()
+        this.initBur(),
+        this.applyCaseSubVisible = this.$route.query.applyCaseSubVisible
+        this.applyTaskVisible = this.$route.query.applyTaskVisible
     },
     computed: {
         ...mapState(['user'])

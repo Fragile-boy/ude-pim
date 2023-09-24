@@ -60,6 +60,7 @@
                     v-if="logList.length" /></el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
         </el-submenu>
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i

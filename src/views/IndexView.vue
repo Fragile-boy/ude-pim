@@ -3,9 +3,7 @@
     <!-- 面包屑导航区域 -->
     <div>
       <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
-        <el-breadcrumb-item>专案管理</el-breadcrumb-item>
-        <el-breadcrumb-item>home</el-breadcrumb-item>
+        <el-breadcrumb-item>专案详情</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
     <el-card class="box-card">

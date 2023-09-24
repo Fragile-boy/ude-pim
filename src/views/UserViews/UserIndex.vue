@@ -19,7 +19,7 @@
           </el-col>
           <!-- 消息区域 -->
           <el-col :span="1" :offset="15">
-            <el-badge :value="logList.length" :hidden="logList.length===0" class="item">
+            <el-badge :value="logList.length" :hidden="logList.length === 0" class="item">
               <el-button round @click="$router.push('/user/info')"><i class="el-icon-chat-dot-round"></i></el-button>
             </el-badge>
           </el-col>
@@ -37,10 +37,22 @@
 
         </el-row>
       </div>
-      <!-- 卡片区域 -->
-      <div class="applyArea">
-        <caseStatus></caseStatus>
+
+      <!-- 链接区域 -->
+      <div class="notice-container">
+        <el-card>
+          <h2 style="margin-bottom: 10px;">快捷访问</h2>
+          <div class="link-container">
+            <el-link type="primary" target="_blank" href="https://scmail.ude-corp.com/">邮件系统<i
+                class="el-icon-s-promotion"></i></el-link>
+            <el-button type="primary" @click="jump2Case">申请子流程<i class="el-icon-plus"></i></el-button>
+            <el-button type="primary" @click="jump2Task">申请技术研究<i class="el-icon-plus"></i></el-button>
+            <el-button type="primary" @click="jump2CaseIndex">专案主页<i class="el-icon-view"></i></el-button>
+            <el-button type="info">待定</el-button>
+          </div>
+        </el-card>
       </div>
+
       <!-- 执行任务区域 -->
       <div class="task-container">
         <el-card class="taskTable">
@@ -63,11 +75,11 @@
           </el-table>
 
 
-          <el-row>
+          <!-- <el-row>
             <el-col :span="3" :offset="10">
-              <el-link type="primary">显示所有任务</el-link>
+              <el-button type="primary">显示所有任务</el-button>
             </el-col>
-          </el-row>
+          </el-row> -->
         </el-card>
 
         <!-- 图表 -->
@@ -87,19 +99,10 @@
         </el-card>
       </div>
 
-      <!-- 链接区域 -->
-      <div class="notice-container">
-        <el-card>
-          <h2 style="margin-bottom: 10px;">快捷访问</h2>
-          <div class="link-container">
-            <el-link type="primary" target="_blank" href="https://scmail.ude-corp.com/">邮件系统<i
-                class="el-icon-s-promotion"></i></el-link>
-            <el-link type="primary">申请子流程<i class="el-icon-plus"></i></el-link>
-            <el-link type="primary">申请技术研究<i class="el-icon-plus"></i></el-link>
-            <el-link type="primary">专案主页<i class="el-icon-view"></i></el-link>
-            <el-link type="info">待定</el-link>
-          </div>
-        </el-card>
+
+      <!-- 卡片区域 -->
+      <div class="applyArea">
+        <caseStatus></caseStatus>
       </div>
     </div>
 
@@ -162,7 +165,7 @@
 import { mapActions, mapState } from 'vuex'
 import { taskList } from '@/api/task'
 import { timeSub } from '@/utils/common'
-import {updatePassword} from '@/api/user'
+import { updatePassword } from '@/api/user'
 export default {
   data() {
     var checkNumber = (rule, value, callback) => {
@@ -398,8 +401,30 @@ export default {
           }
         }
       })
+    },
+    jump2Case() {
+      this.$router.push({
+        path: '/user/progress',
+        query: {
+          applyCaseSubVisible: true
+        }
+      })
+    },
+    jump2Task() {
+      this.$router.push({
+        path: '/user/progress',
+        query: {
+          applyTaskVisible: true
+        }
+      })
+    },
+    jump2CaseIndex(){
+      this.$router.push({
+        path:'/index',
+      })
     }
-  }
+  },
+
 }
 </script>
 
@@ -438,7 +463,7 @@ export default {
     margin: 0 30px;
   }
 
-  .el-link {
+  .el-button {
     font-size: 15px;
   }
 }
