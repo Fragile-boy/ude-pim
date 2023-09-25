@@ -50,6 +50,9 @@ import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
 import UserInfo from '@/views/UserViews/UserInfo.vue'
 
+// 需求界面
+import Demand from '@/components/Demand.vue'
+
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
 
@@ -199,7 +202,12 @@ const routes = [
         name: 'userChart',
         component: UserChart
       },
-      
+      {
+        //需求
+        path:'/demand',
+        name:'demand',
+        component:Demand
+      }
     ]
   },
   // 登录页

@@ -353,6 +353,7 @@ export default {
                 // 获得正确的负责人值
                 this.addCaseForm.director = this.addCaseForm.directors[1]
                 this.addCaseForm.createUser = this.user.id
+                this.addCaseForm.terminate = 0
                 if (this.newFlag === 0)
                     var res = await addCase(this.addCaseForm)
                 else
@@ -383,7 +384,7 @@ export default {
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
                     this.defaultDays[this.relationSub[i].id] = r.data
-                    if (i <= 5) {
+                    if (this.relationSub[i].id <= 6) {
                         this.relationSub[i].chargeId = [this.curDirector]
                     }
                 }
@@ -457,6 +458,9 @@ export default {
 
                 this.insertInfo[i].caseId = this.curCaseId
             }
+            //id本来是子流程的id，结果变成了专案子流程的id，可恶的bug
+            for(var i =0;i<this.insertInfo.length;i++)
+                this.insertInfo[i].id = null
             console.log(this.insertInfo)
             const res = await insertRelation(this.insertInfo)
             if (res.code === 200) {
@@ -519,11 +523,13 @@ export default {
         async addRelationByTemplate() {
             for (var i = 0; i < this.relationTemplateSub.length; i++) {
                 this.relationTemplateSub[i].subId = this.relationTemplateSub[i].id
+                
                 if (!('level' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].level === null)
                     this.relationTemplateSub[i].level = this.curLevel
                 if (!('planDays' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].planDays === null)
                     this.relationTemplateSub[i].planDays = this.defaultDays[this.relationTemplateSub[i].id]
                 this.relationTemplateSub[i].caseId = this.curCaseId
+                this.relationTemplateSub[i].id = null
             }
             console.log(this.relationTemplateSub)
             const res = await insertRelation(this.relationTemplateSub)

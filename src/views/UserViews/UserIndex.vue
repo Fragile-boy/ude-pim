@@ -131,6 +131,10 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="电子邮件" prop="email">
+          <el-input v-model="editUser.email" placeholder="请输入电子邮件地址"></el-input>
+        </el-form-item>
+
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="editUserVisible = false">取 消</el-button>
@@ -188,6 +192,13 @@ export default {
       callback()
     }
 
+    var checkEmail = (rule, value, callback) => {
+      //正则表达式验证电子邮箱地址
+      if (/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)) {
+        callback()
+      }
+    }
+
     return {
       taskList: [],
       pieChart: null,
@@ -202,6 +213,10 @@ export default {
         ],
         number: [
           { validator: checkNumber, trigger: 'blur' }
+        ],
+        email: [
+          { required: true, message: '电子邮箱不能为空', trigger: 'blur' },
+          { validator: checkEmail, trigger: 'blur' }
         ]
       },
       passwordInfo: {
@@ -216,7 +231,7 @@ export default {
           { validator: checkSecond, trigger: 'blur' }
         ]
       },
-      caseName:''
+      caseName: ''
     }
   },
   computed: {
@@ -419,16 +434,16 @@ export default {
         }
       })
     },
-    jump2CaseIndex(){
+    jump2CaseIndex() {
       this.$router.push({
-        path:'/index',
+        path: '/index',
       })
     },
-    jump2QueryCase(){
+    jump2QueryCase() {
       this.$router.push({
-        path:'/index',
-        query:{
-          caseName:this.caseName
+        path: '/index',
+        query: {
+          caseName: this.caseName
         }
       })
     }

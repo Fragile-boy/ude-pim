@@ -158,6 +158,10 @@
                     </el-select>
                 </el-form-item>
 
+                <el-form-item label="电子邮件" prop="email">
+                    <el-input v-model="editUser.email" placeholder="请输入电子邮件地址"></el-input>
+                </el-form-item>
+
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editUserVisible = false">取 消</el-button>
@@ -212,6 +216,14 @@ export default {
             }
             callback()
         }
+
+        var checkEmail = (rule, value, callback)=>{
+            //正则表达式验证电子邮箱地址
+            if(/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)){
+                callback()
+            }
+            callback(new Error('电子邮箱格式不正确'))
+        }
         return {
             userList: [],
             total: 0,
@@ -249,7 +261,8 @@ export default {
                 id: null,
                 name: '',
                 number: '',
-                status: null
+                status: null,
+                email:''
             },
             //修改密码，修改个人信息
             editUserVisible: false,
@@ -262,6 +275,10 @@ export default {
                 ],
                 number: [
                     { validator: checkNumber, trigger: 'blur' }
+                ],
+                email:[
+                    {required:true,message: '电子邮箱不能为空', trigger: 'blur' },
+                    {validator:checkEmail,trigger:'blur'}
                 ]
             },
             passwordInfo: {

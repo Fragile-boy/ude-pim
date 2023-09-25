@@ -1,7 +1,7 @@
 <template>
     <el-menu background-color="#343743" text-color="#fff" active-text-color="#409eff" :default-active="$route.path"
         :collapse="isCollapse" :collapse-transition="false" router>
-        <el-submenu index="1" v-if="user.type===1">
+        <el-submenu index="1" v-if="user.type === 1">
             <template slot="title">
                 <i class="el-icon-s-platform"></i>
                 <span>专案管理</span>
@@ -13,7 +13,7 @@
             <el-menu-item index="/taskManage"><i class="el-icon-s-tools"></i>任务管理</el-menu-item>
         </el-submenu>
 
-        <el-submenu index="2" v-if="user.type===1">
+        <el-submenu index="2" v-if="user.type === 1">
             <template slot="title">
                 <i class="el-icon-s-operation"></i>
                 <span>审批流程<el-badge :value="subList.length" is-dot
@@ -31,7 +31,7 @@
                     v-if="caseSubList.length" /></el-menu-item>
         </el-submenu>
 
-        <el-submenu index="3" v-if="user.type===1">
+        <el-submenu index="3" v-if="user.type === 1">
             <template slot="title">
                 <i class="el-icon-s-data"></i>
                 <span>数据统计</span>
@@ -40,7 +40,7 @@
             <!-- <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item> -->
         </el-submenu>
 
-        <el-submenu index="4" v-if="user.type===1">
+        <el-submenu index="4" v-if="user.type === 1">
             <template slot="title">
                 <i class="el-icon-s-custom"></i>
                 <span>部员管理</span>
@@ -50,7 +50,7 @@
             <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
         </el-submenu>
 
-        <el-submenu index="5" v-if="user.type===0">
+        <el-submenu index="5" v-if="user.type === 0">
             <template slot="title">
                 <i class="el-icon-user"></i>
                 <span>个人中心<el-badge is-dot :value="logList.length" class="item" v-if="logList.length" /></span>
@@ -65,6 +65,9 @@
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i
                     class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
+
+        <el-menu-item><router-link to="/demand"><i
+                    class="el-icon-s-check"></i>需求管理</router-link></el-menu-item>
     </el-menu>
 </template>
 
@@ -101,7 +104,7 @@ export default {
                     this.getFinish(),
                     this.getCaseSubApplyList(),
                     this.getTaskList()
-            },10000)
+            }, 10000)
     },
     methods: {
         ...mapActions('log', ['getLogList']),

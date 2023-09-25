@@ -134,8 +134,7 @@ export default {
       defaultYear: this.initYear(),
       year: '',
       //要查询的月份
-      // month: this.getDefaultMonth(),
-      month: 7,
+      month: this.getDefaultMonth(),
       title: "达成率",
       value: 123.78,
       //评论对象
@@ -179,7 +178,6 @@ export default {
         this.showSubList = []
         this.finishSubList.forEach(item => {
           item.executionDays = timeSub(item.startTime, item.finishTime)
-          item.executionDays -= item.unforcedDays === null ? 0 : item.unforcedDays
           if (item.achievingRate < this.showTopRate)
             this.showSubList.push(item)
         })
