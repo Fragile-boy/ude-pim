@@ -12,10 +12,10 @@
       <div class="userHeader">
         <el-row :gutter="20">
           <el-col :span="4">
-            <el-input placeholder="输入专案查询"></el-input>
+            <el-input v-model="caseName" placeholder="输入专案查询"></el-input>
           </el-col>
           <el-col :span="2">
-            <el-button type="primary" icon="el-icon-search"></el-button>
+            <el-button type="primary" icon="el-icon-search" @click="jump2QueryCase"></el-button>
           </el-col>
           <!-- 消息区域 -->
           <el-col :span="1" :offset="15">
@@ -215,7 +215,8 @@ export default {
         doublecheck: [
           { validator: checkSecond, trigger: 'blur' }
         ]
-      }
+      },
+      caseName:''
     }
   },
   computed: {
@@ -421,6 +422,14 @@ export default {
     jump2CaseIndex(){
       this.$router.push({
         path:'/index',
+      })
+    },
+    jump2QueryCase(){
+      this.$router.push({
+        path:'/index',
+        query:{
+          caseName:this.caseName
+        }
       })
     }
   },

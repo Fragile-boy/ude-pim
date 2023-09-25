@@ -3,19 +3,19 @@
         <el-card shadow="always" class="sub_card">
             <label class="cardName">专案类</label>
             <hr>
-            <a href="#">查看详情</a>
+            <router-link to="/user/statistics?curType=0">查看详情</router-link>
         </el-card>
 
         <el-card shadow="always" class="temporary_card">
             <label class="cardName">临时事务</label>
             <hr>
-            <a href="#">查看详情</a>
+            <router-link to="/user/statistics?curType=1">查看详情</router-link>
         </el-card>
 
         <el-card shadow="always" class="research_card">
             <label class="cardName">技术研究</label>
             <hr>
-            <a href="#">查看详情</a>
+            <router-link to="/user/statistics?curType=2">查看详情</router-link>
         </el-card>
     </div>
 </template>

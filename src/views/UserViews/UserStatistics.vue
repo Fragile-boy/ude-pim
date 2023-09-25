@@ -98,7 +98,8 @@
             <el-statistic :value="statisticsObj.sumTask" title="完成任务总件数"></el-statistic>
           </el-col>
           <el-col :span="5">
-            <el-statistic :precision="2" suffix="%" :value="statisticsObj.taskAchievingRate" title="任务按期达成率"></el-statistic>
+            <el-statistic :precision="2" suffix="%" :value="statisticsObj.taskAchievingRate"
+              title="任务按期达成率"></el-statistic>
           </el-col>
           <el-col :span="4">
             <el-statistic :precision="2" suffix="%" :value="statisticsObj.avgAchievingRate" title="总达成率"></el-statistic>
@@ -167,21 +168,30 @@ export default {
       //完成的情况
       finishType: null,
       //统计信息
-      statisticsObj:{
-        executionDays:0,
-        delayDays:0,
+      statisticsObj: {
+        executionDays: 0,
+        delayDays: 0,
         //记录延误了多少件任务
-        delayTask:0,
-        sumTask:0,
-        taskAchievingRate:0,
-        avgAchievingRate:0,
+        delayTask: 0,
+        sumTask: 0,
+        taskAchievingRate: 0,
+        avgAchievingRate: 0,
       }
     }
   },
-  created() {
+  async created() {
     var pageSize = +localStorage.getItem("pim_user_statistics_pageSize")
     this.pageInfo.pageSize = pageSize === 0 ? 8 : pageSize
-    this.getFinishedTaskList();
+    await this.getFinishedTaskList();
+  },
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      if ('curType' in to.query) {
+        //获取当前状态类型
+        vm.curType = +to.query.curType
+        vm.filter()
+      }
+    })
   },
   computed: {
     ...mapState(['user'])
@@ -195,20 +205,20 @@ export default {
         this.allTaskList.forEach(s => {
           s.executionDays = timeSub(s.startTime, s.finishTime)
           //累加执行时长
-          this.statisticsObj.executionDays+=s.executionDays
+          this.statisticsObj.executionDays += s.executionDays
           s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
           s.isDelay = s.achievingRate < 100
-          if(s.isDelay){
+          if (s.isDelay) {
             //累加延误时长
-            this.statisticsObj.delayDays+=s.executionDays-(s.planDays + +s.unforcedDays)
+            this.statisticsObj.delayDays += s.executionDays - (s.planDays + +s.unforcedDays)
             this.statisticsObj.delayTask++
           }
         })
 
         //计算其他统计信息
         this.statisticsObj.sumTask = this.allTaskList.length
-        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask===0?0:(this.statisticsObj.sumTask-this.statisticsObj.delayTask)*100/this.statisticsObj.sumTask
-        this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask===0?0:(this.statisticsObj.executionDays-this.statisticsObj.delayDays)*100/this.statisticsObj.executionDays
+        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask - this.statisticsObj.delayTask) * 100 / this.statisticsObj.sumTask
+        this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.executionDays - this.statisticsObj.delayDays) * 100 / this.statisticsObj.executionDays
 
         //筛选信息
         this.filterList = this.allTaskList
@@ -288,8 +298,8 @@ export default {
 .el-row {
   margin-bottom: 10px;
 }
-.statistics_container{
+
+.statistics_container {
   margin-top: 30px;
 }
-
 </style>
