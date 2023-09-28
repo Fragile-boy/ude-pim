@@ -204,13 +204,14 @@ export default {
         this.total = this.allTaskList.length
         this.allTaskList.forEach(s => {
           s.executionDays = timeSub(s.startTime, s.finishTime)
+          s.executionDays -=s.unforcedDays===null?0:s.unforcedDays
           //累加执行时长
           this.statisticsObj.executionDays += s.executionDays
-          s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
+          s.achievingRate = +(s.planDays * 100 / s.executionDays).toFixed()
           s.isDelay = s.achievingRate < 100
           if (s.isDelay) {
             //累加延误时长
-            this.statisticsObj.delayDays += s.executionDays - (s.planDays + +s.unforcedDays)
+            this.statisticsObj.delayDays += s.executionDays - s.planDays
             this.statisticsObj.delayTask++
           }
         })

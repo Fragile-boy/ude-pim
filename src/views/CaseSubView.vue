@@ -421,8 +421,8 @@ export default {
                 //执行天数
                 if (this.subInfo[i].startTime !== null) {
                     this.subInfo[i].executionDays = timeSub(this.subInfo[i].startTime, this.subInfo[i].finishTime === null ? new Date() : this.subInfo[i].finishTime)
-                    // 减去外界因素延期（为什么要减，疯了？）
-                    // this.subInfo[i].executionDays -= this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
+                    // 减去外界因素延期(原excel表中就是使用的减去外界因素延期的执行时间，所以用该值去计算积分才符合原来的数据)
+                    this.subInfo[i].executionDays -= this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
                 }
                 //计算积分
                 if (this.subInfo[i].finishTime !== null) {

@@ -13,7 +13,7 @@
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input type="password" v-model="loginForm.password" prefix-icon="el-icon-s-cooperation"
-                        placeholder="请输入密码"></el-input>
+                        placeholder="请输入密码" @keyup.enter.native="handlerLogin"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <div class="btns">

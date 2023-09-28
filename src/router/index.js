@@ -116,7 +116,7 @@ const routes = [
       // 异常状态的专案子阶段
       {
         path: '/exception',
-        name: '/exception',
+        name: 'exception',
         component: checkException
       },
       //延期申请
@@ -238,7 +238,6 @@ function isLogin(){
 }
 
 router.beforeEach(async (to, from, next) => {
-  console.log(to)
   // if (authUrls.includes(to.path)) {
   //   await store.dispatch('fetchUserData', getInfo())
   //   if (store.state.user.type !== 1) {

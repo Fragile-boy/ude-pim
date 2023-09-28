@@ -32,6 +32,7 @@
                 <el-col :span="12">
                     <el-input v-model="description" class="textarea-placeholder-multiline" type="textarea" :rows="4"
                         placeholder="请尽可能详细的描述你的需求/或者系统bug, 例： 
+专案详情界面: XXX专案XXX阶段的负责人不对/开始时间不对
 个人总览界面: 搜索后 界面不跳转
 数据统计界面: 我需要多一个查询维度,比如按照XX查询/排序"></el-input>
                 </el-col>

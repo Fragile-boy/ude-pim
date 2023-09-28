@@ -31,6 +31,11 @@
                             <el-button type="success" size="mini" icon="el-icon-video-play" round
                                 @click="launch(scope.row)"></el-button>
                         </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="专案详情" placement="right-start">
+                            <el-button icon="el-icon-s-promotion" type="primary" size="mini" round
+                                @click="openCaseDetail(scope.row)">
+                            </el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>
@@ -60,6 +65,7 @@ import { updateCaseSub, startOrFinish } from '@/api/caseSub'
 import { formatDate } from '@/utils/common'
 import { setDirector } from '@/api/caseSubUser'
 export default {
+    name:'checkException',
     data() {
         return {
             subInfo: [],
@@ -137,6 +143,16 @@ export default {
             } else
                 this.$message.error(res.msg)
         },
+        //打开专案详情
+        openCaseDetail(row){
+            this.$router.push({
+                name:'case-sub',
+                query:{
+                    caseId:row.caseId,
+                    caseName:row.caseName
+                }
+            })
+        }
     }
 }
 </script>
