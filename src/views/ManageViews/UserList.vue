@@ -51,8 +51,9 @@
                 </el-table-column>
                 <el-table-column label="职务">
                     <template slot-scope="scope">
-                        <el-tag v-if="scope.row.status === 0">机构</el-tag>
-                        <el-tag type="success" v-else>电控</el-tag>
+                        <el-tag effect="dark" v-if="scope.row.status === 0">机构</el-tag>
+                        <el-tag effect="dark" type="success" v-else-if="scope.row.status===1">电控</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status===2">助理</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作">
@@ -242,6 +243,7 @@ export default {
             statusOps: [
                 { value: 0, label: "机构" },
                 { value: 1, label: "电控" },
+                { value: 2, label: "助理" },
             ],
             addFormRules: {
                 name: [

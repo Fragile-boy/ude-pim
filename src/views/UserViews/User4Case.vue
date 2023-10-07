@@ -8,13 +8,13 @@
         </div>
         <el-card>
             <!-- 申请区域 -->
-            <el-row>
-                <el-col :span="3" :offset="18">
+            <el-row :gutter="20">
+                <el-col :span="2" :offset="20">
                     <el-button type="success" icon="el-icon-plus" @click="initApplyCaseSub()">申请子流程</el-button>
                 </el-col>
 
-                <el-col :span="3">
-                    <el-button type="primary" icon="el-icon-plus" @click="applyTaskVisible = true">申请技术研究</el-button>
+                <el-col :span="2">
+                    <el-button type="primary" icon="el-icon-plus" @click="applyTaskVisible = true">申请任务</el-button>
                 </el-col>
             </el-row>
             <br>

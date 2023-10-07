@@ -146,8 +146,11 @@ export default {
         //初始化块元素
         this.typePie = this.$echarts.init(document.getElementById('taskType'))
         this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
-        this.initPie()
-        this.initBar()
+        setTimeout(() => {
+            this.initPie()
+            this.initBar()
+        }, 1000)
+
     },
     computed: {
         ...mapState(['user'])
@@ -207,6 +210,8 @@ export default {
             var { data: res } = await getUserList()
             console.log(res)
             for (var i = 0; i < res.length; i++) {
+                if(res[i].status >= 2)
+                    continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
         },
@@ -404,12 +409,12 @@ export default {
             this.$refs.commitFormRef.resetFields()
         },
         //打开专案详情
-        openCaseDetail(row){
+        openCaseDetail(row) {
             this.$router.push({
-                name:'case-sub',
-                query:{
-                    caseId:row.caseId,
-                    caseName:row.description.split("→")[0]
+                name: 'case-sub',
+                query: {
+                    caseId: row.caseId,
+                    caseName: row.description.split("→")[0]
                 }
             })
         }

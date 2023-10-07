@@ -112,7 +112,7 @@ const routes = [
         name: 'taskManage',
         component: TaskManage
       },
-      
+
       // 异常状态的专案子阶段
       {
         path: '/exception',
@@ -162,14 +162,14 @@ const routes = [
       {
         // 部员专案管理页
         path: '/userProject',
-        name:'userProjectManagement',
-        component:UserProjectManagement
+        name: 'userProjectManagement',
+        component: UserProjectManagement
       },
       {
         // 部员专案追踪页
         path: '/userProjectTracking',
-        name:'userProjectTracking',
-        component:UserProjectTracking
+        name: 'userProjectTracking',
+        component: UserProjectTracking
       },
 
       {
@@ -204,9 +204,9 @@ const routes = [
       },
       {
         //需求
-        path:'/demand',
-        name:'demand',
-        component:Demand
+        path: '/demand',
+        name: 'demand',
+        component: Demand
       }
     ]
   },
@@ -228,23 +228,31 @@ const router = new VueRouter({
 })
 
 //管理员权限界面
-const authUrls = ['/check', '/commit', '/delay', '/finish']
+const authUrls = ['/caseList', '/subManage'
+  , '/templeteManage', '/taskManage', '/exception', '/delay', '/finish', '/study'
+  , '/caseApply', '/caseAnalysis', '/userList', '/userProject', '/userProjectTracking']
 
-function isLogin(){
-  console.log(localStorage.getItem('ude_pim_user'))
-  if(localStorage.getItem('ude_pim_user')!==null)
-    return true
-  return false
-}
+//用户界面
+const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart']
+
 
 router.beforeEach(async (to, from, next) => {
-  // if (authUrls.includes(to.path)) {
-  //   await store.dispatch('fetchUserData', getInfo())
-  //   if (store.state.user.type !== 1) {
-  //     next("/home")
-  //     return
-  //   }
-  // }
+  //检查权限界面
+  if (authUrls.includes(to.path)) {
+    await store.dispatch('fetchUserData', getInfo())
+    if (store.state.user.type !== 1) {
+      next("/index")
+      return
+    }
+  }
+  //检查用户界面
+  if (userUrls.includes(to.path)) {
+    await store.dispatch('fetchUserData', getInfo())
+    if (store.state.user.status > 2) {
+      next("/index")
+      return
+    }
+  }
   next()
 })
 

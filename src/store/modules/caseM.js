@@ -56,18 +56,19 @@ export default {
 
                 //设置执行天数
 
-                // 如果案子还没有完结
-                if (res[i].finishTime === null) {
-                    //今天的时间-开始时间 获得已经执行的时间
-                    var doingDay = Math.ceil((today - startTime) / (3600 * 24 * 1000))
-                    res[i]['doingDay'] = doingDay
+                // // 如果案子还没有完结
+                // if (res[i].finishTime === null) {
+                //     //今天的时间-开始时间 获得已经执行的时间
+                //     var doingDay = Math.ceil((today - startTime) / (3600 * 24 * 1000))
+                //     res[i]['doingDay'] = doingDay
 
-                } else {
-                    //案子已经完结
-                    var doingDay = Math.ceil((new Date(res[i].finishTime) - startTime) / (3600 * 24 * 1000))
-                    res[i]['doingDay'] = doingDay
-                    res[i].finishTime = formatDate(res[i].finishTime)
-                }
+                // } else {
+                //     //案子已经完结
+                //     var doingDay = Math.ceil((new Date(res[i].finishTime) - startTime) / (3600 * 24 * 1000))
+                //     res[i]['doingDay'] = doingDay
+                //     res[i].finishTime = formatDate(res[i].finishTime)
+                // }
+                // res[i]['doingDay']-=res[i]['unforcedDay']===null?0:+res[i]['unforcedDay']
 
                 //显示当前阶段
                 if (res[i].curStage === null)
@@ -77,7 +78,9 @@ export default {
                 // 如果案子还没有完结
                 res[i].status = getStatus(res[i].startTime, res[i].presetTime, res[i].finishTime)
             }
-
+            res.sort((a, b) => {
+                return b.executionDays-a.executionDays
+            })
             context.commit('updateList', res)
         },
 

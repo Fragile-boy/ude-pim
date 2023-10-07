@@ -87,11 +87,14 @@ export default {
                     //如果结束时间不为空
                     if (this.case2person[i].finishTime !== null) {
                         this.case2person[i].executionDays = timeSub(this.case2person[i].startTime, this.case2person[i].finishTime)
-                        //配电要乘以2
-                        this.case2person[i].sumValue = (this.case2person[i].planDays * (this.case2person[i].planDays / this.case2person[i].executionDays) ** (2 / 3)).toFixed(2)
-                        if (this.case2person[i].subId === 9)
-                            this.case2person[i].sumValue *= 2
-                        this.case2person[i].value = (this.case2person[i].sumValue * this.case2person[i].directorRate / 100).toFixed(2)
+                        this.case2person[i].executionDays -= this.case2person[i].unforcedDays===null?0:+this.case2person[i].unforcedDays
+                        if (this.case2person[i].subId !== 7) {
+                            //配电要乘以2
+                            this.case2person[i].sumValue = (this.case2person[i].planDays * (this.case2person[i].planDays / this.case2person[i].executionDays) ** (2 / 3)).toFixed(2)
+                            if (this.case2person[i].subId === 9)
+                                this.case2person[i].sumValue *= 2
+                            this.case2person[i].value = (this.case2person[i].sumValue * this.case2person[i].directorRate / 100).toFixed(2)
+                        }
                     }
                 }
                 console.log(this.case2person)
@@ -148,7 +151,7 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.el-page-header{
+.el-page-header {
     margin-bottom: 10px;
 }
 </style>

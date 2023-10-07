@@ -10,11 +10,10 @@
         </div>
 
         <!-- 子流程详情演示区域 -->
-        <el-card>
+        <el-card class="table">
             <div class="subInfo">
                 <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
-                <div class="table">
-                    <div class="subTable">
+                <div>
                         <el-table :cell-style="setCellColor" :data="subInfo" stripe border
                             @cell-dblclick="handleDoubleClick">
 
@@ -191,17 +190,15 @@
                                 </el-card>
                             </el-form-item>
                             <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
-                            <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1">
+                            <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1||user.status===2">
                                 <el-input type="textarea" v-model="commitForm.newContent"></el-input>
                             </el-form-item>
                         </el-form>
                         <span slot="footer" class="dialog-footer">
-                            <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1">提交</el-button>
+                            <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1||user.status===2">提交</el-button>
                             <el-button @click="commitVisible = false">取 消</el-button>
                         </span>
                     </el-dialog>
-
-                </div>
             </div>
         </el-card>
 
@@ -425,7 +422,7 @@ export default {
                     this.subInfo[i].executionDays -= this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
                 }
                 //计算积分
-                if (this.subInfo[i].finishTime !== null) {
+                if (this.subInfo[i].finishTime !== null&&this.subInfo[i].subId!==7) {
                     this.subInfo[i].value = (this.subInfo[i].planDays * (this.subInfo[i].planDays * 1.0 / this.subInfo[i].executionDays) ** (2 / 3)).toFixed(2)
                     // if(this.subInfo[i].subName==='配電')
                     if (this.subInfo[i].subId === 9)
@@ -632,7 +629,8 @@ export default {
             if (res.code === 200) {
                 this.editUser = res.data
                 res.data.forEach((item) => {
-                    this.allUser[item.status].children.push(item)
+                    if(item.status!==2)
+                        this.allUser[item.status].children.push(item)
                 })
             } else
                 this.$message.error(res.msg)
@@ -776,5 +774,9 @@ export default {
 .chargeNameTag {
     margin: 7px;
     font-size: 20px;
+}
+
+.table{
+    width: 100%;
 }
 </style>

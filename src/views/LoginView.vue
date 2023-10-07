@@ -17,8 +17,19 @@
                 </el-form-item>
                 <el-form-item>
                     <div class="btns">
-                        <el-checkbox v-model="rememberPsw">记住密码</el-checkbox>
-                        <el-button type="primary" @click="handlerLogin">登录</el-button>
+                        <el-row>
+                            <el-col :span="1">
+                                <el-checkbox v-model="rememberPsw">记住密码</el-checkbox>
+                            </el-col>
+                            <el-col :span="6" :offset="14">
+                                <el-button type="warning" @click="visitLogin">游客访问</el-button>
+                            </el-col>
+                            <el-col :span="3">
+                                <el-button type="primary" @click="handlerLogin">登录</el-button>
+                            </el-col>
+                        </el-row>
+
+
                     </div>
 
                 </el-form-item>
@@ -57,9 +68,9 @@ export default {
         }
     },
     created() {
-        if (localStorage.getItem('userLogin') !== null){
+        if (localStorage.getItem('userLogin') !== null) {
             this.loginForm = JSON.parse(localStorage.getItem('userLogin'))
-            if(this.loginForm.password!==null)
+            if (this.loginForm.password !== null)
                 this.rememberPsw = true
         }
     },
@@ -73,21 +84,21 @@ export default {
                 const res = await loginApi(this.loginForm)
                 if (res.code == 200) {
                     //持久化存储上一个登录成功的账号
-                    if(this.rememberPsw)
+                    if (this.rememberPsw)
                         localStorage.setItem("userLogin", JSON.stringify(this.loginForm))
-                    else{
+                    else {
                         this.loginForm.password = null
                         localStorage.setItem("userLogin", JSON.stringify(this.loginForm))
                     }
                     this.setUser(res.data)
-                    localStorage.setItem("token",res.data.id)
+                    localStorage.setItem("token", res.data.id)
                     this.$message({
                         message: "登录成功",
                         type: 'success',
                         duration: 900
                     })
 
-                    if(res.data.type===1)
+                    if (res.data.type === 1)
                         setTimeout(() => this.$router.push('/home'), 1000)
                     else
                         setTimeout(() => this.$router.push('/user/index'), 1000)
@@ -96,11 +107,17 @@ export default {
                 }
             })
         },
-        fn() {
-            if (this.remember) {
-                localStorage.setItem("password", this.password)
-            } else {
-                localStorage.removeItem("password")
+        async visitLogin() {
+            const res = await loginApi({ number: 888888, password: 123456 })
+            if (res.code == 200) {
+                this.$message({
+                    message: "登录成功",
+                    type: 'success',
+                    duration: 900
+                })
+                this.setUser(res.data)
+                localStorage.setItem("token", res.data.id)
+                setTimeout(() => this.$router.push('/index'), 1000)
             }
         }
     }
@@ -157,8 +174,8 @@ export default {
     box-sizing: border-box;
 }
 
-.btns {
-    display: flex;
-    justify-content: space-between;
-}
+// .btns {
+//     display: flex;
+//     justify-content: space-between;
+// }
 </style>

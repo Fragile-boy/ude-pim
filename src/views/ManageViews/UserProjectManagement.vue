@@ -315,6 +315,8 @@ export default {
             var { data: res } = await getUserList()
             console.log(res)
             for (var i = 0; i < res.length; i++) {
+                if(res[i].status >= 2)
+                    continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
         },

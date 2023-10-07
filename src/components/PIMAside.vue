@@ -104,7 +104,7 @@ export default {
                     this.getFinish(),
                     this.getCaseSubApplyList(),
                     this.getTaskList()
-            }, 10000)
+            }, 60000)
     },
     methods: {
         ...mapActions('log', ['getLogList']),

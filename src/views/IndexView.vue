@@ -37,10 +37,12 @@
           </el-row>
         </div>
 
-        <el-table :data="pageInfo" border stripe max-height=600 :default-sort="{ prop: 'doingDay', order: 'descending' }">
+        <el-table :data="pageInfo" border stripe max-height=600 @cell-dblclick="handleDoubleClick">
           <el-table-column type="index" label="编号" width="50">
           </el-table-column>
           <el-table-column prop="name" label="任务名" width="260">
+          </el-table-column>
+          <el-table-column prop="curStage" label="当前阶段">
           </el-table-column>
           <el-table-column prop="level" label="难度">
           </el-table-column>
@@ -54,11 +56,9 @@
           </el-table-column>
           <el-table-column prop="planDay" label="计划天数">
           </el-table-column>
-          <el-table-column prop="doingDay" label="执行天数">
+          <el-table-column prop="executionDays" label="执行天数">
           </el-table-column>
           <el-table-column prop="unforcedDay" label="外界因素延期">
-          </el-table-column>
-          <el-table-column prop="curStage" label="当前阶段">
           </el-table-column>
           <el-table-column prop="status" label="执行状态">
             <template slot-scope="scope">
@@ -89,11 +89,43 @@
       </div>
     </el-card>
 
+    <!-- 显示备注框 -->
+    <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%" @close="$refs.commitFormRef.resetFields()">
+      <el-form ref="commitFormRef" :model="commitForm" :rules="rules" label-width="100px">
+        <!-- 专案名称显示 -->
+        <el-form-item label="专案">
+          <el-input v-model="commitForm.caseName" disabled></el-input>
+        </el-form-item>
+        <!-- 子流程名称显示 -->
+        <el-form-item label="流程名">
+          <el-input v-model="commitForm.subName" disabled></el-input>
+        </el-form-item>
+        <!-- 备注显示区域 -->
+        <el-form-item label="备注信息">
+          <el-card class="box-card">
+            <div v-for="o in commitForm.content" :key="o" class="text item">
+              {{ o }}
+            </div>
+            <label v-if="commitForm.content.length === 0">暂无备注</label>
+          </el-card>
+        </el-form-item>
+        <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
+        <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1 || user.status === 2">
+          <el-input type="textarea" v-model="commitForm.newContent"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1 || user.status === 2">提交</el-button>
+        <el-button @click="commitVisible = false">取 消</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
 import { mapActions, mapState, mapMutations } from 'vuex'
+import { getById, saveCommit } from '@/api/caseSubCommit';
 export default {
   name: 'indexPage',
   data() {
@@ -104,56 +136,29 @@ export default {
       total: 0,
       queryText: '',
       caseInfo: [],
-      levels: ['正在执行', '已延误', '正常完成', '延误完成', '中断'],
+      levels: ['正在执行', '已延误'],
       queryStatus: '',
       queryStartTime: '',
       queryEndTime: '',
-      timeOptions: {
-        shortcuts: [{
-          text: '最近一个月',
-          onClick(picker) {
-            const end = new Date();
-            var start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
-            const year = start.getFullYear();
-            const month = (start.getMonth() + 1).toString().padStart(2, '0');
-            start = new Date(`${year}-${month}-01`)
-            picker.$emit('pick', [start, end]);
+      commitVisible: false,
+      commitForm: {
+        caseName: '',
+        subName: '',
+        content: [],
+        newContent: '',
+        caseSubId: null,
+      },
+      //备注验证规则
+      rules: {
+        newContent: [
+          {
+            required: true, message: '备注不能为空', trigger: 'blur'
+          },
+          {
+            min: 8, max: 255, message: '备注应该大于8个字符，小于255个字符', trigger: 'blur'
           }
-        }, {
-          text: '最近三个月',
-          onClick(picker) {
-            const end = new Date();
-            var start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
-            const year = start.getFullYear();
-            const month = (start.getMonth() + 1).toString().padStart(2, '0');
-            start = new Date(`${year}-${month}-01`)
-            picker.$emit('pick', [start, end]);
-          }
-        }, {
-          text: '最近半年',
-          onClick(picker) {
-            const end = new Date();
-            var start = new Date();
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 180);
-            const year = start.getFullYear();
-            const month = (start.getMonth() + 1).toString().padStart(2, '0');
-            start = new Date(`${year}-${month}-01`)
-            picker.$emit('pick', [start, end]);
-          }
-        }, {
-          text: '今年到今天',
-          onClick(picker) {
-            const end = new Date();
-            var start = new Date();
-            start = start.getFullYear() + "-01-01"
-            console.log(start)
-            start = new Date(start)
-            picker.$emit('pick', [start, end]);
-          }
-        }]
-      }
+        ]
+      },
 
     }
   },
@@ -182,7 +187,8 @@ export default {
     }
   },
   computed: {
-    ...mapState('caseM', ['caseList', 'queryList'])
+    ...mapState('caseM', ['caseList', 'queryList']),
+    ...mapState(['user'])
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
@@ -305,7 +311,39 @@ export default {
       this.pageInfo = this.caseInfo.slice((this.page - 1) * this.size,
         this.page * this.size)
       this.total = this.caseInfo.length
-    }
+    },
+    //显示专案正在执行阶段的备注信息
+    async handleDoubleClick(row, column) {
+      if (column.label === '当前阶段') {
+        this.commitForm.caseName = row.name
+        this.commitForm.subName = row.curStage
+        this.commitForm.caseSubId = row.curStageId
+        // 获取专案子流程对应的所有备注
+        var res = await getById(this.commitForm.caseSubId)
+        res = res.data
+        //备注数组必须清空，否则会叠加
+        this.commitForm.content = []
+        for (var i = 0; i < res.length; i++) {
+          this.commitForm.content.push(res[i].content)
+        }
+        this.commitVisible = true
+      }
+    },
+    async submitCommitForm() {
+      //判断备注信息是否为空或者内容太少
+      this.$refs.commitFormRef.validate(async valid => {
+        if (!valid) return;
+        const commmitObj = {}
+        commmitObj.caseSubId = this.commitForm.caseSubId
+        commmitObj.content = this.commitForm.newContent
+        commmitObj.createUser = this.user.id
+        var res = await saveCommit(commmitObj)
+        this.$message(res.data)
+        //隐藏画面
+        this.commitVisible = false
+      })
+
+    },
   }
 }
 </script>

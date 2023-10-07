@@ -10,7 +10,7 @@
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse ? '64px' : '200px'">
+      <el-aside :width="isCollapse ? '64px' : '200px'" v-if="user.status<=2">
         <div class="toggle-button" @click="toggleCollapse">|||</div>
         <PIMAside :isCollapse="isCollapse"></PIMAside>
       </el-aside>

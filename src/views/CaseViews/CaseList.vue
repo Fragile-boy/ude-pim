@@ -384,7 +384,7 @@ export default {
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
                     this.defaultDays[this.relationSub[i].id] = r.data
-                    if (this.relationSub[i].id <= 6) {
+                    if (this.relationSub[i].id <= 7) {
                         this.relationSub[i].chargeId = [this.curDirector]
                     }
                 }
@@ -550,7 +550,7 @@ export default {
             for (var i = 0; i < this.relationTemplateSub.length; i++) {
                 const r = await getPresetDay({ subId: this.relationTemplateSub[i].id, level: this.curLevel })
                 this.defaultDays[this.relationTemplateSub[i].id] = r.data
-                if (this.relationTemplateSub[i].id <= 6) {
+                if (this.relationTemplateSub[i].id <= 7) {
                     this.relationTemplateSub[i].chargeId = [this.curDirector]
                 }
             }
