@@ -16,12 +16,18 @@
               </el-input>
             </el-col>
 
-            <!-- 难度 -->
-            <el-col :span="4">
+            <!-- 执行状态 -->
+            <el-col :span="4" v-if="!showMode">
               <el-select v-model="queryStatus" placeholder="请选择执行状态" clearable @change="handleQuery">
                 <el-option v-for="item in levels" :key="item" :label="item" :value="item">
                 </el-option>
               </el-select>
+            </el-col>
+
+            <el-col :span="6" v-if="showMode">
+              <el-date-picker v-model="start_stop_time" type="daterange" align="left" unlink-panels range-separator="——"
+                start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="timeOptions" value-format="yyyy-MM-dd">
+              </el-date-picker>
             </el-col>
 
             <el-col :span="2">
@@ -32,6 +38,11 @@
             <el-col :span="2">
               <!-- 按钮 -->
               <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
+            </el-col>
+
+            <el-col :span="3" :offset="showMode ? 7 : 9">
+              <el-switch v-model="showMode" active-text="已完成" inactive-text="正在执行">
+              </el-switch>
             </el-col>
 
           </el-row>
@@ -138,8 +149,6 @@ export default {
       caseInfo: [],
       levels: ['正在执行', '已延误'],
       queryStatus: '',
-      queryStartTime: '',
-      queryEndTime: '',
       commitVisible: false,
       commitForm: {
         caseName: '',
@@ -159,11 +168,49 @@ export default {
           }
         ]
       },
-
+      //查看已完成(false正在执行，true已完成)
+      showMode: false,
+      start_stop_time: '',
+      //时间选择器
+      timeOptions: {
+        shortcuts: [{
+          text: '最近一月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近三个月',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近半年',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 180);
+            picker.$emit('pick', [start, end]);
+          }
+        }, {
+          text: '最近一年',
+          onClick(picker) {
+            const end = new Date();
+            const start = new Date();
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
+            picker.$emit('pick', [start, end]);
+          }
+        }]
+      },
     }
   },
   async created() {
-    await this.getCaseList()
+    await this.getCaseList(this.showMode)
     var pageSize = +localStorage.getItem('pim_caseTable_pageSize')
     this.pageSize = pageSize === 0 ? 10 : pageSize
     this.caseInfo = this.caseList
@@ -182,6 +229,12 @@ export default {
     },
     caseInfo: {
       handler() {
+        this.getTableDate()
+      }
+    },
+    showMode: {
+      handler() {
+        this.getCaseList(this.showMode)
         this.getTableDate()
       }
     }
@@ -265,24 +318,22 @@ export default {
       //2. 难度
       //4. 开始时间
       //5. 结束时间
+      console.log(this.start_stop_time)
       var queryObj = {}
       if (this.queryText !== '')
         queryObj.name = this.queryText
       // 状态不为空
-      if (this.queryStatus !== '' && this.queryStatus !== null) {
+      if (!this.showMode && this.queryStatus !== '' && this.queryStatus !== null) {
         // this.queryStatus = this.transformStatus(this.queryStatus)
         queryObj.status = this.transformStatus(this.queryStatus)
       }
 
-      //开始时间不为空
-      if (this.queryStartTime !== null && this.queryStartTime !== '')
-        queryObj.startTime = this.queryStartTime
-
-      //结束时间不为空
-      if (this.queryEndTime !== null && this.queryEndTime !== '')
-        queryObj.endTime = this.queryEndTime
-
-
+      //时间区间
+      if (this.showMode && this.start_stop_time !== null && this.start_stop_time !== '') {
+        queryObj.startTime = this.start_stop_time[0]
+        queryObj.endTime = this.start_stop_time[1]
+        console.log(queryObj)
+      }
       this.queryCase(queryObj)
 
       this.page = 1
@@ -293,7 +344,7 @@ export default {
       this.queryCase({})
       //清空状态
       this.queryText = ''
-      this.queryLevel = null
+      this.start_stop_time = ''
     },
     //页面大小发生变化
     handleSizeChange(val) {

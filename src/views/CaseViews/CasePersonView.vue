@@ -87,7 +87,7 @@ export default {
                     //如果结束时间不为空
                     if (this.case2person[i].finishTime !== null) {
                         this.case2person[i].executionDays = timeSub(this.case2person[i].startTime, this.case2person[i].finishTime)
-                        this.case2person[i].executionDays -= this.case2person[i].unforcedDays===null?0:+this.case2person[i].unforcedDays
+                        this.case2person[i].executionDays -= this.case2person[i].unforcedDays === null ? 0 : +this.case2person[i].unforcedDays
                         if (this.case2person[i].subId !== 7) {
                             //配电要乘以2
                             this.case2person[i].sumValue = (this.case2person[i].planDays * (this.case2person[i].planDays / this.case2person[i].executionDays) ** (2 / 3)).toFixed(2)
@@ -115,8 +115,10 @@ export default {
         async computeSumValue(index) {
             var userId = this.case2person[index].userId
             var res = 0
-            while (this.case2person[index] != null && 'value' in this.case2person[index] && this.case2person[index].userId === userId) {
-                res += +this.case2person[index].value
+            while (index<this.case2person.length && this.case2person[index].userId === userId) {
+                if (this.case2person[index] != null && 'value' in this.case2person[index]) {
+                    res += +this.case2person[index].value
+                }
                 index++
             }
             res = res.toFixed(2)

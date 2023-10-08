@@ -1,8 +1,8 @@
 import service from "@/plugins/service"
 
 // 返回专案综合信息列表
-export const getCaseList = () => {
-    return service.get('case/dtoList')
+export const getCaseList = (isFinished) => {
+    return service.get('case/dtoList',{params: {isFinished: isFinished}})
 }
 
 // 返回专案列表

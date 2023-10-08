@@ -37,7 +37,6 @@
                 <span>数据统计</span>
             </template>
             <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
-            <!-- <el-menu-item><i class="el-icon-s-tools"></i>部员数据分析</el-menu-item> -->
         </el-submenu>
 
         <el-submenu index="4" v-if="user.type === 1">

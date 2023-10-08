@@ -23,17 +23,14 @@ export default {
             if ("status" in obj)
                 state.queryList = state.queryList.filter(item => item.status === obj.status)
 
-            if ("startTime" in obj)
-                state.queryList = state.queryList.filter(item => (new Date(obj.startTime[0]) <= new Date(item.startTime)) && (new Date(obj.startTime[1]) >= new Date(item.startTime)))
-
-            if ("endTime" in obj)
-                state.queryList = state.queryList.filter(item => item.finishTime !== null && (new Date(obj.endTime[0]) <= new Date(item.finishTime)) && (new Date(obj.endTime[1]) >= new Date(item.finishTime)))
+            if ("startTime" in obj && "endTime" in obj)
+                state.queryList = state.queryList.filter(item => (new Date(item.finishTime)>=new Date(obj.startTime)) && (new Date(item.finishTime)<=new Date(obj.endTime)))
         }
     },
     actions: {
         //获取专案列表
-        async getCaseList(context) {
-            var res = await getCaseList()
+        async getCaseList(context,isFinished) {
+            var res = await getCaseList(isFinished)
             res = res.data
             //数据加工
             for (let i = 0; i < res.length; i++) {
@@ -45,6 +42,8 @@ export default {
                 //后端拿到的是字符串格式的数据，转换为时间格式
                 const startTime = new Date(res[i]['startTime'])
                 res[i].startTime = formatDate(startTime)
+                if(res[i].finishTime!==null)
+                    res[i].finishTime = formatDate(new Date(res[i]['finishTime']))
                 //获得今天的日期，用于计算执行天数（如果已经完成，则执行天数由结束之间-开始时间获得）
                 const today = new Date()
                 //目标完成时间

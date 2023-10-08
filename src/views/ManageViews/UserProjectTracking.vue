@@ -7,9 +7,14 @@
             </el-breadcrumb>
         </div>
         <el-card>
-            <!-- 申请区域 -->
             <el-row>
-                <el-col :span="3" :offset="21">
+                <el-col :span="1" :offset="19">
+                    <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
+                </el-col>
+                <el-col :span="1">
+                    <el-button type="primary" icon="el-icon-bottom" round @click="changeUser(1)"></el-button>
+                </el-col>
+                <el-col :span="3">
                     <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
                         <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                             <el-option v-for="item in group.children" :key="item.value" :label="item.label"
@@ -22,7 +27,7 @@
             <br>
             <!-- 执行任务的详情 -->
             <el-table :data="userInfo">
-                <el-table-column label="进度" width="260">
+                <el-table-column label="进度">
                     <template slot-scope="scope">
                         <el-progress :stroke-width="24" :percentage="scope.row.percentage"
                             :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'"></el-progress>
@@ -36,7 +41,7 @@
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="描述"></el-table-column>
+                <el-table-column prop="description" label="描述" width="260"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
@@ -45,8 +50,8 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <!-- 这里后面留着查看信息 -->
-                        <el-button icon="el-icon-info" type="primary" size="mini" round @click="openCommentView(scope.row)"
-                            v-if="scope.row.caseSubId"></el-button>
+                        <el-button icon="el-icon-info" type="primary" size="mini" round
+                            @click="openCommentView(scope.row.caseSubId)" v-if="scope.row.caseSubId"></el-button>
                         <el-tooltip class="item" effect="dark" content="专案详情" placement="right-start">
                             <el-button icon="el-icon-s-promotion" type="primary" size="mini" round
                                 @click="openCaseDetail(scope.row)" v-if="scope.row.caseSubId">
@@ -58,7 +63,7 @@
         </el-card>
 
         <br>
-        <div class="charts-area">
+        <div class="charts-area" v-show="!commitVisible">
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
                 <div id="taskType" style="width: 100%; height: 300px;"></div>
@@ -69,16 +74,14 @@
             </el-card>
         </div>
 
-        <!-- 显示备注框 -->
-        <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%" @close="closeCommitDialog">
+        <el-card v-if="commitVisible">
+            <el-row>
+                <el-col :span="1" :offset="23">
+                    <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
+                        style="margin-bottom: 5px;"></el-button>
+                </el-col>
+            </el-row>
             <el-form ref="commitFormRef" :model="commitForm" label-width="100px">
-                <!-- 子流程名称显示 -->
-                <el-form-item label="专案名称">
-                    <el-input v-model="commitForm.caseName" disabled></el-input>
-                </el-form-item>
-                <el-form-item label="流程名称">
-                    <el-input v-model="commitForm.subName" disabled></el-input>
-                </el-form-item>
                 <!-- 备注显示区域 -->
                 <el-form-item label="备注信息">
                     <el-card class="box-card">
@@ -88,16 +91,9 @@
                         <label v-if="commitForm.content.length === 0">暂无备注</label>
                     </el-card>
                 </el-form-item>
-                <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
-                <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1">
-                    <el-input type="textarea" v-model="commitForm.newContent"></el-input>
-                </el-form-item>
+
             </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1">提交</el-button>
-                <el-button @click="commitVisible = false">取 消</el-button>
-            </span>
-        </el-dialog>
+        </el-card>
     </div>
 </template>
 
@@ -127,6 +123,8 @@ export default {
                 }
             ],
             curUser: null,
+            curGroup: null,
+            curIndex: null,
             typePie: null,
             barInfo: null,
             // 显示备注框
@@ -141,15 +139,16 @@ export default {
     async mounted() {
         await this.getAllUser()
         this.curUser = this.directorOptions[0].children[0].value
-        console.log(this.curUser)
-        this.getTaskByUserId()
+        this.curGroup = 0,
+            this.curIndex = 0,
+            this.getTaskByUserId()
         //初始化块元素
         this.typePie = this.$echarts.init(document.getElementById('taskType'))
         this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
         setTimeout(() => {
             this.initPie()
             this.initBar()
-        }, 1000)
+        }, 100)
 
     },
     computed: {
@@ -191,6 +190,16 @@ export default {
                 if (this.userInfo[i].percentage > 100)
                     this.userInfo[i].percentage = 100
             }
+            if (this.commitVisible) {
+                if(this.userInfo.length === 0)
+                    this.commitForm.content = ''
+                for (var i = 0; i < this.userInfo.length; i++) {
+                    if (this.userInfo[i].caseSubId !== null) {
+                        this.openCommentView(this.userInfo[i].caseSubId)
+                        break
+                    }
+                }
+            }
         },
 
         percentageText(row) {
@@ -210,12 +219,29 @@ export default {
             var { data: res } = await getUserList()
             console.log(res)
             for (var i = 0; i < res.length; i++) {
-                if(res[i].status >= 2)
+                if (res[i].status >= 2)
                     continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
         },
         handleUserChange() {
+            var flag = false
+            for (var i = 0; i < this.directorOptions.length; i++) {
+                for (var j = 0; j < this.directorOptions[i].children.length; j++) {
+                    if (this.directorOptions[i].children[j].value === this.curUser) {
+                        this.curGroup = i
+                        this.curIndex = j
+                        flag = true
+                        break
+                    }
+                }
+                if (flag)
+                    break
+            }
+            this.updateView()
+        },
+        //更新界面
+        updateView() {
             this.getTaskByUserId()
             this.initPie()
             this.initBar()
@@ -372,15 +398,15 @@ export default {
             return minval; // 输出最小值
         },
         //显示评论
-        async openCommentView(row) {
-            console.log(row)
+        async openCommentView(caseSubId) {
+
             this.commitVisible = true
-            var names = row.description.split("→")
-            this.commitForm.caseName = names[0]
-            this.commitForm.subName = names[1]
-            this.commitForm.caseSubId = row.caseSubId
+            // var names = row.description.split("→")
+            // this.commitForm.caseName = names[0]
+            // this.commitForm.subName = names[1]
+            this.commitForm.caseSubId = caseSubId
             // 获取专案子流程对应的所有备注
-            var res = await getById(row.caseSubId)
+            var res = await getById(caseSubId)
             res = res.data
             //备注数组必须清空，否则会叠加
             this.commitForm.content = []
@@ -417,6 +443,20 @@ export default {
                     caseName: row.description.split("→")[0]
                 }
             })
+        },
+        //修改当前科员
+        changeUser(value) {
+            this.curIndex += value
+            if (this.curIndex >= this.directorOptions[this.curGroup].children.length) {
+                this.curGroup = 1 - this.curGroup
+                this.curIndex = 0
+            }
+            if(this.curIndex < 0){
+                this.curGroup = 1-this.curGroup
+                this.curIndex = this.directorOptions[this.curGroup].children.length-1
+            }
+            this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
+            this.updateView()
         }
     }
 }

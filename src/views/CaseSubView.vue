@@ -13,194 +13,195 @@
         <el-card class="table">
             <div class="subInfo">
                 <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
-                <div>
-                        <el-table :cell-style="setCellColor" :data="subInfo" stripe border
-                            @cell-dblclick="handleDoubleClick">
-
-                            <el-table-column type="expand">
-                                <template slot-scope="scope">
-                                    <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
-                                        <el-col :span="2">
-                                            <el-tag class="chargeNameTag"
-                                                @click="getCaseByUserId(scope.row.chargeId[index], item)">
-                                                {{ item }}
-                                            </el-tag>
-
-                                        </el-col>
-
-                                        <el-col :span="3">
-                                            <el-tag v-if="scope.row.directorRate != null" type="warning"
-                                                class="chargeNameTag">
-                                                积分比例：{{ (scope.row.directorRate[index]).toFixed() }} %
-                                            </el-tag>
-                                        </el-col>
-
-                                        <el-col :span="3">
-                                            <el-tag v-if="scope.row.directorRate != null" type="warning"
-                                                class="chargeNameTag">
-                                                积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) / 100).toFixed(2)
-                                                }}
-                                            </el-tag>
-                                        </el-col>
-                                    </el-row>
-                                    <el-tag v-if="scope.row.chargeId.length === 0">暂无负责人</el-tag>
-                                </template>
-                            </el-table-column>
-
-                            <el-table-column prop="subName" label="子流程">
-                            </el-table-column>
-
-                            <el-table-column prop="level" label="难度">
-                            </el-table-column>
-
-                            <el-table-column prop="value" label="积分">
-                            </el-table-column>
-
-                            <el-table-column prop="startTime" label="开始时间">
-                            </el-table-column>
-
-                            <!-- 阶段目标时间：实际开始时间+预设时间 -->
-                            <el-table-column prop="targetTime" label="阶段目标时间">
-                            </el-table-column>
-
-                            <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
-                            <el-table-column prop="standardTime" label="目标完成时间">
-                            </el-table-column>
-
-                            <!-- 理想完成时间：所有流程都正常结束的时间 -->
-                            <el-table-column prop="ideaTime" label="预计完成时间">
-                            </el-table-column>
-
-                            <el-table-column prop="finishTime" label="实际结束时间">
-                            </el-table-column>
-
-                            <el-table-column prop="planDays" label="计划时间">
-                            </el-table-column>
-
-                            <el-table-column prop="executionDays" label="执行天数">
-                            </el-table-column>
-
-                            <el-table-column prop="unforcedDays" label="外界因素延期">
-                            </el-table-column>
-
-                            <el-table-column prop="applyDelay" label="人为因素延期">
-                            </el-table-column>
-
-                            <el-table-column prop="status" label="执行状态">
-                                <template slot-scope="scope">
-                                    <el-tag effect="dark" :type="showtype(scope.row.status)" disable-transitions>{{
-                                        number2status(scope.row.status)
-                                    }}</el-tag>
-                                </template>
-
-                            </el-table-column>
-
-                            <el-table-column label="操作" width="180">
-                                <template slot-scope="scope">
-                                    <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
-                                        <el-button type="info" size="mini" icon="el-icon-info" round
-                                            @click="openCommentView(scope.row)"></el-button>
-                                    </el-tooltip>
-                                    <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
-                                        v-if="user.type===1&&scope.row.startTime === null">
-                                        <el-button type="success" size="mini" icon="el-icon-video-play" round
-                                            @click="launch(scope.row)"></el-button>
-                                    </el-tooltip>
-                                    <el-tooltip effect="dark" content="结束阶段" placement="top" :enterable="false"
-                                        v-if="user.type===1&&scope.row.startTime !== null && scope.row.finishTime === null">
-                                        <el-button type="danger" size="mini" icon="el-icon-success" round
-                                            @click="finish(scope.row)"></el-button>
-                                    </el-tooltip>
-                                    <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
-                                        <el-button v-if="user.type===1" type="primary" size="mini" icon="el-icon-edit" round
-                                            @click="openEditCaseSub(scope.row)"></el-button>
-                                    </el-tooltip>
-                                    <el-tooltip
-                                        v-if="user.type===1&&scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
-                                        effect="dark" content="分配比例" placement="top" :enterable="false">
-                                        <el-button type="warning" size="mini" icon="el-icon-setting" round
-                                            @click="initEditDirectorRate(scope.row)"></el-button>
-                                    </el-tooltip>
-                                </template>
-                            </el-table-column>
-                        </el-table>
-                        <!-- 分页区域 -->
-
-                    </div>
-                    <!-- 显示负责人手头的子流程 -->
-                    <el-drawer :visible.sync="drawer" :direction="direction" size="50%">
-                        <div class="userCase" border>
-                            <div class="chargeInfo">
-                                <label class="chargeName">{{ chargeName }}</label>
-                            </div>
-                            <el-table :data="userInfo">
-                                <el-table-column prop="caseName" label="专案名称" width="245">
-                                </el-table-column>
-                                <el-table-column prop="subName" label="阶段名称" width="80">
-                                </el-table-column>
-                                <el-table-column prop="startTime" label="开始时间" width="100">
-                                </el-table-column>
-                                <el-table-column prop="presetTime" label="预计完成时间" width="110">
-                                </el-table-column>
-                                <el-table-column prop="deadLine" label="延期/截止" width="110">
-                                </el-table-column>
-                                <el-table-column prop="status" label="执行状态" width="100"
-                                    :filters="[{ text: '正在执行', value: '正在执行' }, { text: '已完成', value: '已完成' }, { text: '已延误', value: '已延误' }, { text: '延误完成', value: '延误完成' }]"
-                                    :filter-method="filterTag" filter-placement="bottom-end">
-                                    <template slot-scope="scope">
-                                        <el-tag :type="showtype(scope.row.status)" disable-transitions>{{
-                                            number2status(scope.row.status)
-                                        }}</el-tag>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                        </div>
-                    </el-drawer>
-                    <!-- 显示外界因素延期 -->
-                    <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
-                        <el-table :data="delayList" style="width: 100%" border>
-                            <el-table-column prop="caseName" label="专案" width="240">
-                            </el-table-column>
-                            <el-table-column prop="subName" label="阶段" width="100">
-                            </el-table-column>
-                            <el-table-column prop="type" label="延期类型" width="120">
-                            </el-table-column>
-                            <el-table-column prop="applyReason" label="延期原因">
-                            </el-table-column>
-                            <el-table-column prop="applyDays" label="申请天数" width="80">
-                            </el-table-column>
-                            <el-table-column prop="predictTime" label="预计完成时间" width="120">
-                            </el-table-column>
-                        </el-table>
-                    </el-drawer>
-                    <!-- 显示备注框 -->
-                    <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%" @close="closeCommitDialog">
-                        <el-form ref="commitFormRef" :model="commitForm" :rules="rules" label-width="100px">
-                            <!-- 子流程名称显示 -->
-                            <el-form-item label="流程名称">
-                                <el-input v-model="commitForm.subName" disabled></el-input>
-                            </el-form-item>
-                            <!-- 备注显示区域 -->
-                            <el-form-item label="备注信息">
-                                <el-card class="box-card">
-                                    <div v-for="o in commitForm.content" :key="o" class="text item">
-                                        {{ o }}
-                                    </div>
-                                    <label v-if="commitForm.content.length === 0">暂无备注</label>
-                                </el-card>
-                            </el-form-item>
-                            <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
-                            <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1||user.status===2">
-                                <el-input type="textarea" v-model="commitForm.newContent"></el-input>
-                            </el-form-item>
-                        </el-form>
-                        <span slot="footer" class="dialog-footer">
-                            <el-button type="primary" @click="submitCommitForm" v-if="user.type === 1||user.status===2">提交</el-button>
-                            <el-button @click="commitVisible = false">取 消</el-button>
-                        </span>
-                    </el-dialog>
             </div>
+            <div class="tableInfo">
+                <el-table :cell-style="setCellColor" :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
+
+                    <el-table-column type="expand">
+                        <template slot-scope="scope">
+                            <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
+                                <el-col :span="2">
+                                    <el-tag class="chargeNameTag" @click="getCaseByUserId(scope.row.chargeId[index], item)">
+                                        {{ item }}
+                                    </el-tag>
+
+                                </el-col>
+
+                                <el-col :span="3">
+                                    <el-tag v-if="scope.row.directorRate != null" type="warning" class="chargeNameTag">
+                                        积分比例：{{ (scope.row.directorRate[index]).toFixed() }} %
+                                    </el-tag>
+                                </el-col>
+
+                                <el-col :span="3">
+                                    <el-tag v-if="scope.row.directorRate != null" type="warning" class="chargeNameTag">
+                                        积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) /
+                                            100).toFixed(2)
+                                        }}
+                                    </el-tag>
+                                </el-col>
+                            </el-row>
+                            <el-tag v-if="scope.row.chargeId.length === 0">暂无负责人</el-tag>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="subName" label="子流程">
+                    </el-table-column>
+
+                    <el-table-column prop="level" label="难度">
+                    </el-table-column>
+
+                    <el-table-column prop="value" label="积分">
+                    </el-table-column>
+
+                    <el-table-column prop="startTime" label="开始时间">
+                    </el-table-column>
+
+                    <!-- 阶段目标时间：实际开始时间+预设时间 -->
+                    <el-table-column prop="targetTime" label="阶段目标时间">
+                    </el-table-column>
+
+                    <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
+                    <el-table-column prop="standardTime" label="目标完成时间">
+                    </el-table-column>
+
+                    <!-- 理想完成时间：所有流程都正常结束的时间 -->
+                    <el-table-column prop="ideaTime" label="预计完成时间">
+                    </el-table-column>
+
+                    <el-table-column prop="finishTime" label="实际结束时间">
+                    </el-table-column>
+
+                    <el-table-column prop="planDays" label="计划时间">
+                    </el-table-column>
+
+                    <el-table-column prop="executionDays" label="执行天数">
+                    </el-table-column>
+
+                    <el-table-column prop="unforcedDays" label="外界因素延期">
+                    </el-table-column>
+
+                    <el-table-column prop="applyDelay" label="人为因素延期">
+                    </el-table-column>
+
+                    <el-table-column prop="status" label="执行状态">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="primary" v-if="scope.row.status===0">正在执行</el-tag>
+                            <el-tag effect="dark" type="success" v-if="scope.row.status===1">正常完成</el-tag>
+                            <el-tag effect="dark" type="danger" v-if="scope.row.status===2">已延误</el-tag>
+                            <el-tag effect="dark" type="warning" v-if="scope.row.status===3">延误完成</el-tag>
+                            <el-tag effect="dark" type="info" v-if="scope.row.status===4">未开始</el-tag>
+                        </template>
+
+                    </el-table-column>
+
+                    <el-table-column label="操作" width="180">
+                        <template slot-scope="scope">
+                            <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
+                                <el-button type="info" size="mini" icon="el-icon-info" round
+                                    @click="openCommentView(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
+                                v-if="user.type === 1 && scope.row.startTime === null">
+                                <el-button type="success" size="mini" icon="el-icon-video-play" round
+                                    @click="launch(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="结束阶段" placement="top" :enterable="false"
+                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime === null">
+                                <el-button type="danger" size="mini" icon="el-icon-success" round
+                                    @click="finish(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
+                                <el-button v-if="user.type === 1" type="primary" size="mini" icon="el-icon-edit" round
+                                    @click="openEditCaseSub(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip
+                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
+                                effect="dark" content="分配比例" placement="top" :enterable="false">
+                                <el-button type="warning" size="mini" icon="el-icon-setting" round
+                                    @click="initEditDirectorRate(scope.row)"></el-button>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+
         </el-card>
+
+        <!-- 显示负责人手头的子流程 -->
+        <el-drawer :visible.sync="drawer" :direction="direction" size="50%">
+            <div class="userCase" border>
+                <div class="chargeInfo">
+                    <label class="chargeName">{{ chargeName }}</label>
+                </div>
+                <el-table :data="userInfo">
+                    <el-table-column prop="caseName" label="专案名称" width="245">
+                    </el-table-column>
+                    <el-table-column prop="subName" label="阶段名称" width="80">
+                    </el-table-column>
+                    <el-table-column prop="startTime" label="开始时间" width="100">
+                    </el-table-column>
+                    <el-table-column prop="presetTime" label="预计完成时间" width="110">
+                    </el-table-column>
+                    <el-table-column prop="deadLine" label="延期/截止" width="110">
+                    </el-table-column>
+                    <el-table-column prop="status" label="执行状态">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="primary" v-if="scope.row.status===0">正在执行</el-tag>
+                            <el-tag effect="dark" type="success" v-if="scope.row.status===1">正常完成</el-tag>
+                            <el-tag effect="dark" type="danger" v-if="scope.row.status===2">已延误</el-tag>
+                            <el-tag effect="dark" type="warning" v-if="scope.row.status===3">延误完成</el-tag>
+                            <el-tag effect="dark" type="info" v-if="scope.row.status===4">未开始</el-tag>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </el-drawer>
+        <!-- 显示外界因素延期 -->
+        <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
+            <el-table :data="delayList" style="width: 100%" border>
+                <el-table-column prop="caseName" label="专案" width="240">
+                </el-table-column>
+                <el-table-column prop="subName" label="阶段" width="100">
+                </el-table-column>
+                <el-table-column prop="type" label="延期类型" width="120">
+                </el-table-column>
+                <el-table-column prop="applyReason" label="延期原因">
+                </el-table-column>
+                <el-table-column prop="applyDays" label="申请天数" width="80">
+                </el-table-column>
+                <el-table-column prop="predictTime" label="预计完成时间" width="120">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
+        <!-- 显示备注框 -->
+        <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%" @close="closeCommitDialog">
+            <el-form ref="commitFormRef" :model="commitForm" :rules="rules" label-width="100px">
+                <!-- 子流程名称显示 -->
+                <el-form-item label="流程名称">
+                    <el-input v-model="commitForm.subName" disabled></el-input>
+                </el-form-item>
+                <!-- 备注显示区域 -->
+                <el-form-item label="备注信息">
+                    <el-card class="box-card">
+                        <div v-for="o in commitForm.content" :key="o" class="text item">
+                            {{ o }}
+                        </div>
+                        <label v-if="commitForm.content.length === 0">暂无备注</label>
+                    </el-card>
+                </el-form-item>
+                <!-- 备注增加 现在的设计是，只有特定的人员去填写备注-->
+                <el-form-item prop="newContent" label="增加备注" v-if="user.type === 1 || user.status === 2">
+                    <el-input type="textarea" v-model="commitForm.newContent"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="submitCommitForm"
+                    v-if="user.type === 1 || user.status === 2">提交</el-button>
+                <el-button @click="commitVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
 
         <!-- 显示分配积分比例框 -->
         <el-dialog title="确定积分比例" :visible.sync="editDirectorRate" width="40%">
@@ -379,7 +380,7 @@ export default {
             curCaseSubObj: {},
             //显示分配子流程积分比例界面
             editDirectorRate: false,
-            directorList: []
+            directorList: [],
         }
     },
     computed: {
@@ -422,7 +423,7 @@ export default {
                     this.subInfo[i].executionDays -= this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
                 }
                 //计算积分
-                if (this.subInfo[i].finishTime !== null&&this.subInfo[i].subId!==7) {
+                if (this.subInfo[i].finishTime !== null && this.subInfo[i].subId !== 7) {
                     this.subInfo[i].value = (this.subInfo[i].planDays * (this.subInfo[i].planDays * 1.0 / this.subInfo[i].executionDays) ** (2 / 3)).toFixed(2)
                     // if(this.subInfo[i].subName==='配電')
                     if (this.subInfo[i].subId === 9)
@@ -469,40 +470,12 @@ export default {
                 this.userInfo[i].startTime = formatDate(this.userInfo[i].startTime)
                 const presetTime = new Date(this.userInfo[i].startTime)
                 //要算开始当天，所以必须-1
-                this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays-1))
+                this.userInfo[i].presetTime = formatDate(presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays - 1))
                 this.userInfo[i].status = getStatus(this.userInfo[i].startTime, this.userInfo[i].presetTime, this.userInfo[i].finishTime)
                 //如果是还没有完成，时间相减正常算，如果已经延期，则要-1，比如9.2截止，9.1那天还剩2天，9.3那天延期1天
-                this.userInfo[i].deadLine = this.userInfo[i].status === 0 ? timeSub(new Date(),this.userInfo[i].presetTime) :timeSub(this.userInfo[i].presetTime,new Date())-1
+                this.userInfo[i].deadLine = this.userInfo[i].status === 0 ? timeSub(new Date(), this.userInfo[i].presetTime) : timeSub(this.userInfo[i].presetTime, new Date()) - 1
             }
             this.drawer = true
-        },
-        filterTag(value, row) {
-            return row.status === value;
-        },
-        showtype(tag) {
-            if (tag === 0)
-                return "primary"
-            else if (tag === 1)
-                return "success"
-            else if (tag === 2)
-                return "danger"
-            else if (tag === 3)
-                return "warning"
-            else if (tag === 4)
-                return 'info'
-        },
-
-        number2status(status) {
-            if (status === 0)
-                return "正在执行"
-            else if (status === 1)
-                return "正常完成"
-            else if (status === 2)
-                return "已延误"
-            else if (status === 3)
-                return "延误完成"
-            else if (status === 4)
-                return "未开始"
         },
         async openCommentView(caseSub) {
             this.commitVisible = true
@@ -629,7 +602,7 @@ export default {
             if (res.code === 200) {
                 this.editUser = res.data
                 res.data.forEach((item) => {
-                    if(item.status!==2)
+                    if (item.status !== 2)
                         this.allUser[item.status].children.push(item)
                 })
             } else
@@ -776,7 +749,14 @@ export default {
     font-size: 20px;
 }
 
-.table{
+.table {
     width: 100%;
+}
+
+.page_change {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
 }
 </style>
