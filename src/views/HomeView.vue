@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import { mapMutations, mapState } from 'vuex'
+import { mapActions, mapMutations, mapState } from 'vuex'
 import { logout,checkLogin } from '@/api/login'
 export default {
   data() {
@@ -35,11 +35,14 @@ export default {
     }
   },
   created(){
+    //获取用户列表存入VueX
+    this.getUserList()
   },
   computed: {
     ...mapState(['user'])
   },
   methods: {
+    ...mapActions('user',['getUserList']),
     toggleCollapse() {
       this.isCollapse = !this.isCollapse
     },

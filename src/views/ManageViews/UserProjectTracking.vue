@@ -51,7 +51,7 @@
                     <template slot-scope="scope">
                         <!-- 这里后面留着查看信息 -->
                         <el-button icon="el-icon-info" type="primary" size="mini" round
-                            @click="openCommentView(scope.row.caseSubId)" v-if="scope.row.caseSubId"></el-button>
+                            @click="openCommentView(scope.row)" v-if="scope.row.caseSubId"></el-button>
                         <el-tooltip class="item" effect="dark" content="专案详情" placement="right-start">
                             <el-button icon="el-icon-s-promotion" type="primary" size="mini" round
                                 @click="openCaseDetail(scope.row)" v-if="scope.row.caseSubId">
@@ -81,18 +81,27 @@
                         style="margin-bottom: 5px;"></el-button>
                 </el-col>
             </el-row>
-            <el-form ref="commitFormRef" :model="commitForm" label-width="100px">
-                <!-- 备注显示区域 -->
-                <el-form-item label="备注信息">
-                    <el-card class="box-card">
-                        <div v-for="o in commitForm.content" :key="o" class="text item">
-                            {{ o }}
-                        </div>
-                        <label v-if="commitForm.content.length === 0">暂无备注</label>
-                    </el-card>
-                </el-form-item>
+            <div class="commit_area">
+                <el-card style="width: 40%; margin-right: 20px;">
+                    <h2>专案：{{ commitForm.caseName }}</h2>
+                    <br>
+                    <br>
+                    <h3>阶段：{{ commitForm.subName }}</h3>
+                </el-card>
 
-            </el-form>
+                <el-card class="box-card" style="width: 55%;">
+                    <h2>备注信息</h2>
+                    <!-- <div v-for="o in commitForm.content" :key="o" class="text item">
+                        {{ o }}
+                    </div> -->
+                    <ul>
+                        <li v-for="o in commitForm.content" :key="o" class="text item">{{ o }}</li>
+                    </ul>
+                    <label v-if="commitForm.content.length === 0">暂无备注</label>
+                </el-card>
+
+                
+            </div>
         </el-card>
     </div>
 </template>
@@ -132,7 +141,6 @@ export default {
             commitForm: {
                 content: [],
                 newContent: null,
-                chargeId: []
             },
         }
     },
@@ -191,11 +199,14 @@ export default {
                     this.userInfo[i].percentage = 100
             }
             if (this.commitVisible) {
-                if(this.userInfo.length === 0)
+                if (this.userInfo.length === 0){
                     this.commitForm.content = ''
+                    this.commitForm.caseName = '暂无数据'
+                    this.commitForm.subName = '暂无数据'
+                }
                 for (var i = 0; i < this.userInfo.length; i++) {
                     if (this.userInfo[i].caseSubId !== null) {
-                        this.openCommentView(this.userInfo[i].caseSubId)
+                        this.openCommentView(this.userInfo[i])
                         break
                     }
                 }
@@ -398,15 +409,15 @@ export default {
             return minval; // 输出最小值
         },
         //显示评论
-        async openCommentView(caseSubId) {
+        async openCommentView(row) {
 
             this.commitVisible = true
-            // var names = row.description.split("→")
-            // this.commitForm.caseName = names[0]
-            // this.commitForm.subName = names[1]
-            this.commitForm.caseSubId = caseSubId
+            var names = row.description.split("→")
+            this.commitForm.caseName = names[0]
+            this.commitForm.subName = names[1]
+            this.commitForm.caseSubId = row.caseSubId
             // 获取专案子流程对应的所有备注
-            var res = await getById(caseSubId)
+            var res = await getById(row.caseSubId)
             res = res.data
             //备注数组必须清空，否则会叠加
             this.commitForm.content = []
@@ -451,9 +462,9 @@ export default {
                 this.curGroup = 1 - this.curGroup
                 this.curIndex = 0
             }
-            if(this.curIndex < 0){
-                this.curGroup = 1-this.curGroup
-                this.curIndex = this.directorOptions[this.curGroup].children.length-1
+            if (this.curIndex < 0) {
+                this.curGroup = 1 - this.curGroup
+                this.curIndex = this.directorOptions[this.curGroup].children.length - 1
             }
             this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
             this.updateView()
@@ -476,5 +487,9 @@ export default {
     .bar-chart {
         width: 70%;
     }
+}
+
+.commit_area{
+    display: flex;
 }
 </style>

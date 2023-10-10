@@ -237,9 +237,16 @@ const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statisti
 
 
 router.beforeEach(async (to, from, next) => {
+  await store.dispatch('fetchUserData', getInfo())
+  //检查是否登录
+  if (store.state.user === null) {
+    next('/login')
+    return
+  }
+
   //检查权限界面
   if (authUrls.includes(to.path)) {
-    await store.dispatch('fetchUserData', getInfo())
+
     if (store.state.user.type !== 1) {
       next("/index")
       return
@@ -247,7 +254,7 @@ router.beforeEach(async (to, from, next) => {
   }
   //检查用户界面
   if (userUrls.includes(to.path)) {
-    await store.dispatch('fetchUserData', getInfo())
+    // await store.dispatch('fetchUserData', getInfo())
     if (store.state.user.status > 2) {
       next("/index")
       return

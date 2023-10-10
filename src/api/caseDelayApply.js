@@ -14,7 +14,7 @@ export const judgeApply = (params) => {
 }
 
 export const getDelayByStatus = (params) => {
-    return service.post('/caseSubDelayApply/byUserAndStatus', params)
+    return service.get('/caseSubDelayApply/byUserAndStatus', {params:params})
 }
 
 export const delayHistory = (obj)=>{
@@ -24,4 +24,12 @@ export const delayHistory = (obj)=>{
 //根据id获取正在申请的延期列表
 export const getDelayListByUserId = (id)=>{
     return service.get(`/caseSubDelayApply/checkList/${id}`)
+}
+
+export const updateDelay = (obj)=>{
+    return service.put(`/caseSubDelayApply/updateDelay`,obj)
+}
+
+export const deleteDelay = (id)=>{
+    return service.delete(`/caseSubDelayApply/${id}`)
 }

@@ -16,6 +16,10 @@
                         <el-input placeholder="请输入专案名称查询" @change="getTableDate()" v-model="queryInfo.query"></el-input>
                     </el-col>
 
+                    <el-col :span="4">
+                        <el-input placeholder="请输入专案名称查询" @change="getTableDate()" v-model="queryInfo.query"></el-input>
+                    </el-col>
+
                     <el-col :span="2">
                         <el-button type="primary" icon="el-icon-search" @click="getTableDate()">查询</el-button>
                     </el-col>
@@ -91,6 +95,20 @@
                     <el-col :span="12">
                         <el-form-item label="难度" prop="level">
                             <el-input v-model.number="addCaseForm.level" placeholder="请输入专案难度"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
+                <el-row :gutter="40">
+                    <el-col :span="12">
+                        <el-form-item label="预估费用" prop="estimatedCost">
+                            <el-input type="number" v-model="addCaseForm.estimatedCost" placeholder="单位（元）"></el-input>
+                        </el-form-item>
+                    </el-col>
+
+                    <el-col :span="12">
+                        <el-form-item label="实际费用" prop="actualCost">
+                            <el-input type="number" v-model="addCaseForm.actualCost" placeholder="单位（元）"></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -220,13 +238,19 @@ import { insertRelation } from '@/api/caseSub'
 import { getTempleteList, getSubsByTemplateId } from '@/api/templete'
 export default {
     data() {
+        var checkCost = (rule, value, callback) => {
+            if (value < 0)
+                callback(new Error("费用必须是非负数"))
+            callback()
+        }
         return {
             dialogTitle: "新增专案",
             pageInfo: [],
             queryInfo: {
                 page: 1,
                 pageSize: 7,
-                query: ''
+                query: '',
+                director: '',
             },
             total: 0,
             addCaseVisible: false,
@@ -234,9 +258,11 @@ export default {
                 name: '',
                 description: "",
                 number: null,
-                level: 7,
+                level: null,
                 //这里用directors，避免和director冲突
                 directors: null,
+                estimatedCost: null,
+                actualCost:null,
             },
             // 标志这是新增还是修改,0=>new,1=>edit
             newFlag: 0,
@@ -257,7 +283,13 @@ export default {
                 ],
                 directors: [
                     { required: true, message: '请选择负责人', trigger: 'blur' }
-                ]
+                ],
+                estimatedCost:[
+                    {validator:checkCost,trigger:'blur'}
+                ],
+                actualCost:[
+                    {validator:checkCost,trigger:'blur'}
+                ],
             },
             //负责人的级联选择器
             directorOptions: [

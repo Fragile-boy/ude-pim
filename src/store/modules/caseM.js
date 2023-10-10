@@ -23,6 +23,9 @@ export default {
             if ("status" in obj)
                 state.queryList = state.queryList.filter(item => item.status === obj.status)
 
+            if("director" in obj)
+                state.queryList = state.queryList.filter(item => item.director === obj.director)
+            
             if ("startTime" in obj && "endTime" in obj)
                 state.queryList = state.queryList.filter(item => (new Date(item.finishTime)>=new Date(obj.startTime)) && (new Date(item.finishTime)<=new Date(obj.endTime)))
         }

@@ -17,9 +17,17 @@
             </el-col>
 
             <!-- 执行状态 -->
-            <el-col :span="4" v-if="!showMode">
+            <el-col :span="4" v-show="false" v-if="!showMode">
               <el-select v-model="queryStatus" placeholder="请选择执行状态" clearable @change="handleQuery">
                 <el-option v-for="item in levels" :key="item" :label="item" :value="item">
+                </el-option>
+              </el-select>
+            </el-col>
+
+            <!-- 按负责人筛选 -->
+            <el-col :span="4">
+              <el-select v-model="queryDirector" placeholder="请选择负责人" clearable @change="handleQuery">
+                <el-option v-for="item in users" :key="item.id" :label="item.name" :value="item.id">
                 </el-option>
               </el-select>
             </el-col>
@@ -40,7 +48,7 @@
               <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
             </el-col>
 
-            <el-col :span="3" :offset="showMode ? 7 : 9">
+            <el-col :span="3" :offset="showMode ? 3 : 9">
               <el-switch v-model="showMode" active-text="已完成" inactive-text="正在执行">
               </el-switch>
             </el-col>
@@ -137,6 +145,7 @@
 <script>
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { getById, saveCommit } from '@/api/caseSubCommit';
+import {getUserList} from '@/api/user'
 export default {
   name: 'indexPage',
   data() {
@@ -149,6 +158,7 @@ export default {
       caseInfo: [],
       levels: ['正在执行', '已延误'],
       queryStatus: '',
+      queryDirector:null,
       commitVisible: false,
       commitForm: {
         caseName: '',
@@ -207,6 +217,8 @@ export default {
           }
         }]
       },
+      //负责人列表
+      users:[],
     }
   },
   async created() {
@@ -215,6 +227,7 @@ export default {
     this.pageSize = pageSize === 0 ? 10 : pageSize
     this.caseInfo = this.caseList
     this.getTableDate()
+    this.getAllUser()
   },
   watch: {
     queryList: {
@@ -241,7 +254,7 @@ export default {
   },
   computed: {
     ...mapState('caseM', ['caseList', 'queryList']),
-    ...mapState(['user'])
+    ...mapState(['user']),
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
@@ -255,6 +268,12 @@ export default {
   methods: {
     ...mapActions('caseM', ['getCaseList']),
     ...mapMutations('caseM', ['queryCase']),
+    async getAllUser(){
+      const res = await getUserList()
+      if(res.code===200){
+        this.users = res.data
+      }
+    },
     showSub(row) {
       this.$router.push({
         name: 'case-sub',
@@ -318,7 +337,6 @@ export default {
       //2. 难度
       //4. 开始时间
       //5. 结束时间
-      console.log(this.start_stop_time)
       var queryObj = {}
       if (this.queryText !== '')
         queryObj.name = this.queryText
@@ -334,6 +352,10 @@ export default {
         queryObj.endTime = this.start_stop_time[1]
         console.log(queryObj)
       }
+
+      //负责人
+      if(this.queryDirector !== null&& this.queryDirector !== '' )
+        queryObj.director = this.queryDirector
       this.queryCase(queryObj)
 
       this.page = 1

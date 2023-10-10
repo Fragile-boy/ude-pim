@@ -86,11 +86,11 @@
 
                     <el-table-column prop="status" label="执行状态">
                         <template slot-scope="scope">
-                            <el-tag effect="dark" type="primary" v-if="scope.row.status===0">正在执行</el-tag>
-                            <el-tag effect="dark" type="success" v-if="scope.row.status===1">正常完成</el-tag>
-                            <el-tag effect="dark" type="danger" v-if="scope.row.status===2">已延误</el-tag>
-                            <el-tag effect="dark" type="warning" v-if="scope.row.status===3">延误完成</el-tag>
-                            <el-tag effect="dark" type="info" v-if="scope.row.status===4">未开始</el-tag>
+                            <el-tag effect="dark" type="primary" v-if="scope.row.status === 0">正在执行</el-tag>
+                            <el-tag effect="dark" type="success" v-if="scope.row.status === 1">正常完成</el-tag>
+                            <el-tag effect="dark" type="danger" v-if="scope.row.status === 2">已延误</el-tag>
+                            <el-tag effect="dark" type="warning" v-if="scope.row.status === 3">延误完成</el-tag>
+                            <el-tag effect="dark" type="info" v-if="scope.row.status === 4">未开始</el-tag>
                         </template>
 
                     </el-table-column>
@@ -148,11 +148,11 @@
                     </el-table-column>
                     <el-table-column prop="status" label="执行状态">
                         <template slot-scope="scope">
-                            <el-tag effect="dark" type="primary" v-if="scope.row.status===0">正在执行</el-tag>
-                            <el-tag effect="dark" type="success" v-if="scope.row.status===1">正常完成</el-tag>
-                            <el-tag effect="dark" type="danger" v-if="scope.row.status===2">已延误</el-tag>
-                            <el-tag effect="dark" type="warning" v-if="scope.row.status===3">延误完成</el-tag>
-                            <el-tag effect="dark" type="info" v-if="scope.row.status===4">未开始</el-tag>
+                            <el-tag effect="dark" type="primary" v-if="scope.row.status === 0">正在执行</el-tag>
+                            <el-tag effect="dark" type="success" v-if="scope.row.status === 1">正常完成</el-tag>
+                            <el-tag effect="dark" type="danger" v-if="scope.row.status === 2">已延误</el-tag>
+                            <el-tag effect="dark" type="warning" v-if="scope.row.status === 3">延误完成</el-tag>
+                            <el-tag effect="dark" type="info" v-if="scope.row.status === 4">未开始</el-tag>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -261,18 +261,48 @@
 
                 <el-row>
                     <!-- 外界因素延期 -->
-                    <el-col :span="12">
+                    <el-col :span="21">
                         <el-form-item label="外界延期">
-                            <el-input v-model="curCaseSubObj.unforcedDays"></el-input>
+                            <el-input disabled v-model="curCaseSubObj.unforcedDays"></el-input>
                         </el-form-item>
                     </el-col>
-                    <!-- 人为因素延期 -->
-                    <el-col :span="12">
-                        <el-form-item label="人为延期">
-                            <el-input v-model="curCaseSubObj.applyDelay"></el-input>
-                        </el-form-item>
+                    <!-- 添加外界因素延期 -->
+                    <el-col :span="2" :offset="1">
+                        <el-tooltip class="item" effect="dark" content="添加外界因素延期" placement="top">
+                            <el-button icon="el-icon-plus" type="primary" size="medium" round
+                                @click="applyDelayVisible = true, addDelayFlag = true, editDelayFlag = false"></el-button>
+                        </el-tooltip>
                     </el-col>
                 </el-row>
+
+                <el-table :data="delayList" style="width: 100%;margin-bottom: 5px;" border>
+                    <el-table-column prop="caseName" label="专案">
+                    </el-table-column>
+                    <el-table-column prop="subName" label="阶段">
+                    </el-table-column>
+                    <el-table-column prop="type" label="延期类型">
+                    </el-table-column>
+                    <el-table-column prop="applyReason" label="延期原因">
+                    </el-table-column>
+                    <el-table-column prop="applyDays" label="申请天数">
+                    </el-table-column>
+                    <el-table-column prop="predictTime" label="预计完成时间" width="120">
+                    </el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-tooltip class="item" effect="dark" content="编辑" placement="top">
+                                <el-button icon="el-icon-edit" type="primary" size="mini" round
+                                    @click="editDelay(scope.row)">
+                                </el-button>
+                            </el-tooltip>
+                            <el-tooltip class="item" effect="dark" content="删除" placement="top">
+                                <el-button icon="el-icon-delete" type="danger" size="mini" round
+                                    @click="deleteDelay(scope.row)">
+                                </el-button>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+                </el-table>
 
                 <el-form-item label="负责人">
                     <el-transfer v-model="curCaseSubObj.chargeId" :data="editUser" :button-texts="['移除', '添加']"
@@ -293,6 +323,45 @@
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editCaseSubVisible = false">取 消</el-button>
                 <el-button type="primary" @click="enableEdit()">修 改</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 管理员添加外界因素延期 -->
+        <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%" @close="closeApplyDelay">
+            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="90px" class="form">
+                <el-form-item label="专案">
+                    <el-input :value="curCaseSubObj.caseName" disabled></el-input>
+                </el-form-item>
+
+                <el-form-item label="阶段">
+                    <el-input :value="curCaseSubObj.subName" disabled></el-input>
+                </el-form-item>
+
+                <el-form-item label="延期类型" prop="delayType">
+                    <el-select v-model="delayApplyObject.delayType" placeholder="请选择延期类型">
+                        <el-option v-for="item in ['外界因素延期', '人为因素延期']" :key="item" :label="item" :value="item">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="原因描述:" prop="applyReason">
+                    <el-input autosize type="textarea" v-model="delayApplyObject.applyReason"
+                        placeholder="请输入延期原因描述"></el-input>
+                </el-form-item>
+
+                <el-form-item label="申请天数" prop="applyDays">
+                    <el-input type="number" v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"
+                        @input="computePresetTime"></el-input>
+                </el-form-item>
+
+                <el-form-item label="预计完成" v-if="delayApplyObject.applyDays > 0">
+                    <el-input :value="presetTime" placeholder="请输入要申请的天数" disabled></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="applyDelayVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitDelayApply()" v-if="addDelayFlag">确 定</el-button>
+                <el-button type="primary" @click="updateDelayApply()" v-if="editDelayFlag">修 改</el-button>
             </span>
         </el-dialog>
 
@@ -318,13 +387,18 @@ import { formatDate, getStatus, timeAdd, timeSub } from '@/utils/common'
 import { getSubList, getSubByUserId, updateCaseSub, startOrFinish } from '@/api/caseSub'
 import { mapState } from 'vuex'
 import { removeDirector, countUser, setDirector, submitDirectorValue } from '@/api/caseSubUser'
-import { getDelayByStatus } from '@/api/caseDelayApply'
+import { getDelayByStatus, saveApply, updateDelay, deleteDelay } from '@/api/caseDelayApply'
 import { getById, saveCommit } from '@/api/caseSubCommit';
 import { getUserList } from '@/api/user'
 import { getPresetDay } from '@/api/sub'
 
 export default {
     data() {
+        var checkDays = (rule, value, callback) => {
+            if (value <= 0 || value > 15)
+                callback(new Error("申请天数必须在1-15之间"))
+            callback()
+        }
         return {
             subInfo: [],
             caseName: '',
@@ -381,10 +455,35 @@ export default {
             //显示分配子流程积分比例界面
             editDirectorRate: false,
             directorList: [],
+            //显示申请延期界面
+            applyDelayVisible: false,
+            //延期规则
+            delayRules: {
+                applyReason: [
+                    { required: true, message: '必须输入延期原因', trigger: 'blur' }
+                ],
+                applyDays: [
+                    { required: true, message: '必须输入要延期的天数', trigger: 'blur' },
+                    { validator: checkDays, trigger: 'blur' }
+                ],
+                delayType: [
+                    { required: true, message: '请选择延期类型', trigger: 'change' }
+                ]
+            },
+            //延期信息
+            delayApplyObject: {
+                delayType: '外界因素延期'
+            },
+            addDelayFlag: false,
+            editDelayFlag: false,
+            //预计时间
+            presetTime: '',
+            //原来的申请，用于修改时确认新的预计完成时间
+            oldApplyDays: '',
         }
     },
     computed: {
-        ...mapState(['user'])
+        ...mapState(['user']),
     },
     created() {
         this.caseId = this.$route.query.caseId
@@ -398,7 +497,6 @@ export default {
         async getSubInfo(caseId) {
             var res = await getSubList(caseId)
             this.subInfo = res.data
-            console.log(this.subInfo)
             for (let i = 0; i < this.subInfo.length; i++) {
                 this.subInfo[i].startTime = formatDate(this.subInfo[i].startTime)
                 if (this.subInfo[i].startTime !== null) {
@@ -435,6 +533,7 @@ export default {
         async handleDoubleClick(row, column) {
             if (column.label === '外界因素延期') {
                 this.getUnforcedDays(row)
+                this.delayDrawer = true
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
 
@@ -448,7 +547,6 @@ export default {
                 item.caseName = row.caseName
                 item.subName = row.subName
             })
-            this.delayDrawer = true
         },
         async getApplyDelay(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '人为因素延期' })
@@ -602,8 +700,7 @@ export default {
             if (res.code === 200) {
                 this.editUser = res.data
                 res.data.forEach((item) => {
-                    if (item.status !== 2)
-                        this.allUser[item.status].children.push(item)
+                    this.allUser[item.status].children.push(item)
                 })
             } else
                 this.$message.error(res.msg)
@@ -633,6 +730,7 @@ export default {
         //打开编辑专案表单
         openEditCaseSub(row) {
             this.curCaseSubObj = { ...row }
+            this.getUnforcedDays(row)
             this.editCaseSubVisible = true
         },
         //修改专案子流程表单
@@ -644,7 +742,6 @@ export default {
             if (this.curCaseSubObj.finishTime !== null) {
                 this.curCaseSubObj.finishTime = formatDate(this.curCaseSubObj.finishTime) + " 00:00:00"
             }
-            console.log(this.curCaseSubObj)
             var res = await updateCaseSub(this.curCaseSubObj)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -728,6 +825,96 @@ export default {
                 return 'background-color:#B9BFBF'
             else if (columnIndex === 8)
                 return 'background-color:#B4EBB1'
+        },
+        //关闭申请延期窗口
+        closeApplyDelay() {
+            this.$refs.applyDelayFormRef.resetFields()
+            this.delayApplyObject = {
+                delayType: '外界因素延期'
+            }
+            this.presetTime = '',
+                this.oldApplyDays = ''
+        },
+        //提交延期表单
+        submitDelayApply() {
+            this.$refs.applyDelayFormRef.validate(async (valid) => {
+                if (valid) {
+                    this.delayApplyObject.applyId = this.user.id
+                    this.delayApplyObject.caseSubId = this.curCaseSubObj.id
+                    const res = await saveApply(this.delayApplyObject)
+                    if (res.code === 200 && res.data === "添加成功") {
+                        this.$message.success(res.data)
+                        this.applyDelayVisible = false
+                        console.log(this.curCaseSubObj.unforcedDays)
+                        console.log(this.delayApplyObject.applyDays)
+                        //修改延期时间和表格，作为页面不刷新的补偿
+                        this.curCaseSubObj.unforcedDays = +this.curCaseSubObj.unforcedDays + +this.delayApplyObject.applyDays
+                        this.getUnforcedDays(this.curCaseSubObj)
+                        //重置表单对象属性
+                        this.delayApplyObject = { delayType: '外界因素延期' }
+                    } else
+                        this.$message.error(res.msg)
+                }
+            })
+        },
+        //修改延期表单
+        updateDelayApply() {
+            this.$refs.applyDelayFormRef.validate(async (valid) => {
+                if (valid) {
+                    this.delayApplyObject.predictTime = null
+                    const res = await updateDelay(this.delayApplyObject)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.applyDelayVisible = false
+                        //修改延期时间和表格，作为页面不刷新的补偿
+                        await this.getUnforcedDays(this.curCaseSubObj)
+                        this.curCaseSubObj.unforcedDays = 0
+                        this.delayList.forEach(item => this.curCaseSubObj.unforcedDays = this.curCaseSubObj.unforcedDays + +item.applyDays)
+                    } else
+                        this.$message.error(res.msg)
+                }
+            })
+        },
+        async deleteDelay(row) {
+            this.$confirm('此操作将删除该延期申请, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+
+                const res = await deleteDelay(row.id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    await this.getUnforcedDays(this.curCaseSubObj)
+                    this.curCaseSubObj.unforcedDays = 0
+                    this.delayList.forEach(item => this.curCaseSubObj.unforcedDays = this.curCaseSubObj.unforcedDays + +item.applyDays)
+                }
+            }).catch((error) => {
+                console.log(error)
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+
+            })
+        },
+        editDelay(row) {
+            this.addDelayFlag = false
+            this.editDelayFlag = true
+            const { id, delayType, applyReason, applyDays, predictTime } = row
+            this.oldApplyDays = applyDays
+            this.delayApplyObject = { id, delayType, applyReason, applyDays, predictTime }
+            this.applyDelayVisible = true
+        },
+        //计算预计完成时间
+        computePresetTime() {
+            //修改模式下
+            if (this.editDelayFlag) {
+                var subDays = this.delayApplyObject.applyDays - this.oldApplyDays
+                this.presetTime = formatDate(timeAdd(this.delayApplyObject.predictTime, subDays, 1))
+            } else {
+                this.presetTime = formatDate(timeAdd(this.curCaseSubObj.startTime, this.curCaseSubObj.planDays, this.curCaseSubObj.unforcedDays, this.delayApplyObject.applyDays))
+            }
         }
     }
 }
