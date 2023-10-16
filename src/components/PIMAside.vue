@@ -49,7 +49,7 @@
             <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
         </el-submenu>
 
-        <el-submenu index="5" v-if="user.type === 0">
+        <el-submenu index="5" v-if="user.type===0">
             <template slot="title">
                 <i class="el-icon-user"></i>
                 <span>个人中心<el-badge is-dot :value="logList.length" class="item" v-if="logList.length" /></span>
@@ -60,6 +60,7 @@
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
             <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
+            <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
         </el-submenu>
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i

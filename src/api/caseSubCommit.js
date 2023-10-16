@@ -26,3 +26,8 @@ export const handleCheck = (params)=>{
 export const getCommitByStatus = (params)=>{
     return service.post('/caseSubComment/byUserAndStatus',params)
 }
+
+//根据id删除备注
+export const deleteCommit = (id)=>{
+    return service.delete(`/caseSubComment/${id}`)
+}

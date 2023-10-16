@@ -17,7 +17,10 @@
                     </el-col>
 
                     <el-col :span="4">
-                        <el-input placeholder="请输入专案名称查询" @change="getTableDate()" v-model="queryInfo.query"></el-input>
+                        <el-select v-model="queryInfo.director" placeholder="请选择负责人" clearable @change="getTableDate">
+                            <el-option v-for="item in allUser" :key="item.id" :label="item.name" :value="item.id">
+                            </el-option>
+                        </el-select>
                     </el-col>
 
                     <el-col :span="2">
@@ -53,11 +56,13 @@
                             <el-button type="warning" icon="el-icon-setting" size="mini"
                                 @click="openAddRelationMenu(scope.row)" round></el-button>
                         </el-tooltip>
-                        <el-tooltip effect="dark" content="终止专案" placement="top" v-if="scope.row.finishTime===null&&!scope.row.terminate">
+                        <el-tooltip effect="dark" content="终止专案" placement="top"
+                            v-if="scope.row.finishTime === null && !scope.row.terminate">
                             <el-button type="warning" size="mini" icon="el-icon-circle-close" round
                                 @click="terminateCase(scope.row, true)"></el-button>
                         </el-tooltip>
-                        <el-tooltip effect="dark" content="重启专案" placement="top" v-if="scope.row.finishTime===null&&scope.row.terminate">
+                        <el-tooltip effect="dark" content="重启专案" placement="top"
+                            v-if="scope.row.finishTime === null && scope.row.terminate">
                             <el-button type="success" size="mini" icon="el-icon-success" round
                                 @click="terminateCase(scope.row, false)"></el-button>
                         </el-tooltip>
@@ -155,7 +160,7 @@
                 </el-table-column>
                 <el-table-column prop="realSort" label="序号">
                 </el-table-column>
-                <el-table-column prop="name" label="名称">
+                <el-table-column proplanDaysdirectorOptionsp="name" label="名称">
                 </el-table-column>
                 <el-table-column label="难度">
                     <template slot-scope="scope">
@@ -173,7 +178,7 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择"
+                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable placeholder="请选择"
                             @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
@@ -210,7 +215,7 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.chargeId" multiple filterable placeholder="请选择负责人">
+                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable placeholder="请选择负责人" @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                     :value="item.value">
@@ -262,7 +267,7 @@ export default {
                 //这里用directors，避免和director冲突
                 directors: null,
                 estimatedCost: null,
-                actualCost:null,
+                actualCost: null,
             },
             // 标志这是新增还是修改,0=>new,1=>edit
             newFlag: 0,
@@ -284,11 +289,11 @@ export default {
                 directors: [
                     { required: true, message: '请选择负责人', trigger: 'blur' }
                 ],
-                estimatedCost:[
-                    {validator:checkCost,trigger:'blur'}
+                estimatedCost: [
+                    { validator: checkCost, trigger: 'blur' }
                 ],
-                actualCost:[
-                    {validator:checkCost,trigger:'blur'}
+                actualCost: [
+                    { validator: checkCost, trigger: 'blur' }
                 ],
             },
             //负责人的级联选择器
@@ -317,9 +322,11 @@ export default {
             //要插入数据库的数据
             insertInfo: [],
             //所有模板数据
-            templateList: [],
+            templateLidirectorOptionsallUst: [],
             //序号数据
-            case_sub_sort: 0
+            case_sub_sort: 0,
+            //控制select多选组件强制刷新
+            forceUpdateKey:null,
         }
     },
     computed: {
@@ -327,6 +334,8 @@ export default {
     },
     created() {
         this.getTableDate()
+        //获取负责人列表
+        this.getAllUser()
     },
     async mounted() {
         var { data: res } = await getUserList()
@@ -401,8 +410,6 @@ export default {
         async openAddRelationSub() {
             //获取子流程数据
             await this.getAllSub()
-            //获取负责人列表
-            this.getAllUser()
             this.addRelationSubVisible = true
         },
         //初始化所有子流程数据
@@ -416,7 +423,7 @@ export default {
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
                     this.defaultDays[this.relationSub[i].id] = r.data
-                    if (this.relationSub[i].id <= 7) {
+                    if (this.relationSub[i].id != 9) {
                         this.relationSub[i].chargeId = [this.curDirector]
                     }
                 }
@@ -431,6 +438,7 @@ export default {
             const res = await getUserList()
             if (res.code === 200) {
                 this.allUser = res.data
+                console.log(this.allUser)
             } else {
                 this.$message.error(res.msg)
                 return
@@ -491,7 +499,7 @@ export default {
                 this.insertInfo[i].caseId = this.curCaseId
             }
             //id本来是子流程的id，结果变成了专案子流程的id，可恶的bug
-            for(var i =0;i<this.insertInfo.length;i++)
+            for (var i = 0; i < this.insertInfo.length; i++)
                 this.insertInfo[i].id = null
             console.log(this.insertInfo)
             const res = await insertRelation(this.insertInfo)
@@ -555,7 +563,7 @@ export default {
         async addRelationByTemplate() {
             for (var i = 0; i < this.relationTemplateSub.length; i++) {
                 this.relationTemplateSub[i].subId = this.relationTemplateSub[i].id
-                
+
                 if (!('level' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].level === null)
                     this.relationTemplateSub[i].level = this.curLevel
                 if (!('planDays' in this.relationTemplateSub[i]) || this.relationTemplateSub[i].planDays === null)
@@ -582,7 +590,7 @@ export default {
             for (var i = 0; i < this.relationTemplateSub.length; i++) {
                 const r = await getPresetDay({ subId: this.relationTemplateSub[i].id, level: this.curLevel })
                 this.defaultDays[this.relationTemplateSub[i].id] = r.data
-                if (this.relationTemplateSub[i].id <= 7) {
+                if (this.relationTemplateSub[i].id != 9) {
                     this.relationTemplateSub[i].chargeId = [this.curDirector]
                 }
             }
@@ -596,10 +604,11 @@ export default {
         },
         //负责人变化强制刷新
         selectChange() {
+            this.forceUpdateKey = Math.random()
             this.$forceUpdate()
         },
         async terminateCase(row, status) {
-            this.$confirm(`此操作将${status?'冻结':'重启'} “${row.name}” 专案,${status?'正在执行的阶段数据将丢失，':''} 是否继续?`, '操作不可逆', {
+            this.$confirm(`此操作将${status ? '冻结' : '重启'} “${row.name}” 专案,${status ? '正在执行的阶段数据将丢失，' : ''} 是否继续?`, '操作不可逆', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'

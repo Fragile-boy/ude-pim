@@ -2,9 +2,9 @@
   <el-container class="home-container">
     <!-- 头部区域 -->
     <el-header>
-      <img src="@/assets/logo.png" alt="">
+      <img src="@/assets/logo_mini.png" alt="">
       <span>新技研进度管理系统</span>
-      <el-button @click="logout">{{ user===null?'':user.name }}<i class="el-icon-switch-button
+      <el-button round size="medium" @click="logout">{{ user===null?'':user.name }}<i class="el-icon-switch-button
 "></i></el-button>
     </el-header>
     <!-- 主体区域 -->
@@ -35,14 +35,12 @@ export default {
     }
   },
   created(){
-    //获取用户列表存入VueX
-    this.getUserList()
+
   },
   computed: {
     ...mapState(['user'])
   },
   methods: {
-    ...mapActions('user',['getUserList']),
     toggleCollapse() {
       this.isCollapse = !this.isCollapse
     },
@@ -70,7 +68,7 @@ export default {
 }
 
 .el-header {
-  height: 10% !important;
+  height: 6% !important;
   background-color: #373d41;
   display: flex;
   justify-content: space-between;

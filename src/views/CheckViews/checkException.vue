@@ -27,7 +27,7 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
-                            v-if="scope.row.startTime === null">
+                            v-if="user.type===1 && scope.row.startTime === null">
                             <el-button type="success" size="mini" icon="el-icon-video-play" round
                                 @click="launch(scope.row)"></el-button>
                         </el-tooltip>
@@ -64,6 +64,7 @@ import { getUserList } from '@/api/user'
 import { updateCaseSub, startOrFinish } from '@/api/caseSub'
 import { formatDate } from '@/utils/common'
 import { setDirector } from '@/api/caseSubUser'
+import { mapState } from 'vuex'
 export default {
     name:'checkException',
     data() {
@@ -90,6 +91,9 @@ export default {
     created() {
         this.exceptionSub()
         this.getAllUser()
+    },
+    computed:{
+        ...mapState(['user'])
     },
     methods: {
         async exceptionSub() {

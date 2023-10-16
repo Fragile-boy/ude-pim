@@ -8,7 +8,10 @@
         </div>
         <el-card>
             <el-row>
-                <el-col :span="1" :offset="19">
+                <el-col :span="2" v-if="user.type===0">
+                    <el-button type="warning" @click="$router.push('/exception')">异常专案讨论</el-button>
+                </el-col>
+                <el-col :span="1" :offset="user.type===0?17:19">
                     <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
                 </el-col>
                 <el-col :span="1">
@@ -50,9 +53,12 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <!-- 这里后面留着查看信息 -->
-                        <el-button icon="el-icon-info" type="primary" size="mini" round
-                            @click="openCommentView(scope.row)" v-if="scope.row.caseSubId"></el-button>
-                        <el-tooltip class="item" effect="dark" content="专案详情" placement="right-start">
+                        <el-tooltip class="item" effect="dark" content="显示备注" placement="top">
+                            <el-button icon="el-icon-info" type="primary" size="mini" round
+                                @click="openCommentView(scope.row)" v-if="scope.row.caseSubId">
+                            </el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="专案详情" placement="top">
                             <el-button icon="el-icon-s-promotion" type="primary" size="mini" round
                                 @click="openCaseDetail(scope.row)" v-if="scope.row.caseSubId">
                             </el-button>
@@ -76,7 +82,27 @@
 
         <el-card v-if="commitVisible">
             <el-row>
-                <el-col :span="1" :offset="23">
+                <el-col :span="23" v-if="user.status === 2 || user.type === 1">
+                    <el-row>
+                        <el-col :span="21">
+                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注"></el-input>
+                        </el-col>
+                        <el-col :span="1" :offset="1">
+                            <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
+                                <el-button size="medium" type="primary" icon="el-icon-finished" round
+                                    @click="submitCommitForm"></el-button>
+                            </el-tooltip>
+                        </el-col>
+                        <el-col :span="1">
+                            <el-tooltip class="item" effect="dark" content="撤回最新" placement="top">
+                                <el-button size="medium" type="danger" icon="el-icon-toilet-paper" round
+                                    @click="deleteCommit"></el-button>
+                            </el-tooltip>
+                        </el-col>
+                    </el-row>
+                </el-col>
+
+                <el-col :span="1" :offset="user.status || user.type === 1 === 2 ? 0 : 23">
                     <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
                         style="margin-bottom: 5px;"></el-button>
                 </el-col>
@@ -95,12 +121,14 @@
                         {{ o }}
                     </div> -->
                     <ul>
-                        <li v-for="o in commitForm.content" :key="o" class="text item">{{ o }}</li>
+                        <li v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
+                            <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
+                        </li>
                     </ul>
                     <label v-if="commitForm.content.length === 0">暂无备注</label>
                 </el-card>
 
-                
+
             </div>
         </el-card>
     </div>
@@ -110,7 +138,7 @@
 import { timeSub, formatDate } from '@/utils/common'
 import { taskList, recentTaskList, recentHalfYear } from '@/api/task'
 import { getUserList } from '@/api/user'
-import { getById, saveCommit } from '@/api/caseSubCommit'
+import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { mapState } from 'vuex'
 
 export default {
@@ -140,7 +168,7 @@ export default {
             commitVisible: false,
             commitForm: {
                 content: [],
-                newContent: null,
+                newContent: this.getToday()
             },
         }
     },
@@ -163,6 +191,13 @@ export default {
         ...mapState(['user'])
     },
     methods: {
+        //获取当天日期
+        getToday() {
+            var today = new Date();
+            var month = today.getMonth() + 1;
+            var day = today.getDate();
+            return month + '/' + day + "："
+        },
         async getTaskByUserId() {
             const res = await taskList(this.curUser)
             this.userInfo = res.data
@@ -199,7 +234,7 @@ export default {
                     this.userInfo[i].percentage = 100
             }
             if (this.commitVisible) {
-                if (this.userInfo.length === 0){
+                if (this.userInfo.length === 0) {
                     this.commitForm.content = ''
                     this.commitForm.caseName = '暂无数据'
                     this.commitForm.subName = '暂无数据'
@@ -411,39 +446,65 @@ export default {
         //显示评论
         async openCommentView(row) {
 
-            this.commitVisible = true
             var names = row.description.split("→")
             this.commitForm.caseName = names[0]
             this.commitForm.subName = names[1]
             this.commitForm.caseSubId = row.caseSubId
+            this.getAndShowCommit()
+        },
+        //获取并显示评论
+        async getAndShowCommit() {
             // 获取专案子流程对应的所有备注
-            var res = await getById(row.caseSubId)
+            var res = await getById(this.commitForm.caseSubId)
             res = res.data
             //备注数组必须清空，否则会叠加
             this.commitForm.content = []
             for (var i = 0; i < res.length; i++) {
-                this.commitForm.content.push(res[i].content)
+                this.commitForm.content.push({ content: res[i].content, id: res[i].id })
             }
+            this.commitVisible = true
         },
         // 提交备注信息
         async submitCommitForm() {
             //判断备注信息是否为空或者内容太少
-            this.$refs.commitFormRef.validate(async valid => {
-                if (!valid) return;
-                const commmitObj = {}
-                commmitObj.caseSubId = this.commitForm.caseSubId
-                commmitObj.content = this.commitForm.newContent
-                commmitObj.createUser = this.user.id
-                var res = await saveCommit(commmitObj)
-                this.$message(res.data)
-                //隐藏画面
-                this.commitVisible = false
-            })
-
+            if (this.commitForm.newContent === null || this.commitForm.newContent.length < 10) {
+                this.$message({
+                    message: '备注内容不能少于10个字',
+                    type: 'warning'
+                })
+                return
+            }
+            const commmitObj = {}
+            commmitObj.caseSubId = this.commitForm.caseSubId
+            commmitObj.content = this.commitForm.newContent
+            commmitObj.createUser = this.user.id
+            var res = await saveCommit(commmitObj)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.initInput()
+                await this.getAndShowCommit()
+            } else {
+                this.$message.error(res.msg)
+            }
         },
-        closeCommitDialog() {
-            //重置表单
-            this.$refs.commitFormRef.resetFields()
+        //重置输入框
+        initInput() {
+            this.commitForm.newContent = this.getToday()
+        },
+        //删除备注
+        deleteCommit() {
+            this.$confirm('此操作将删除最新评论, 操作不可逆，是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await deleteCommit(this.commitForm.content[0].id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getAndShowCommit()
+                } else
+                    this.$message.error(res.msg)
+            })
         },
         //打开专案详情
         openCaseDetail(row) {
@@ -489,7 +550,7 @@ export default {
     }
 }
 
-.commit_area{
+.commit_area {
     display: flex;
 }
 </style>

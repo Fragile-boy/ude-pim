@@ -109,7 +109,7 @@
     </el-card>
 
     <!-- 显示备注框 -->
-    <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%" @close="$refs.commitFormRef.resetFields()">
+    <el-dialog title="备注信息" :visible.sync="commitVisible" width="45%" @close="$refs.commitFormRef.resetFields()">
       <el-form ref="commitFormRef" :model="commitForm" :rules="rules" label-width="100px">
         <!-- 专案名称显示 -->
         <el-form-item label="专案">
@@ -122,8 +122,9 @@
         <!-- 备注显示区域 -->
         <el-form-item label="备注信息">
           <el-card class="box-card">
-            <div v-for="o in commitForm.content" :key="o" class="text item">
-              {{ o }}
+            <div v-for="(o,index) in commitForm.content" :key="o.id" class="text item">
+              <span :style="{color:index===0?'red':'black'}">{{ o.content }}</span>
+              <el-button icon="el-icon-delete" size="mini" round type="danger" @click="deleteCommit(o.id)"></el-button>
             </div>
             <label v-if="commitForm.content.length === 0">暂无备注</label>
           </el-card>
@@ -144,8 +145,8 @@
 
 <script>
 import { mapActions, mapState, mapMutations } from 'vuex'
-import { getById, saveCommit } from '@/api/caseSubCommit';
-import {getUserList} from '@/api/user'
+import { deleteCommit, getById, saveCommit } from '@/api/caseSubCommit';
+import { getUserList } from '@/api/user'
 export default {
   name: 'indexPage',
   data() {
@@ -158,7 +159,7 @@ export default {
       caseInfo: [],
       levels: ['正在执行', '已延误'],
       queryStatus: '',
-      queryDirector:null,
+      queryDirector: null,
       commitVisible: false,
       commitForm: {
         caseName: '',
@@ -218,7 +219,7 @@ export default {
         }]
       },
       //负责人列表
-      users:[],
+      users: [],
     }
   },
   async created() {
@@ -268,9 +269,9 @@ export default {
   methods: {
     ...mapActions('caseM', ['getCaseList']),
     ...mapMutations('caseM', ['queryCase']),
-    async getAllUser(){
+    async getAllUser() {
       const res = await getUserList()
-      if(res.code===200){
+      if (res.code === 200) {
         this.users = res.data
       }
     },
@@ -354,7 +355,7 @@ export default {
       }
 
       //负责人
-      if(this.queryDirector !== null&& this.queryDirector !== '' )
+      if (this.queryDirector !== null && this.queryDirector !== '')
         queryObj.director = this.queryDirector
       this.queryCase(queryObj)
 
@@ -387,20 +388,26 @@ export default {
     },
     //显示专案正在执行阶段的备注信息
     async handleDoubleClick(row, column) {
-      if (column.label === '当前阶段') {
+      if (column.label === '当前阶段' && !this.showMode) {
         this.commitForm.caseName = row.name
         this.commitForm.subName = row.curStage
         this.commitForm.caseSubId = row.curStageId
-        // 获取专案子流程对应的所有备注
-        var res = await getById(this.commitForm.caseSubId)
-        res = res.data
-        //备注数组必须清空，否则会叠加
-        this.commitForm.content = []
-        for (var i = 0; i < res.length; i++) {
-          this.commitForm.content.push(res[i].content)
-        }
-        this.commitVisible = true
+        this.getAndShowCommit()
       }
+    },
+    //获取并显示评论
+    async getAndShowCommit() {
+      // 获取专案子流程对应的所有备注
+      var res = await getById(this.commitForm.caseSubId)
+      res = res.data
+      console.log(res)
+      //备注数组必须清空，否则会叠加
+      this.commitForm.content = []
+      for (var i = 0; i < res.length; i++) {
+        this.commitForm.content.push({ content: res[i].content, id: res[i].id })
+      }
+      console.log(this.commitForm)
+      this.commitVisible = true
     },
     async submitCommitForm() {
       //判断备注信息是否为空或者内容太少
@@ -417,6 +424,21 @@ export default {
       })
 
     },
+    //删除备注
+    deleteCommit(id) {
+      this.$confirm('此操作将删除该评论, 操作不可逆，是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        const res = await deleteCommit(id)
+        if (res.code === 200) {
+          this.$message.success(res.data)
+          this.getAndShowCommit()
+        } else
+          this.$message.error(res.msg)
+      })
+    }
   }
 }
 </script>

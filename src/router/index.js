@@ -229,25 +229,31 @@ const router = new VueRouter({
 
 //管理员权限界面
 const authUrls = ['/caseList', '/subManage'
-  , '/templeteManage', '/taskManage', '/exception', '/delay', '/finish', '/study'
-  , '/caseApply', '/caseAnalysis', '/userList', '/userProject', '/userProjectTracking']
+  , '/templeteManage', '/taskManage', '/delay', '/finish', '/study'
+  , '/caseApply', '/caseAnalysis', '/userList', '/userProject']
 
 //用户界面
-const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart']
+const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception']
 
 
 router.beforeEach(async (to, from, next) => {
-  await store.dispatch('fetchUserData', getInfo())
+  if(to.path==='/login'){
+    next()
+    return
+  }
+  var user = localStorage.getItem('ude_pim_user')
   //检查是否登录
-  if (store.state.user === null) {
+  if (user === null || user==="{}") {
     next('/login')
     return
   }
 
+  user = JSON.parse(user)
+
   //检查权限界面
   if (authUrls.includes(to.path)) {
 
-    if (store.state.user.type !== 1) {
+    if (user.type !== 1) {
       next("/index")
       return
     }
@@ -255,7 +261,7 @@ router.beforeEach(async (to, from, next) => {
   //检查用户界面
   if (userUrls.includes(to.path)) {
     // await store.dispatch('fetchUserData', getInfo())
-    if (store.state.user.status > 2) {
+    if (user.status > 2) {
       next("/index")
       return
     }
