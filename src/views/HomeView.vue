@@ -4,19 +4,22 @@
     <el-header>
       <img src="@/assets/logo_mini.png" alt="">
       <span>新技研进度管理系统</span>
-      <el-button round size="medium" @click="logout">{{ user===null?'':user.name }}<i class="el-icon-switch-button
+      <el-button round size="medium" @click="logout">{{ user === null ? '' : user.name }}<i class="el-icon-switch-button
 "></i></el-button>
     </el-header>
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse ? '64px' : '200px'" v-if="user.status<=2">
+      <el-aside :width="isCollapse ? '64px' : '200px'" v-if="user.status <= 2">
         <div class="toggle-button" @click="toggleCollapse">|||</div>
         <PIMAside :isCollapse="isCollapse"></PIMAside>
       </el-aside>
       <!-- 右侧内容区域 -->
       <el-main>
-        <keep-alive :include="['indexPage','userStatistics','caseTracking','checkException']">
+        <div style="margin-bottom: 10px; margin-top: -10px;">
+          <NavigationBar></NavigationBar>
+        </div>
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException']">
           <router-view></router-view>
         </keep-alive>
 
@@ -27,14 +30,16 @@
 
 <script>
 import { mapActions, mapMutations, mapState } from 'vuex'
-import { logout,checkLogin } from '@/api/login'
+import { logout, checkLogin } from '@/api/login'
+import NavigationBar from '@/components/NavigationBar.vue'
 export default {
+  components: { NavigationBar },
   data() {
     return {
       isCollapse: false
     }
   },
-  created(){
+  created() {
 
   },
   computed: {
@@ -62,7 +67,6 @@ export default {
 </script>
 
 <style lang="less" scoped>
-
 .home-container {
   height: 100%;
 }

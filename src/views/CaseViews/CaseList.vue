@@ -30,6 +30,11 @@
                     <el-col :span="2">
                         <el-button type="primary" icon="el-icon-plus" @click="openAddCase()">新增专案</el-button>
                     </el-col>
+
+                    <el-col :span="2" :offset="10">
+                        <el-switch v-model="queryInfo.showTerminated" active-text="中断专案" @change="getTableDate">
+                        </el-switch>
+                    </el-col>
                 </el-row>
             </div>
             <!-- 表格区域 -->
@@ -215,7 +220,8 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable placeholder="请选择负责人" @change="selectChange()">
+                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable
+                            placeholder="请选择负责人" @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                     :value="item.value">
@@ -256,6 +262,8 @@ export default {
                 pageSize: 7,
                 query: '',
                 director: '',
+                // 显示中断专案
+                showTerminated: false,
             },
             total: 0,
             addCaseVisible: false,
@@ -326,7 +334,7 @@ export default {
             //序号数据
             case_sub_sort: 0,
             //控制select多选组件强制刷新
-            forceUpdateKey:null,
+            forceUpdateKey: null,
         }
     },
     computed: {
@@ -630,4 +638,5 @@ export default {
 <style lang="less" scoped>
 .case_add {
     margin-bottom: 10px;
-}</style>
+}
+</style>

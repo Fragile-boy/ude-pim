@@ -509,7 +509,7 @@ export default {
         //打开专案详情
         openCaseDetail(row) {
             this.$router.push({
-                name: 'case-sub',
+                path: '/case2sub',
                 query: {
                     caseId: row.caseId,
                     caseName: row.description.split("→")[0]

@@ -3,6 +3,7 @@ import App from './App.vue'
 import './plugins/element.js'
 import PIMHeader from './components/PIMHeader'
 import PIMAside from './components/PIMAside'
+import NavigationBar from './components/NavigationBar'
 import CasePie from './components/CasePie'
 import CaseStatus from './components/CaseStatus'
 import CaseTable from './components/CaseTable'
@@ -21,6 +22,7 @@ Vue.component("CaseTable",CaseTable)
 Vue.component("CaseSubTable",CaseSubTable)
 Vue.component("CaseBox",CaseBox)
 Vue.component("CasePie",CasePie)
+Vue.component("NavigationBar",NavigationBar)
 
 Vue.prototype.$axios = axios
 Vue.prototype.$echarts = echarts;

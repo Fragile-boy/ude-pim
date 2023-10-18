@@ -73,74 +73,74 @@ const routes = [
       //主页
       {
         path: '/index',
-        name: 'index',
+        name: '主页',
         component: IndexView
       },
       // 子流程详情页
       {
         path: '/case2sub',
-        name: 'case-sub',
+        name: '子流程详情',
         component: CaseSubView
       },
       // 按个人分的子流程详情页
       {
         path: '/case2person',
-        name: 'case-person',
+        name: '专案个人详情',
         component: CasePersonView
       },
       // 专案列表
       {
         path: '/caseList',
-        name: 'caseList',
+        name: '专案列表',
         component: CaseList
       },
       //子流程管理
       {
         path: '/subManage',
-        name: 'subManage',
+        name: '子流程管理',
         component: subManage
       },
       //模板管理
       {
         path: '/templeteManage',
-        name: 'templeteManage',
+        name: '模板管理',
         component: TempleteManage
       },
       //任务管理
       {
         path: '/taskManage',
-        name: 'taskManage',
+        name: '任务管理',
         component: TaskManage
       },
 
       // 异常状态的专案子阶段
       {
         path: '/exception',
-        name: 'exception',
+        name: '异常专案处理',
         component: checkException
       },
       //延期申请
       {
         path: '/delay',
-        name: 'delay',
+        name: '延期申请',
         component: checkDelay
       },
       // 完结申请 
       {
         path: '/finish',
-        name: 'finish',
+        name: '完结申请',
         component: checkFinish
       },
       // 技术研究申请 
       {
         path: '/study',
-        name: 'study',
+        name: '任务申请',
         component: checkStudy
       },
       // 专案类申请 
       {
         path: '/caseApply',
-        name: 'caseApply',
+        name: '专案类申请',
         component: checkApply
       },
 
@@ -148,7 +148,7 @@ const routes = [
       //专案分析
       {
         path: '/caseAnalysis',
-        name: 'caseAnalysis',
+        name: '月报分析',
         component: caseData
       },
 
@@ -156,44 +156,44 @@ const routes = [
       //部员列表
       {
         path: '/userList',
-        name: 'userList',
+        name: '部员信息管理',
         component: UserList
       },
       {
         // 部员专案管理页
         path: '/userProject',
-        name: 'userProjectManagement',
+        name: '部员专案统计',
         component: UserProjectManagement
       },
       {
         // 部员专案追踪页
         path: '/userProjectTracking',
-        name: 'userProjectTracking',
+        name: '部员专案追踪',
         component: UserProjectTracking
       },
 
       {
         // 个人总览页
         path: '/user/index',
-        name: 'userIndex',
+        name: '个人总览',
         component: UserIndex
       },
       {
-        // 个人总览页
+        // 消息中心页
         path: '/user/info',
-        name: 'userInfo',
+        name: '消息中心',
         component: UserInfo
       },
       {
         // 执行任务页
         path: '/user/progress',
-        name: 'user4case',
+        name: '执行任务',
         component: User4Case
       },
       {
         // 数据统计页
         path: '/user/statistics',
-        name: 'userStatistics',
+        name: '数据统计',
         component: UserStatistics
       },
       {

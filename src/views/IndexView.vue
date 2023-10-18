@@ -277,7 +277,7 @@ export default {
     },
     showSub(row) {
       this.$router.push({
-        name: 'case-sub',
+        path: '/case2sub',
         query: {
           caseId: row.id,
           caseName: row.name
