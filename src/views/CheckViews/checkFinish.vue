@@ -29,9 +29,17 @@
                 </el-table-column>
                 <el-table-column prop="description" label="描述">
                 </el-table-column>
+                <el-table-column prop="startTime" label="开始时间">
+                </el-table-column>
+                <el-table-column prop="planDays" label="计划时间">
+                </el-table-column>
+                <el-table-column prop="executionDays" label="执行时间">
+                </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
                 </el-table-column>
                 <el-table-column prop="applyTime" label="申请完结时间">
+                </el-table-column>
+                <el-table-column prop="createTime" label="申请创建时间">
                 </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
@@ -77,7 +85,9 @@
                 </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
                 </el-table-column>
-                <el-table-column prop="createTime" label="申请时间">
+                <el-table-column prop="applyTime" label="申请时间">
+                </el-table-column>
+                <el-table-column prop="createTime" label="申请创建时间">
                 </el-table-column>
                 <el-table-column prop="description" label="描述">
                 </el-table-column>
@@ -246,6 +256,9 @@ export default {
         handleCurrentChange(value) {
             this.queryInfo.page = value
             this.checkHistory()
+        },
+        openCaseSubDetail(row){
+            console.log(row)
         }
     }
 }

@@ -150,7 +150,7 @@ export default {
         //打开专案详情
         openCaseDetail(row){
             this.$router.push({
-                name:'case-sub',
+                name:'子流程详情',
                 query:{
                     caseId:row.caseId,
                     caseName:row.caseName

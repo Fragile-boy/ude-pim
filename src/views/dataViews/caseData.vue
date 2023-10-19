@@ -178,6 +178,7 @@ export default {
         this.showSubList = []
         this.finishSubList.forEach(item => {
           item.executionDays = timeSub(item.startTime, item.finishTime)
+          item.executionDays -= +item.unforcedDays
           if (item.achievingRate < this.showTopRate)
             this.showSubList.push(item)
         })

@@ -8,10 +8,10 @@
         </div>
         <el-card>
             <el-row>
-                <el-col :span="2" v-if="user.type===0">
+                <el-col :span="2" v-if="user.type === 0">
                     <el-button type="warning" @click="$router.push('/exception')">异常专案讨论</el-button>
                 </el-col>
-                <el-col :span="1" :offset="user.type===0?17:19">
+                <el-col :span="1" :offset="user.type === 0 ? 17 : 19">
                     <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
                 </el-col>
                 <el-col :span="1">
@@ -68,7 +68,27 @@
             </el-table>
         </el-card>
 
-        <br>
+        <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
+            <h2>中止专案</h2>
+            <!-- 未开始的异常专案 -->
+            <el-table :data="exceptionList" stripe border style="width: 100%">
+                <el-table-column prop="caseName" label="专案"></el-table-column>
+                <el-table-column prop="subName" label="阶段"></el-table-column>
+                <el-table-column prop="level" label="难度"></el-table-column>
+                <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-tooltip class="item" effect="dark" content="专案详情" placement="top">
+                            <el-button size="mini" type="primary" icon="el-icon-s-promotion" round
+                                @click="openCaseDetail(scope.row)"></el-button>
+                        </el-tooltip>
+
+                    </template>
+                </el-table-column>
+
+            </el-table>
+        </el-card>
+
         <div class="charts-area" v-show="!commitVisible">
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
@@ -136,7 +156,7 @@
 
 <script>
 import { timeSub, formatDate } from '@/utils/common'
-import { taskList, recentTaskList, recentHalfYear } from '@/api/task'
+import { taskList, recentTaskList, recentHalfYear,getExceptionList } from '@/api/task'
 import { getUserList } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { mapState } from 'vuex'
@@ -170,14 +190,17 @@ export default {
                 content: [],
                 newContent: this.getToday()
             },
+            //当前用户所有未开始的任务
+            exceptionList: [],
         }
     },
     async mounted() {
         await this.getAllUser()
         this.curUser = this.directorOptions[0].children[0].value
+        await this.getExceptionList()
         this.curGroup = 0,
-            this.curIndex = 0,
-            this.getTaskByUserId()
+        this.curIndex = 0,
+        this.getTaskByUserId()
         //初始化块元素
         this.typePie = this.$echarts.init(document.getElementById('taskType'))
         this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
@@ -191,6 +214,15 @@ export default {
         ...mapState(['user'])
     },
     methods: {
+        // 获取当前用户的所有未开始的任务
+        async getExceptionList() {
+            const res = await getExceptionList(this.curUser)
+            if (res.code === 200) {
+                this.exceptionList = res.data
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
         //获取当天日期
         getToday() {
             var today = new Date();
@@ -289,6 +321,7 @@ export default {
         //更新界面
         updateView() {
             this.getTaskByUserId()
+            this.getExceptionList()
             this.initPie()
             this.initBar()
         },
@@ -512,7 +545,7 @@ export default {
                 path: '/case2sub',
                 query: {
                     caseId: row.caseId,
-                    caseName: row.description.split("→")[0]
+                    caseName: 'description' in row?row.description.split("→")[0]:row.caseName
                 }
             })
         },

@@ -56,9 +56,6 @@ export default{
         //获得完结申请列表
         async getFinish(ctx) {
             var res = await getFinishApplyList()
-            res.data.map(item => {
-                item.applyTime = formatDate(item.createTime)
-            })
             ctx.commit('updateFinishList', res.data)
         },
         async getCaseSubApplyList(ctx) {

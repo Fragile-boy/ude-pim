@@ -31,3 +31,8 @@ export const updateTask=(obj)=>{
 export const addTask = (obj)=>{
     return service.post('/task/addTask',obj)
 }
+
+//获取所有未开始的任务
+export const getExceptionList = (id)=>{
+    return service.get(`/task/exception/${id}`)
+}

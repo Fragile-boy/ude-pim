@@ -431,9 +431,7 @@ export default {
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
                     this.defaultDays[this.relationSub[i].id] = r.data
-                    if (this.relationSub[i].id != 9) {
-                        this.relationSub[i].chargeId = [this.curDirector]
-                    }
+                    this.relationSub[i].chargeId = [this.curDirector]
                 }
                 console.log(this.defaultDays)
             } else {
@@ -598,9 +596,7 @@ export default {
             for (var i = 0; i < this.relationTemplateSub.length; i++) {
                 const r = await getPresetDay({ subId: this.relationTemplateSub[i].id, level: this.curLevel })
                 this.defaultDays[this.relationTemplateSub[i].id] = r.data
-                if (this.relationTemplateSub[i].id != 9) {
-                    this.relationTemplateSub[i].chargeId = [this.curDirector]
-                }
+                this.relationTemplateSub[i].chargeId = [this.curDirector]
             }
 
         },

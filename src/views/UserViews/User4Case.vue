@@ -17,8 +17,7 @@
                     <el-button type="primary" icon="el-icon-plus" @click="applyTaskVisible = true">申请任务</el-button>
                 </el-col>
             </el-row>
-            <br>
-            <br>
+            <h2>执行专案</h2>
             <!-- 执行任务的详情 -->
             <el-table :data="userInfo">
                 <el-table-column label="进度" width="260">
@@ -43,14 +42,16 @@
                 <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-tooltip class="item" effect="dark" content="申请延期" placement="left" v-if="!scope.row.delayChecking">
+                        <el-tooltip class="item" effect="dark" content="申请延期" placement="left"
+                            v-if="!scope.row.delayChecking">
                             <el-button size="mini" type="warning" icon="el-icon-timer" round
                                 @click="openDelayApply(scope.row)"></el-button>
                         </el-tooltip>
                         <el-tooltip class="item" effect="dark" content="审核中" placement="left" v-else>
                             <el-button size="mini" type="primary" icon="el-icon-timer" round></el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="完结" placement="right" v-if="!scope.row.finishChecking">
+                        <el-tooltip class="item" effect="dark" content="完结" placement="right"
+                            v-if="!scope.row.finishChecking">
                             <el-button size="mini" type="success" icon="el-icon-success" round
                                 @click="tryFinish(scope.row)"></el-button>
                         </el-tooltip>
@@ -59,6 +60,32 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
+            </el-table>
+        </el-card>
+
+        <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
+            <h2>中止专案</h2>
+            <!-- 未开始的异常专案 -->
+            <el-table :data="exceptionList" stripe border style="width: 100%">
+                <el-table-column prop="caseName" label="专案"></el-table-column>
+                <el-table-column prop="subName" label="阶段"></el-table-column>
+                <el-table-column prop="level" label="难度"></el-table-column>
+                <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-tooltip class="item" effect="dark" content="开始执行" placement="top">
+                            <el-button size="mini" type="success" icon="el-icon-success" round
+                                @click="tryStart(scope.row)"></el-button>
+                        </el-tooltip>
+
+                        <el-tooltip class="item" effect="dark" content="专案详情" placement="top">
+                            <el-button size="mini" type="primary" icon="el-icon-s-promotion" round
+                                @click="openCaseDetail(scope.row)"></el-button>
+                        </el-tooltip>
+
+                    </template>
+                </el-table-column>
+
             </el-table>
         </el-card>
 
@@ -180,11 +207,22 @@
         </el-dialog>
 
         <el-dialog title="选择完结日期" :visible.sync="selectFinishTimeVisible" width="30%">
-            <el-date-picker v-model="curTask.createTime" type="date" placeholder="选择完结日期" value-format="yyyy-MM-dd HH:mm:ss" @input="changeTime">
+            <el-date-picker v-model="curTask.applyTime" type="date" placeholder="选择完结日期" value-format="yyyy-MM-dd HH:mm:ss"
+                @input="changeTime">
             </el-date-picker>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="selectFinishTimeVisible = false">取 消</el-button>
                 <el-button type="primary" @click="submitFinish()">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <el-dialog title="选择开始日期" :visible.sync="selectStartTimeVisible" width="30%">
+            <el-date-picker v-model="curInterruptTask.startTime" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd HH:mm:ss"
+                @input="changeTime">
+            </el-date-picker>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="selectStartTimeVisible = false">取 消</el-button>
+                <el-button type="primary" @click="launch()">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -194,12 +232,12 @@
 import { mapState } from 'vuex'
 import { timeSub, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
-import { unfinishedSubList } from '@/api/caseSub'
-import { taskList, recentTaskList, recentHalfYear } from '@/api/task'
+import { unfinishedSubList,startOrFinish } from '@/api/caseSub'
+import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
 import { saveApply } from '@/api/caseDelayApply'
 import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
-import { saveApplyCaseSub } from '@/api/applyCaseSub'
+import { saveApplyCaseSub} from '@/api/applyCaseSub'
 import { saveApplyTask } from '@/api/applyTask'
 
 export default {
@@ -271,13 +309,19 @@ export default {
             applyTaskVisible: false,
             applyTask: {},
             //当前申请完结的任务
-            curTask:{},
+            curTask: {},
             //完结选择时间弹窗
-            selectFinishTimeVisible:false,
+            selectFinishTimeVisible: false,
             //当前用户的所有延期申请信息
-            delayApplyList:[],
+            delayApplyList: [],
             //当前用户的所有完结申请信息
-            finishApplyList:[],
+            finishApplyList: [],
+            //当前用户所有未开始的任务
+            exceptionList: [],
+            //选择中止专案阶段的开始时间
+            selectStartTimeVisible:false,
+            //当前申请开始的专案任务
+            curInterruptTask: {},
         }
     },
     created() {
@@ -286,30 +330,40 @@ export default {
         // this.getFinishApplyList()
         this.getTaskByUserId()
         this.getUnfinishedCaseList()
+        this.getExceptionList()
     },
     mounted() {
         this.initPie(),
-        this.initBur(),
-        this.applyCaseSubVisible = this.$route.query.applyCaseSubVisible
+            this.initBur(),
+            this.applyCaseSubVisible = this.$route.query.applyCaseSubVisible
         this.applyTaskVisible = this.$route.query.applyTaskVisible
     },
     computed: {
         ...mapState(['user'])
     },
     methods: {
-        async getDelayApplyList(){
-            const res = await getDelayListByUserId(this.user.id)
-            if(res.code===200){
-                this.delayApplyList = res.data
-            }else{
+        // 获取当前用户的所有未开始的任务
+        async getExceptionList() {
+            const res = await getExceptionList(this.user.id)
+            if (res.code === 200) {
+                this.exceptionList = res.data
+            } else {
                 this.$message.error(res.msg)
             }
         },
-        async getFinishApplyList(){
+        async getDelayApplyList() {
+            const res = await getDelayListByUserId(this.user.id)
+            if (res.code === 200) {
+                this.delayApplyList = res.data
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        async getFinishApplyList() {
             const res = await getFinishListByUserId(this.user.id)
-            if(res.code===200){
+            if (res.code === 200) {
                 this.finishApplyList = res.data
-            }else{
+            } else {
                 this.$message.error(res.msg)
             }
         },
@@ -390,6 +444,7 @@ export default {
         },
         //尝试完结任务
         async tryFinish(row) {
+            console.log(row)
             // 看是专案类还是其他类
             // 专案类就要看有几个负责人
             // 多个负责人就打开任务描述窗口
@@ -416,18 +471,18 @@ export default {
             this.directors = info
         },
         //打开填写完结日期的窗口
-        openSelectFinishTIme(row){
-            this.curTask = {...row}
-            this.curTask.createTime = format4back(new Date())
+        openSelectFinishTIme(row) {
+            this.curTask = { ...row }
             this.selectFinishTimeVisible = true
         },
         //强制更新完结时间组件
-        changeTime(){
+        changeTime() {
             this.$forceUpdate()
         },
         //完结任务
         async submitFinish() {
             this.curTask.applyId = this.user.id
+            this.curTask.applyTime = format4back(this.curTask.applyTime)
             const res = await saveFinishApply(this.curTask)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -596,9 +651,9 @@ export default {
                             padding: [0, 50, -50, 200]
                         },
                         min: 0,
-                        max: Math.max(this.calMax(res.timeAchieveRate),this.calMax(res.taskAchieveRate)),
+                        max: Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)),
                         splitNumber: 6,
-                        interval: ((Math.max(this.calMax(res.timeAchieveRate),this.calMax(res.taskAchieveRate)) - 0) / 6).toFixed(),
+                        interval: ((Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)) - 0) / 6).toFixed(),
                         axisLabel: {
                             formatter: function (v) {
                                 return v.toFixed(2) + '%'; //0表示小数为0位，1表示1位小数，2表示2位小数
@@ -663,6 +718,32 @@ export default {
             var minval = minint * 1 - 5; // 最终设置的最小值
             return minval; // 输出最小值
         },
+        //打开中止专案详情
+        openCaseDetail(row) {
+            this.$router.push({
+                path: '/case2sub',
+                query: {
+                    caseId: row.caseId,
+                    caseName: row.caseName,
+                }
+            })
+        },
+        // 中止专案重启
+        tryStart(row){
+            this.curInterruptTask = {...row}
+            this.selectStartTimeVisible = true
+        },
+        //启动阶段
+        async launch(){
+            const res = await startOrFinish(this.curInterruptTask)
+            if(res.code===200){
+                this.$message.success(res.data)
+                //刷新界面
+                this.getTaskByUserId()
+                this.getExceptionList()
+                this.selectStartTimeVisible = false
+            }
+        }
     }
 }
 </script>

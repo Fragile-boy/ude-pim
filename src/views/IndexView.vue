@@ -287,7 +287,7 @@ export default {
     //跳转到按个人分类的界面
     showPerson(row) {
       this.$router.push({
-        name: 'case-person',
+        name: '专案个人详情',
         query: {
           caseId: row.id,
           caseName: row.name
