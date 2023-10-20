@@ -7,6 +7,11 @@
             </el-breadcrumb>
         </div>
         <el-card>
+            <el-row>
+                <el-col :span="2" :offset="22">
+                    <el-button icon="el-icon-s-claim" type="warning">我的申请</el-button>
+                </el-col>
+            </el-row>
             <!-- 日志任务的详情 -->
             <el-table :data="logList">
                 <el-table-column prop="content" label="消息"></el-table-column>

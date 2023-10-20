@@ -5,7 +5,7 @@
       <img src="@/assets/logo_mini.png" alt="">
       <!-- <span style="color:red">(测试中...请稍后访问)</span> -->
       <span>新技研进度管理系统<span style="font-size: 10px;">(测试版)</span></span>
-      <el-button round size="medium" @click="logout">{{ user === null ? '' : user.name }}<i class="el-icon-switch-button
+      <el-button round size="medium" @click="handleLogout()">{{ user === null ? '' : user.name }}<i class="el-icon-switch-button
 "></i></el-button>
     </el-header>
     <!-- 主体区域 -->
@@ -51,16 +51,15 @@ export default {
       this.isCollapse = !this.isCollapse
     },
     ...mapMutations(['setUser']),
-    async logout() {
+    async handleLogout() {
       this.setUser({})
-      // if(localStorage.getItem("user")===null)
-      //     return
+      localStorage.removeItem("token")
       await logout()
       this.$message.success({
         message: "登出成功",
         duration: 1000
       })
-      this.$router.push('/login')
+      // this.$router.push('/login')
 
     }
   }

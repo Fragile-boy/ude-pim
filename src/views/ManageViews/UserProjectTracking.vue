@@ -69,13 +69,15 @@
         </el-card>
 
         <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
-            <h2>中止专案</h2>
+            <h2>中断专案</h2>
             <!-- 未开始的异常专案 -->
             <el-table :data="exceptionList" stripe border style="width: 100%">
                 <el-table-column prop="caseName" label="专案"></el-table-column>
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="level" label="难度"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column prop="lastFinishTime" label="上阶段完结时间"></el-table-column>
+                <el-table-column prop="interruptDays" label="中断时间(天)"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" content="专案详情" placement="top">
@@ -219,6 +221,10 @@ export default {
             const res = await getExceptionList(this.curUser)
             if (res.code === 200) {
                 this.exceptionList = res.data
+                this.exceptionList.forEach(item=>{
+                    item.interruptDays = timeSub(item.lastFinishTime,new Date())-1
+                    item.lastFinishTime = formatDate(item.lastFinishTime)
+                })
             } else {
                 this.$message.error(res.msg)
             }
