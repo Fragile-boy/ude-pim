@@ -15,11 +15,11 @@
                         <h1>审核完结申请</h1>
                     </el-col>
                     <el-col :span="2" :offset="9">
-                    <el-button type="info" icon="el-icon-s-order" @click="openHistory()"> 历史记录 </el-button>
-                </el-col>
+                        <el-button type="info" icon="el-icon-s-order" @click="openHistory()"> 历史记录 </el-button>
+                    </el-col>
                 </el-row>
             </div>
-            <el-table :data="finishList" style="width: 100%" border>
+            <el-table :data="finishList" style="width: 100%" border @cell-dblclick="handleDoubleClick">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -31,20 +31,29 @@
                 </el-table-column>
                 <el-table-column prop="startTime" label="开始时间">
                 </el-table-column>
+                <el-table-column prop="applyTime" label="申请完结时间">
+                </el-table-column>
                 <el-table-column prop="planDays" label="计划时间">
                 </el-table-column>
                 <el-table-column prop="executionDays" label="执行时间">
                 </el-table-column>
+                <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
+                </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
                 </el-table-column>
-                <el-table-column prop="applyTime" label="申请完结时间">
-                </el-table-column>
+
                 <el-table-column prop="createTime" label="申请创建时间">
+                </el-table-column>
+                <el-table-column label="备注" width="90">
+                    <template slot-scope="scope">
+                        <el-button type="primary" icon="el-icon-info" size="mini" round @click="showCommit(scope.row)"
+                            v-if="scope.row.caseSubId">备注</el-button>
+                    </template>
                 </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-button type="success" @click="handleCheck(scope.row, 1)">通过</el-button>
-                        <el-button type="primary" @click="handleCheck(scope.row, 2)">拒绝</el-button>
+                        <el-button type="success" @click="handleCheck(scope.row, 1)" size="mini" round>通过</el-button>
+                        <el-button type="primary" @click="handleCheck(scope.row, 2)" size="mini" round>拒绝</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -101,6 +110,31 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </el-card>
+
+        <!-- 显示备注框 -->
+        <el-dialog title="备注信息" :visible.sync="commitVisible" width="40%">
+            <el-form ref="commitFormRef" :model="commitForm" label-width="100px">
+                <el-form-item label="专案">
+                    <el-input v-model="commitForm.caseName" disabled></el-input>
+                </el-form-item>
+                <!-- 子流程名称显示 -->
+                <el-form-item label="阶段">
+                    <el-input v-model="commitForm.subName" disabled></el-input>
+                </el-form-item>
+                <!-- 备注显示区域 -->
+                <el-form-item label="备注信息">
+                    <el-card class="box-card">
+                        <div v-for="o in commitForm.content" :key="o" class="text item">
+                            {{ o }}
+                        </div>
+                        <label v-if="commitForm.content.length === 0">暂无备注</label>
+                    </el-card>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="commitVisible = false">返 回</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -109,6 +143,8 @@ import { getFinishApplyList, judgeFinishApply, endHistory } from '@/api/caseFini
 import { mapActions, mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 import { countUser, submitDirectorValue } from '@/api/caseSubUser'
+import {getById} from '@/api/caseSubCommit'
+import {getCaseId} from '@/api/caseSub'
 export default {
     data() {
         return {
@@ -124,12 +160,18 @@ export default {
             },
             total: 0,
             //已审核的列表
-            checkedApplyList: []
+            checkedApplyList: [],
+            commitVisible: false,
+            commitForm: {
+                caseName: '',
+                subName: '',
+                content: []
+            }
         }
     },
     computed: {
         ...mapState(['user']),
-        ...mapState('apply',['finishList'])
+        ...mapState('apply', ['finishList'])
     },
     created() {
         const pageSize = +localStorage.getItem("pim_check_finish_pageSize")
@@ -137,7 +179,7 @@ export default {
         this.getFinish()
     },
     methods: {
-        ...mapActions('apply',['getFinish']),
+        ...mapActions('apply', ['getFinish']),
         async handleCheck(row, status) {
             row.status = status
             row.checkUser = this.user.id
@@ -257,8 +299,41 @@ export default {
             this.queryInfo.page = value
             this.checkHistory()
         },
-        openCaseSubDetail(row){
+        openCaseSubDetail(row) {
             console.log(row)
+        },
+        async showCommit(row) {
+            this.commitVisible = true
+            var names = row.description.split("->")
+            this.commitForm.caseName = names[0]
+            this.commitForm.subName = names[1]
+            // 获取专案子流程对应的所有备注
+            var res = await getById(row.caseSubId)
+            if (res.code == 200) {
+                res = res.data
+                //备注数组必须清空，否则会叠加
+                this.commitForm.content = []
+                for (var i = 0; i < res.length; i++) {
+                    this.commitForm.content.push(res[i].content)
+                }
+            } else
+                this.$message.error(res.msg)
+        },
+        async handleDoubleClick(row, column){
+            if(row.caseSubId){
+                var res = await getCaseId(row.caseSubId)
+                if(res.code == 200){
+                    res = res.data
+                }else
+                    this.$message.error(res.msg)
+                this.$router.push({
+                    path:'/case2sub',
+                    query:{
+                        caseName:row.description.split("->")[0],
+                        caseId:res
+                    }
+                })
+            }
         }
     }
 }

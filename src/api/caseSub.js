@@ -50,3 +50,8 @@ export const analysis=(obj)=>{
 export const planFinishCount=(obj)=>{
     return service.get("/caseSub/planFinishCount",{params:obj})
 }
+
+//根据专案子流程id获取专案id
+export const getCaseId = (id) => {
+    return service.get(`/caseSub/${id}`)
+}

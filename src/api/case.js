@@ -2,7 +2,7 @@ import service from "@/plugins/service"
 
 // 返回专案综合信息列表
 export const getCaseList = (isFinished) => {
-    return service.get('case/dtoList',{params: {isFinished: isFinished}})
+    return service.get('case/dtoList', { params: { isFinished: isFinished } })
 }
 
 // 返回专案列表
@@ -21,20 +21,20 @@ export const editCase = (caseObj) => {
 }
 
 //返回专案朴素信息
-export const getById = (id)=>{
+export const getById = (id) => {
     return service.get(`/case/${id}`)
 }
 
 // 删除专案
-export const deleteCase= (id)=>{
+export const deleteCase = (id) => {
     return service.delete(`/case/${id}`)
 }
 
 //获取所有未完成的专案列表
-export const unFinishedCaseList = ()=>{
+export const unFinishedCaseList = () => {
     return service.get("/case/unFinishedCaseList")
 }
 
-export const terminateCase = (obj)=>{
-    return service.put("/case/terminateCase",obj)
+export const terminateCase = (obj) => {
+    return service.put("/case/terminateCase", obj)
 }
