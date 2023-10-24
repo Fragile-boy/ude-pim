@@ -16,3 +16,11 @@ export const judgeApply=(obj)=>{
 export const applyHistoryList = (obj)=>{
     return service.get('/applyTask/applyHistoryList',{params:obj})
 }
+
+export const checkingApplyTask = (id)=>{
+    return service.get('/applyTask/checkingApply/'+id)
+}
+
+export const removeTaskApply = (id)=>{
+    return service.delete(`/applyTask/removeTaskApply/${id}`)
+}

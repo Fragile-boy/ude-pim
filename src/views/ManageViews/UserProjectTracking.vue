@@ -91,7 +91,11 @@
             </el-table>
         </el-card>
 
+        <el-card class="gantt-chart">
+                <div id="ganttChart" style="width: 100%; height: 300px;"></div>
+            </el-card>
         <div class="charts-area" v-show="!commitVisible">
+            
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
                 <div id="taskType" style="width: 100%; height: 300px;"></div>
@@ -157,8 +161,8 @@
 </template>
 
 <script>
-import { timeSub, formatDate } from '@/utils/common'
-import { taskList, recentTaskList, recentHalfYear,getExceptionList } from '@/api/task'
+import { timeSub, formatDate, timeAdd } from '@/utils/common'
+import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
 import { getUserList } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { mapState } from 'vuex'
@@ -201,14 +205,16 @@ export default {
         this.curUser = this.directorOptions[0].children[0].value
         await this.getExceptionList()
         this.curGroup = 0,
-        this.curIndex = 0,
-        this.getTaskByUserId()
+            this.curIndex = 0,
+            this.getTaskByUserId()
         //初始化块元素
         this.typePie = this.$echarts.init(document.getElementById('taskType'))
         this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
+        this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
         setTimeout(() => {
             this.initPie()
             this.initBar()
+            this.initGantt()
         }, 100)
 
     },
@@ -221,8 +227,8 @@ export default {
             const res = await getExceptionList(this.curUser)
             if (res.code === 200) {
                 this.exceptionList = res.data
-                this.exceptionList.forEach(item=>{
-                    item.interruptDays = timeSub(item.lastFinishTime,new Date())-1
+                this.exceptionList.forEach(item => {
+                    item.interruptDays = timeSub(item.lastFinishTime, new Date()) - 1
                     item.lastFinishTime = formatDate(item.lastFinishTime)
                 })
             } else {
@@ -325,11 +331,12 @@ export default {
             this.updateView()
         },
         //更新界面
-        updateView() {
-            this.getTaskByUserId()
+        async updateView() {
+            await this.getTaskByUserId()
             this.getExceptionList()
             this.initPie()
             this.initBar()
+            this.initGantt()
         },
 
         //初始化饼状图
@@ -468,6 +475,137 @@ export default {
             })
 
         },
+        // 初始化甘特图对象
+        initGanttObj(obj, stack, start, color, zlevel, name) {
+            obj.name = name
+            obj.stack = stack
+            obj.type = "bar";
+            obj.label = {
+                normal: {
+                    show: true,
+                    color: "#000",
+                    position: "insideTopRight",
+                    offset: [0, -20],
+                    formatter: function (params) {
+                        var data = new Date(params.value)
+                        return data.getMonth() + 1 + "-" + data.getDate()
+                    }
+                }
+            }
+            obj.zlevel = zlevel
+            if (start) {
+                obj.itemStyle = {
+                    normal: {
+                        color: "#fff"
+                    }
+                }
+            } else {
+                obj.itemStyle =
+                {
+                    normal: {
+                        color: color,
+                        borderColor: "#fff",
+                        borderWidth: 2,
+                    }
+                }
+            }
+            obj.data = []
+            return obj
+        },
+        // 初始化甘特图
+        initGantt() {
+            // 初始化y轴坐标
+            var yAxis = [];
+            for (let i = this.userInfo.length-1; i >= 0; i--) {
+                yAxis.push(this.userInfo[i].description)
+            }
+            var dataSeries = []
+            // 计划时间
+            var planTime_start = {};
+            var planTime_end = {};
+            planTime_start = this.initGanttObj(planTime_start, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
+
+            // 外界因素延期
+            var standardTime = {};
+            standardTime = this.initGanttObj(standardTime, "bar0", false, "skyblue", 2, "目标完成时间")
+
+            // 执行时间
+            var execTime_end = {};
+            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "执行时间")
+
+            for (let i = this.userInfo.length-1; i >= 0; i--) {
+                planTime_start.data.push(new Date(this.userInfo[i].startTime))
+                planTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays)))
+                standardTime.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays, this.userInfo[i].unforcedDays)))
+                execTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].executionDays)))
+            }
+
+
+            dataSeries.push(planTime_start)
+            dataSeries.push(planTime_end)
+            dataSeries.push(standardTime)
+            dataSeries.push(execTime_end)
+
+            var option = {
+                backgroundColor: "#fff",
+                title: {
+                    text: "执行甘特图",
+                    padding: 20,
+                    textStyle: {
+                        fontSize: 17,
+                        fontWeight: "bolder",
+                        color: "#333"
+                    },
+                    subtextStyle: {
+                        fontSize: 13,
+                        fontWeight: "bolder"
+                    }
+                },
+                legend: {
+                    data: ['开始时间', '预计完成时间', '目标完成时间', '执行时间'],
+                    align: "right",
+                    right: 80,
+                    top: 50
+                },
+                grid: {
+                    containLabel: true,
+                    show: false,
+                    right: 130,
+                    left: 40,
+                    bottom: 40,
+                    top: 90
+                },
+                xAxis: {
+                    type: "time",
+                    axisLabel: {
+                        "show": true,
+                        "interval": 0
+                    }
+                },
+                yAxis: {
+                    axisLabel: {
+                        show: true,
+                        interval: 0,
+                    },
+                    data: yAxis
+                },
+                tooltip: {
+                    trigger: "axis",
+                    formatter: function (params) {
+                        var res = ''
+                        res+=params[0].axisValue+'<br/>';
+                        for (var i = 0; i < params.length; i++) {
+                            res+='<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>'+
+                            params[i].seriesName+'：'+formatDate(params[i].value)+'<br/>'
+                        }
+                        return res
+                    }
+                },
+                series: dataSeries,
+            }
+            this.gantt.setOption(option);
+        },
         // 获取最大值方法
         calMax(arr) {
             var max = Math.max.apply(null, arr); // 获取最大值方法
@@ -551,7 +689,7 @@ export default {
                 path: '/case2sub',
                 query: {
                     caseId: row.caseId,
-                    caseName: 'description' in row?row.description.split("→")[0]:row.caseName
+                    caseName: 'description' in row ? row.description.split("→")[0] : row.caseName
                 }
             })
         },
@@ -577,11 +715,16 @@ export default {
 .charts-area {
     width: 100%;
     display: flex;
+    flex-wrap: wrap;
 
-    .el-card,
-    .pie-charts {
-        width: 30%;
-        margin-right: 5px;
+    .gantt-chart {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .pie-chart {
+        width: 29.5%;
+        margin-right: 0.5%;
     }
 
     .bar-chart {

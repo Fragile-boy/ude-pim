@@ -33,3 +33,7 @@ export const updateDelay = (obj)=>{
 export const deleteDelay = (id)=>{
     return service.delete(`/caseSubDelayApply/${id}`)
 }
+
+export const removeDelayApply = (id)=>{
+    return service.delete(`/caseSubDelayApply/removeDelayApply/${id}`)
+}

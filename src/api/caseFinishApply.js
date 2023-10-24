@@ -20,3 +20,7 @@ export const endHistory = (obj)=>{
 export const getFinishListByUserId = (id)=>{
     return service.get(`/caseSubFinishApply/checkList/${id}`)
 }
+
+export const removeFinishApply = (id)=>{
+    return service.delete(`/caseSubFinishApply/removeFinishApply/${id}`)
+}

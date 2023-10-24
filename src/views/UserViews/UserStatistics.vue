@@ -284,7 +284,7 @@ export default {
     },
     openCharts() {
       this.$router.push({
-        name: 'userChart',
+        name: '图表统计',
         query: {
           allTaskList: this.filterList,
           start_stop_time: this.start_stop_time

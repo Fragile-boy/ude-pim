@@ -199,13 +199,13 @@ const routes = [
       {
         // 图表统计页
         path: '/user/chart',
-        name: 'userChart',
+        name: '图表统计',
         component: UserChart
       },
       {
         //需求
         path: '/demand',
-        name: 'demand',
+        name: '需求管理',
         component: Demand
       }
     ]

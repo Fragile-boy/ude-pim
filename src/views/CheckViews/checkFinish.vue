@@ -324,8 +324,10 @@ export default {
                 var res = await getCaseId(row.caseSubId)
                 if(res.code == 200){
                     res = res.data
-                }else
+                }else{
                     this.$message.error(res.msg)
+                    return
+                }
                 this.$router.push({
                     path:'/case2sub',
                     query:{
