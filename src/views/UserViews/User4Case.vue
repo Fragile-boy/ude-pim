@@ -63,6 +63,7 @@
             </el-table>
         </el-card>
 
+        <!-- 中止专案显示区域 -->
         <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
             <h2>中止专案</h2>
             <!-- 未开始的异常专案 -->
@@ -103,7 +104,7 @@
 
 
         <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%" @close="closeApplyDelay">
-            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="90px" class="form">
+            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="110px" class="form">
                 <el-form-item label="申请类型">
                     <el-input :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : '技术研究'"
                         disabled></el-input>
@@ -126,7 +127,11 @@
                 </el-form-item>
 
                 <el-form-item label="申请天数" prop="applyDays">
-                    <el-input type="number" v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"></el-input>
+                    <el-input type="number" v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数" @input="computePresetTime"></el-input>
+                </el-form-item>
+
+                <el-form-item label="预计完成时间" v-if="delayApplyObject.presetFinishTime">
+                    <el-input :value="delayApplyObject.presetFinishTime" disabled></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -230,7 +235,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { timeSub, formatDate, format4back } from '@/utils/common'
+import { timeSub, timeAdd, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList,startOrFinish } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
@@ -418,6 +423,8 @@ export default {
         openDelayApply(row) {
             this.applyDelayVisible = true
             this.delayApplyObject = { ...row }
+            // 添加预计完成时间显示
+            this.delayApplyObject.presetFinishTime = null
         },
         //关闭dialog时的回调函数
         closeApplyDelay() {
@@ -743,6 +750,14 @@ export default {
                 this.getExceptionList()
                 this.selectStartTimeVisible = false
             }
+        },
+        // 计算执行时间
+        computePresetTime() {
+            if(this.delayApplyObject.applyDays===''){
+                this.delayApplyObject.presetFinishTime = null
+                return
+            }
+            this.delayApplyObject.presetFinishTime = formatDate(timeAdd(this.delayApplyObject.startTime, this.delayApplyObject.planDays, this.delayApplyObject.unforcedDays, this.delayApplyObject.applyDays))
         }
     }
 }

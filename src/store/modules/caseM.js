@@ -53,7 +53,7 @@ export default {
                 //开始时间+各个阶段的计划时间
                 //必须new一个新的，否则共用一个对象，修改一个，两个都改了
                 var presetTime = new Date(startTime)
-                presetTime.setDate(presetTime.getDate() + res[i].planDay)
+                presetTime.setDate(presetTime.getDate() + res[i].planDay-1)
                 res[i].presetTime = formatDate(presetTime)
 
                 //设置执行天数

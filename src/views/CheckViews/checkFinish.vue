@@ -143,8 +143,8 @@ import { getFinishApplyList, judgeFinishApply, endHistory } from '@/api/caseFini
 import { mapActions, mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 import { countUser, submitDirectorValue } from '@/api/caseSubUser'
-import {getById} from '@/api/caseSubCommit'
-import {getCaseId} from '@/api/caseSub'
+import { getById } from '@/api/caseSubCommit'
+import { getCaseId } from '@/api/caseSub'
 export default {
     data() {
         return {
@@ -215,7 +215,35 @@ export default {
                     return
                 }
                 this.directorList = res.data
-                this.editDirectorRate = true
+                // 仅有一个负责人
+                if (this.directorList.length === 1) {
+                    this.directorList[0].value = 100
+                    const res = await submitDirectorValue(this.directorList)
+                    if(res.code!==200){
+                        this.$message.error(res.msg)
+                        return
+                    }
+                    this.$confirm('您正在通过该阶段的完结申请, 是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(async () => {
+                        const res = await judgeFinishApply(this.curObj)
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                            setTimeout(() => this.getFinish(), 500)
+                        } else {
+                            this.$message.error(res.msg)
+                        }
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消操作'
+                        });
+                    });
+                } else {
+                    this.editDirectorRate = true
+                }
             } else if (status === 2) {
                 this.$prompt('请输入原因', '您正在拒绝申请', {
                     confirmButtonText: '确定',
@@ -319,20 +347,20 @@ export default {
             } else
                 this.$message.error(res.msg)
         },
-        async handleDoubleClick(row, column){
-            if(row.caseSubId){
+        async handleDoubleClick(row, column) {
+            if (row.caseSubId) {
                 var res = await getCaseId(row.caseSubId)
-                if(res.code == 200){
+                if (res.code == 200) {
                     res = res.data
-                }else{
+                } else {
                     this.$message.error(res.msg)
                     return
                 }
                 this.$router.push({
-                    path:'/case2sub',
-                    query:{
-                        caseName:row.description.split("->")[0],
-                        caseId:res
+                    path: '/case2sub',
+                    query: {
+                        caseName: row.description.split("->")[0],
+                        caseId: res
                     }
                 })
             }

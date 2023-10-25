@@ -11,8 +11,11 @@
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse ? '64px' : '200px'" v-if="user.status <= 2">
-        <div class="toggle-button" @click="toggleCollapse">|||</div>
+      <el-aside :width="isCollapse ? '55px' : '200px'" v-if="user.status <= 2" style="margin-left: -10px;">
+        <div class="toggle-button" @click="toggleCollapse">
+          <i class="el-icon-back" v-if="!isCollapse"></i>
+          <i class="el-icon-right" v-else style="margin-left: 10px;"></i>
+        </div>
         <PIMAside :isCollapse="isCollapse"></PIMAside>
       </el-aside>
       <!-- 右侧内容区域 -->
@@ -20,7 +23,7 @@
         <div style="margin-bottom: 10px; margin-top: -10px;">
           <NavigationBar></NavigationBar>
         </div>
-        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException']">
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException','caseAnalysis']">
           <router-view></router-view>
         </keep-alive>
 

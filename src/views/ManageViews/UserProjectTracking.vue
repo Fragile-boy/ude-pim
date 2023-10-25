@@ -91,21 +91,6 @@
             </el-table>
         </el-card>
 
-        <el-card class="gantt-chart">
-                <div id="ganttChart" style="width: 100%; height: 300px;"></div>
-            </el-card>
-        <div class="charts-area" v-show="!commitVisible">
-            
-            <el-card class="pie-chart">
-                <h2>任务类别</h2><span>(近半年)</span>
-                <div id="taskType" style="width: 100%; height: 300px;"></div>
-            </el-card>
-            <el-card class="bar-chart">
-                <h2>任务达成</h2><span>(近半年)</span>
-                <div id="taskAchieve" style="width: 100%; height: 300px"></div>
-            </el-card>
-        </div>
-
         <el-card v-if="commitVisible">
             <el-row>
                 <el-col :span="23" v-if="user.status === 2 || user.type === 1">
@@ -143,20 +128,48 @@
 
                 <el-card class="box-card" style="width: 55%;">
                     <h2>备注信息</h2>
-                    <!-- <div v-for="o in commitForm.content" :key="o" class="text item">
-                        {{ o }}
-                    </div> -->
-                    <ul>
+                    <ul v-show="!showAllCommit">
+                        <li v-for="(o, index) in commitForm.content.slice(0,4)" :key="o.id" class="text item">
+                            <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
+                        </li>
+                    </ul>
+                    <ul v-show="showAllCommit">
                         <li v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
                             <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
                         </li>
                     </ul>
                     <label v-if="commitForm.content.length === 0">暂无备注</label>
+                    <el-row>
+                        <el-col :span="2" :offset="10">
+                            <a class="viewItem" @click="showAll" v-if="!showAllCommit">展开全部</a>
+                            <a class="viewItem" @click="showAll" v-else>收起</a>
+                        </el-col>
+                    </el-row>
                 </el-card>
 
 
             </div>
         </el-card>
+         
+        <el-card class="gantt-chart">
+            <div id="ganttChart" style="width: 100%; height: 300px;"></div>
+        </el-card>
+        
+        <div class="charts-area" v-show="!commitVisible">
+
+            <el-card class="pie-chart">
+                <h2>任务类别</h2><span>(近半年)</span>
+                <div id="taskType" style="width: 100%; height: 300px;"></div>
+            </el-card>
+            <el-card class="bar-chart">
+                <h2>任务达成</h2><span>(近半年)</span>
+                <div id="taskAchieve" style="width: 100%; height: 300px"></div>
+            </el-card>
+        </div>
+
+        
+
+        
     </div>
 </template>
 
@@ -198,6 +211,8 @@ export default {
             },
             //当前用户所有未开始的任务
             exceptionList: [],
+            // 是否显示所有备注
+            showAllCommit:false,
         }
     },
     async mounted() {
@@ -485,7 +500,6 @@ export default {
                     show: true,
                     color: "#000",
                     position: "insideTopRight",
-                    offset: [0, -20],
                     formatter: function (params) {
                         var data = new Date(params.value)
                         return data.getMonth() + 1 + "-" + data.getDate()
@@ -516,7 +530,7 @@ export default {
         initGantt() {
             // 初始化y轴坐标
             var yAxis = [];
-            for (let i = this.userInfo.length-1; i >= 0; i--) {
+            for (let i = this.userInfo.length - 1; i >= 0; i--) {
                 yAxis.push(this.userInfo[i].description)
             }
             var dataSeries = []
@@ -532,9 +546,9 @@ export default {
 
             // 执行时间
             var execTime_end = {};
-            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "执行时间")
+            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "当前时间")
 
-            for (let i = this.userInfo.length-1; i >= 0; i--) {
+            for (let i = this.userInfo.length - 1; i >= 0; i--) {
                 planTime_start.data.push(new Date(this.userInfo[i].startTime))
                 planTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays)))
                 standardTime.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays, this.userInfo[i].unforcedDays)))
@@ -563,7 +577,7 @@ export default {
                     }
                 },
                 legend: {
-                    data: ['开始时间', '预计完成时间', '目标完成时间', '执行时间'],
+                    data: ['开始时间', '预计完成时间', '目标完成时间', '当前时间'],
                     align: "right",
                     right: 80,
                     top: 50
@@ -594,10 +608,10 @@ export default {
                     trigger: "axis",
                     formatter: function (params) {
                         var res = ''
-                        res+=params[0].axisValue+'<br/>';
+                        res += params[0].axisValue + '<br/>';
                         for (var i = 0; i < params.length; i++) {
-                            res+='<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>'+
-                            params[i].seriesName+'：'+formatDate(params[i].value)+'<br/>'
+                            res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
+                                params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
                         }
                         return res
                     }
@@ -706,6 +720,9 @@ export default {
             }
             this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
             this.updateView()
+        },
+        showAll(){
+            this.showAllCommit = !this.showAllCommit
         }
     }
 }
@@ -734,5 +751,15 @@ export default {
 
 .commit_area {
     display: flex;
+}
+
+.viewItem{
+    color:#3DA3E2;
+    text-decoration: none;
+}
+
+.viewItem:hover{
+    color:#EB4056;
+    text-decoration: underline;
 }
 </style>

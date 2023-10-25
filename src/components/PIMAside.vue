@@ -36,7 +36,8 @@
                 <i class="el-icon-s-data"></i>
                 <span>数据统计</span>
             </template>
-            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
+            <el-menu-item index="/monthlyAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
+            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
         </el-submenu>
 
         <el-submenu index="4" v-if="user.type === 1">
@@ -63,10 +64,10 @@
             <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
         </el-submenu>
 
-        <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"><i
+        <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/" :style="{color:isCollapse?'#333744':'#fff'}"><i
                     class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
 
-        <el-menu-item><router-link to="/demand"><i
+        <el-menu-item><router-link to="/demand" :style="{color:isCollapse?'#333744':'#fff'}"><i
                     class="el-icon-s-check"></i>需求管理</router-link></el-menu-item>
     </el-menu>
 </template>

@@ -355,7 +355,7 @@
                 </el-form-item>
 
                 <el-form-item label="预计完成" v-if="delayApplyObject.applyDays > 0">
-                    <el-input :value="presetTime" placeholder="请输入要申请的天数" disabled></el-input>
+                    <el-input :value="presetTime" disabled></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">

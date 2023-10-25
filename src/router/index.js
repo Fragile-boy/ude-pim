@@ -35,7 +35,8 @@ import checkStudy from '@/views/CheckViews/checkStudy'
 import checkApply from '@/views/CheckViews/checkApply'
 
 // 数据统计界面
-import caseData from '@/views/dataViews/caseData'
+import monthlyAnalysis from '@/views/dataViews/monthlyAnalysis'
+import caseAnalysis from '@/views/dataViews/caseAnalysis'
 
 //部员管理界面
 import UserList from '@/views/ManageViews/UserList'
@@ -145,13 +146,19 @@ const routes = [
       },
 
 
-      //专案分析
+      //月报分析
       {
-        path: '/caseAnalysis',
+        path: '/monthlyAnalysis',
         name: '月报分析',
-        component: caseData
+        component: monthlyAnalysis
       },
 
+      // 专案分析
+      {
+        path:'/caseAnalysis',
+        name:'专案分析',
+        component: caseAnalysis
+      },
 
       //部员列表
       {
