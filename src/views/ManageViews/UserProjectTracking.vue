@@ -46,6 +46,7 @@
                 </el-table-column>
                 <el-table-column prop="description" label="描述" width="260"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
+                <el-table-column prop="presetTime" label="预计完成"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
@@ -96,7 +97,7 @@
                 <el-col :span="23" v-if="user.status === 2 || user.type === 1">
                     <el-row>
                         <el-col :span="21">
-                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注"></el-input>
+                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注" @change="submitCommitForm"></el-input>
                         </el-col>
                         <el-col :span="1" :offset="1">
                             <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
@@ -658,9 +659,9 @@ export default {
         // 提交备注信息
         async submitCommitForm() {
             //判断备注信息是否为空或者内容太少
-            if (this.commitForm.newContent === null || this.commitForm.newContent.length < 10) {
+            if (this.commitForm.newContent === null||this.commitForm.newContent ==='') {
                 this.$message({
-                    message: '备注内容不能少于10个字',
+                    message: '备注内容不能为空',
                     type: 'warning'
                 })
                 return

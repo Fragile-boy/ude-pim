@@ -1,8 +1,13 @@
 import service from "@/plugins/service";
 
-//获得所有用户
+//获得所有用户(电控和机构)
 export const getUserList = () => {
     return service.get('/user/list')
+}
+
+// 获得所有用户（并包括助理）
+export const getUserListWithAssistants = () => {
+    return service.get('/user/userListWithAssistants')
 }
 
 //获得用户页面数据

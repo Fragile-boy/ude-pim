@@ -9,7 +9,25 @@
             </el-breadcrumb>
         </div>
         <el-card>
-            <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
+
+            <!-- 显示统计信息 -->
+            <div style="margin-bottom: 10px;">
+                <el-row :gutter="20">
+                    <el-col :span="6">
+                        <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
+                    </el-col>
+                    <el-col :span="2" :offset="8">
+                        <el-statistic :value="planDay" title="计划时长(天)">
+                        </el-statistic>
+                    </el-col>
+                    <el-col :span="3">
+                        <el-statistic :value="executionDays" title="执行时间(天)">
+                        </el-statistic>
+                    </el-col>
+                </el-row>
+            </div>
+
+
             <el-table :cell-style="setCellColor" :data="case2person" :span-method="objectSpanMethod" border>
                 <el-table-column prop="userName" label="姓名"></el-table-column>
                 <el-table-column prop="subName" label="子流程"></el-table-column>
@@ -48,14 +66,21 @@ import { timeSub } from '@/utils/common'
 import Clipboard from 'clipboard';
 
 export default {
+    name:'casePersonView',
     data() {
         return {
-            case2person: []
+            case2person: [],
+            caseId: null,
+            caseName: null,
+            planDay: null,
+            executionDays: null
         }
     },
     created() {
         this.caseId = this.$route.query.caseId
         this.caseName = this.$route.query.caseName
+        this.planDay = this.$route.query.planDay
+        this.executionDays = this.$route.query.executionDays
         this.listFocusPerson(this.caseId)
     },
     methods: {
@@ -63,6 +88,7 @@ export default {
             const res = await listFocusPerson(id);
             if (res.code === 200) {
                 this.case2person = res.data
+                console.log(this.case2person)
                 for (var i = 0; i < this.case2person.length; i++) {
                     //执行状态
                     //未开始
@@ -115,7 +141,7 @@ export default {
         async computeSumValue(index) {
             var userId = this.case2person[index].userId
             var res = 0
-            while (index<this.case2person.length && this.case2person[index].userId === userId) {
+            while (index < this.case2person.length && this.case2person[index].userId === userId) {
                 if (this.case2person[index] != null && 'value' in this.case2person[index]) {
                     res += +this.case2person[index].value
                 }

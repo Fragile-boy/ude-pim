@@ -122,8 +122,8 @@
         <!-- 备注显示区域 -->
         <el-form-item label="备注信息">
           <el-card class="box-card">
-            <div v-for="(o,index) in commitForm.content" :key="o.id" class="text item">
-              <span :style="{color:index===0?'red':'black'}">{{ o.content }}</span>
+            <div v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
+              <span :style="{ color: index === 0 ? 'red' : 'black' }">{{ o.content }}</span>
               <el-button icon="el-icon-delete" size="mini" round type="danger" @click="deleteCommit(o.id)"></el-button>
             </div>
             <label v-if="commitForm.content.length === 0">暂无备注</label>
@@ -290,7 +290,9 @@ export default {
         name: '专案个人详情',
         query: {
           caseId: row.id,
-          caseName: row.name
+          caseName: row.name,
+          planDay: row.planDay,
+          executionDays: row.executionDays
         }
       })
     },

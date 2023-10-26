@@ -23,21 +23,21 @@ export default {
             if ("status" in obj)
                 state.queryList = state.queryList.filter(item => item.status === obj.status)
 
-            if("director" in obj)
+            if ("director" in obj)
                 state.queryList = state.queryList.filter(item => item.director === obj.director)
-            
+
             if ("startTime" in obj && "endTime" in obj)
-                state.queryList = state.queryList.filter(item => (new Date(item.finishTime)>=new Date(obj.startTime)) && (new Date(item.finishTime)<=new Date(obj.endTime)))
+                state.queryList = state.queryList.filter(item => (new Date(item.finishTime) >= new Date(obj.startTime)) && (new Date(item.finishTime) <= new Date(obj.endTime)))
         }
     },
     actions: {
         //获取专案列表
-        async getCaseList(context,isFinished) {
+        async getCaseList(context, isFinished) {
             var res = await getCaseList(isFinished)
             res = res.data
             //数据加工
             for (let i = 0; i < res.length; i++) {
-                if(res[i]['startTime']===null){
+                if (res[i]['startTime'] === null) {
                     //不直接返回，其他数据显示就会乱码
                     res[i].status = 4
                     continue
@@ -45,7 +45,7 @@ export default {
                 //后端拿到的是字符串格式的数据，转换为时间格式
                 const startTime = new Date(res[i]['startTime'])
                 res[i].startTime = formatDate(startTime)
-                if(res[i].finishTime!==null)
+                if (res[i].finishTime !== null)
                     res[i].finishTime = formatDate(new Date(res[i]['finishTime']))
                 //获得今天的日期，用于计算执行天数（如果已经完成，则执行天数由结束之间-开始时间获得）
                 const today = new Date()
@@ -53,7 +53,7 @@ export default {
                 //开始时间+各个阶段的计划时间
                 //必须new一个新的，否则共用一个对象，修改一个，两个都改了
                 var presetTime = new Date(startTime)
-                presetTime.setDate(presetTime.getDate() + res[i].planDay-1)
+                presetTime.setDate(presetTime.getDate() + res[i].planDay - 1)
                 res[i].presetTime = formatDate(presetTime)
 
                 //设置执行天数
@@ -80,9 +80,17 @@ export default {
                 // 如果案子还没有完结
                 res[i].status = getStatus(res[i].startTime, res[i].presetTime, res[i].finishTime)
             }
-            res.sort((a, b) => {
-                return b.executionDays-a.executionDays
-            })
+            // 获取的是执行中的专案，则按照执行天数倒序排序
+            if (!isFinished) {
+                res.sort((a, b) => {
+                    return b.executionDays - a.executionDays
+                })
+            }else{
+                // 获取的是已完成的专案，则按照完结时间倒序排序
+                res.sort((a,b)=>{
+                    return new Date(b.finishTime)-new Date(a.finishTime)
+                })
+            }
             context.commit('updateList', res)
         },
 

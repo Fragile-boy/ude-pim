@@ -34,8 +34,10 @@
                 </el-table-column>
                 <el-table-column prop="description" label="描述"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
+                <el-table-column prop="predictTime" label="预计时间"></el-table-column>
                 <el-table-column prop="finishTime" label="完成时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外界因素延期"></el-table-column>
                 <el-table-column prop="applyDelay" label="人为因素延期"></el-table-column>
                 <el-table-column label="操作">
@@ -148,8 +150,8 @@
 
 <script>
 import { allTaskList, updateTask, addTask } from '@/api/task';
-import { getUserList } from '@/api/user';
-import { format4back } from '@/utils/common';
+import { getUserListWithAssistants } from '@/api/user';
+import { format4back, timeAdd, timeSub } from '@/utils/common';
 import { mapState } from 'vuex';
 
 export default {
@@ -174,6 +176,10 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
+                },{
+                    value:2,
+                    label:'IE',
+                    children:[]
                 }
             ],
             curUser: null,
@@ -216,6 +222,16 @@ export default {
             const res = await allTaskList(this.curUser)
             if (res.code === 200) {
                 this.taskList = res.data
+                this.taskList.forEach(item=>{
+                    item.predictTime = timeAdd(item.startTime, item.planDays)
+                    if(item.finishTime!==null){
+                        item.executionDays = timeSub(item.startTime, item.finishTime)
+                        item.executionDays -= item.unforcedDays
+                    }else{
+                        item.executionDays = timeSub(item.startTime, new Date())
+                        item.executionDays -= item.unforcedDays
+                    }
+                })
             } else {
                 this.$message.error(res.msg)
             }
@@ -223,10 +239,8 @@ export default {
         //获取所有科员信息
         async getAllUser() {
             //获取所有科员信息
-            var { data: res } = await getUserList()
+            var { data: res } = await getUserListWithAssistants()
             for (var i = 0; i < res.length; i++) {
-                if(res[i].status >=2)
-                    continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
         },

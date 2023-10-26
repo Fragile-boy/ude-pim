@@ -16,7 +16,7 @@ export default {
     created() {
         // 监听路由变化
         this.$router.afterEach((to, from) => {
-            if(to.path === '/case2sub')
+            if(to.path === '/case2sub' || to.path === '/case2person')
                 return
             let exists = this.tabs.find(tab => tab.path === to.path);
             if (!exists) {
