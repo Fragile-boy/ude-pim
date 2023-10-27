@@ -249,8 +249,8 @@ export default {
     name: 'case4me',
     data() {
         var checkDays = (rule, value, callback) => {
-            if (value <= 0 || value > 15)
-                callback(new Error("申请天数必须在1-15之间"))
+            if (value <= 0 || value > 90)
+                callback(new Error("申请天数必须在1-90之间"))
             callback()
         }
         var checkPlandays = (rule, value, callback) => {

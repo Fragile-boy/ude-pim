@@ -15,7 +15,7 @@
                 <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
             </div>
             <div class="tableInfo">
-                <el-table :cell-style="setCellColor" :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
+                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
 
                     <el-table-column type="expand">
                         <template slot-scope="scope">
@@ -27,14 +27,21 @@
 
                                 </el-col>
 
+                                <el-col :span="6">
+                                    <el-tag v-if="scope.row.desc.length!==0&&scope.row.desc[index] !== null && scope.row.desc[index]!==''" type="warning" class="chargeNameTag">
+                                        工作描述:{{ (scope.row.desc[index]) }}
+                                    </el-tag>
+
+                                </el-col>
+
                                 <el-col :span="3">
-                                    <el-tag v-if="scope.row.directorRate != null" type="warning" class="chargeNameTag">
-                                        积分比例：{{ (scope.row.directorRate[index]).toFixed() }} %
+                                    <el-tag v-if="scope.row.directorRate.length!==0&&scope.row.directorRate[index]!==null" type="warning" class="chargeNameTag">
+                                        时间占比：{{ (scope.row.directorRate[index]).toFixed() }} %
                                     </el-tag>
                                 </el-col>
 
                                 <el-col :span="3">
-                                    <el-tag v-if="scope.row.directorRate != null" type="warning" class="chargeNameTag">
+                                    <el-tag v-if="scope.row.directorRate.length !== 0" type="warning" class="chargeNameTag">
                                         积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) /
                                             100).toFixed(2)
                                         }}
@@ -480,6 +487,8 @@ export default {
             presetTime: '',
             //原来的申请，用于修改时确认新的预计完成时间
             oldApplyDays: '',
+            // 展开行的数组
+            expandRowKeys:[],
         }
     },
     computed: {
@@ -528,6 +537,7 @@ export default {
                         this.subInfo[i].value *= 2
                 }
             }
+            console.log(this.subInfo)
         },
         //显示负责人手头的子流程
         async handleDoubleClick(row, column) {
@@ -536,6 +546,12 @@ export default {
                 this.delayDrawer = true
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
+            else if (column.label === '积分') {
+                if(this.expandRowKeys.length===0)
+                    this.expandRowKeys =this.subInfo.map(r => r.id); // 假设数据中的每一行有唯一的id属性
+                else
+                    this.expandRowKeys = [];
+            }
 
         },
         async getUnforcedDays(row) {
@@ -774,11 +790,11 @@ export default {
             this.directorList.forEach(item => {
                 sum += +item.value
             })
-            // console.log(sum)
-            if (sum !== 100) {
-                this.$message.error("积分总和不为100，请检查积分比例")
-                return
-            }
+            // 2023.10.27 泽伟哥说取消限制积分必须是100%
+            // if (sum !== 100) {
+            //     this.$message.error("积分总和不为100，请检查积分比例")
+            //     return
+            // }
             const res = await submitDirectorValue(this.directorList)
             if (res.code === 200) {
                 this.$message.success(res.data)

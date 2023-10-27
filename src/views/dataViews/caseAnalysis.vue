@@ -50,15 +50,15 @@ export default {
     }
   },
   async created() {
-    await this.getCaseList(true),
-      this.caseList.sort(function (a, b) {
-        if (a.startTime < b.startTime)
-          return -1
-        else if (a.startTime > b.startTime)
-          return 1
-        else
-          return 0
-      })
+    await this.getCaseList(true)
+    // this.caseList.sort(function (a, b) {
+    //   if (a.startTime < b.startTime)
+    //     return -1
+    //   else if (a.startTime > b.startTime)
+    //     return 1
+    //   else
+    //     return 0
+    // })
     for (let i = 0; i < this.caseList.length; i++) {
       this.map.set(this.caseList[i].name, this.caseList[i])
     }
@@ -105,16 +105,15 @@ export default {
         position: fullTime ? "insideTopRight" : "right",
         fontSize: 16,
         formatter: function (params) {
+          var data = new Date(params.value)
           if (fullTime) {
             if (zlevel === 4 || zlevel === 1)
-              return formatDate(params.value)
+              return (''+data.getFullYear()).substring(2,4)+"/"+(data.getMonth() + 1) + "/" + data.getDate()
             return ''
           } else {
-            var data = new Date(params.value)
             if (zlevel === 1)
               return data.getMonth() + 1 + "/" + data.getDate()
             return ''
-
           }
         }
       }
@@ -245,16 +244,16 @@ export default {
       var dataSeries = []
       // 开始时间
       var startTime = {}
-      startTime = this.initGanttObj(startTime, "bar0", true, "#fff", 4, "开始时间")
+      startTime = this.initGanttObj(startTime, "bar0", true, "#fff", 4, "开始时间", true)
       // 预计完成时间
       var predictTime = {}
-      predictTime = this.initGanttObj(predictTime, "bar0", false, "#6ED77E", 3, "预计完成")
+      predictTime = this.initGanttObj(predictTime, "bar0", false, "#6ED77E", 3, "预计完成", true)
       // 目标时间
       var targetTime = {}
-      targetTime = this.initGanttObj(targetTime, "bar0", false, "skyblue", 2, "目标时间")
+      targetTime = this.initGanttObj(targetTime, "bar0", false, "skyblue", 2, "目标时间", true)
       // 完结时间
       var finishTime = {}
-      finishTime = this.initGanttObj(finishTime, "bar0", false, "#E23D3D", 1, "完成时间")
+      finishTime = this.initGanttObj(finishTime, "bar0", false, "#E23D3D", 1, "完成时间", true)
       for (let i = this.finishCaseList.length - 1; i >= 0; i--) {
         startTime.data.push(new Date(this.finishCaseList[i].startTime))
         predictTime.data.push(new Date(this.finishCaseList[i].presetTime))
@@ -383,14 +382,14 @@ export default {
             var res = ''
             res += params[0].axisValue + '<br/>';
             for (var i = 0; i < params.length; i++) {
-              
+
               res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
             }
-            if(params[params.length-1].value>params[params.length-2].value){
-              res+='延期'+(timeSub(params[params.length-2].value,params[params.length-1].value)-1)+"天"
-            }else{
-              res+='提前'+(timeSub(params[params.length-1].value,params[params.length-2].value)-1)+"天"
+            if (params[params.length - 1].value > params[params.length - 2].value) {
+              res += '延期' + (timeSub(params[params.length - 2].value, params[params.length - 1].value) - 1) + "天"
+            } else {
+              res += '提前' + (timeSub(params[params.length - 1].value, params[params.length - 2].value) - 1) + "天"
             }
             return res
           }

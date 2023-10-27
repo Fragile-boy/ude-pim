@@ -123,7 +123,6 @@ export default {
                         }
                     }
                 }
-                console.log(this.case2person)
             } else {
                 this.$message.error(res.msg)
             }
