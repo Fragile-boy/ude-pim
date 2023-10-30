@@ -56,6 +56,7 @@ export default{
         //获得完结申请列表
         async getFinish(ctx) {
             var res = await getFinishApplyList()
+            res.data.forEach(item=>item.estimateValue = item.estimateValue.toFixed(2))
             ctx.commit('updateFinishList', res.data)
         },
         async getCaseSubApplyList(ctx) {

@@ -15,7 +15,8 @@
                 <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
             </div>
             <div class="tableInfo">
-                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" stripe border @cell-dblclick="handleDoubleClick">
+                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" stripe
+                    border @cell-dblclick="handleDoubleClick">
 
                     <el-table-column type="expand">
                         <template slot-scope="scope">
@@ -28,14 +29,18 @@
                                 </el-col>
 
                                 <el-col :span="6">
-                                    <el-tag v-if="scope.row.desc.length!==0&&scope.row.desc[index] !== null && scope.row.desc[index]!==''" type="warning" class="chargeNameTag">
+                                    <el-tag
+                                        v-if="scope.row.desc.length !== 0 && scope.row.desc[index] !== null && scope.row.desc[index] !== ''"
+                                        type="warning" class="chargeNameTag">
                                         工作描述:{{ (scope.row.desc[index]) }}
                                     </el-tag>
 
                                 </el-col>
 
                                 <el-col :span="3">
-                                    <el-tag v-if="scope.row.directorRate.length!==0&&scope.row.directorRate[index]!==null" type="warning" class="chargeNameTag">
+                                    <el-tag
+                                        v-if="scope.row.directorRate.length !== 0 && scope.row.directorRate[index] !== null"
+                                        type="warning" class="chargeNameTag">
                                         时间占比：{{ (scope.row.directorRate[index]).toFixed() }} %
                                     </el-tag>
                                 </el-col>
@@ -225,6 +230,11 @@
                         <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
                     </template>
                 </el-table-column>
+                <el-table-column label="获得积分">
+                    <template slot-scope="scope">
+                        <el-input :value="scope.row.value*1.0/100*curCaseSubObj.value" placeholder="工作内容" disabled></el-input>
+                    </template>
+                </el-table-column>
             </el-table>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editDirectorRate = false">取 消</el-button>
@@ -386,6 +396,17 @@
                 <el-button type="primary" @click="setDirectorFn()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <!-- 完结阶段的时候选择日期窗口 -->
+        <el-dialog title="选择完结日期" :visible.sync="pickFinishTime.pickFinishTimeVisible" width="30%">
+            <el-date-picker v-model="pickFinishTime.preFinishTime" type="date" placeholder="选择完结日期"
+                value-format="yyyy-MM-dd HH:mm:ss">
+            </el-date-picker>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="pickFinishTime.pickFinishTimeVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitFinishInfo()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -488,7 +509,16 @@ export default {
             //原来的申请，用于修改时确认新的预计完成时间
             oldApplyDays: '',
             // 展开行的数组
-            expandRowKeys:[],
+            expandRowKeys: [],
+            pickFinishTime: {
+                // 准备结束的子流程id
+                preFinishCaseSubId: null,
+                // 准备结束的子流程选择窗口显示
+                pickFinishTimeVisible: null,
+                // 准备结束的子流程选择日期
+                preFinishTime: null,
+            }
+
         }
     },
     computed: {
@@ -547,8 +577,8 @@ export default {
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
             else if (column.label === '积分') {
-                if(this.expandRowKeys.length===0)
-                    this.expandRowKeys =this.subInfo.map(r => r.id); // 假设数据中的每一行有唯一的id属性
+                if (this.expandRowKeys.length === 0)
+                    this.expandRowKeys = this.subInfo.map(r => r.id); // 假设数据中的每一行有唯一的id属性
                 else
                     this.expandRowKeys = [];
             }
@@ -660,20 +690,29 @@ export default {
             })
         },
         //手动点了完结阶段
-        async finish(row) {
-
+        finish(row) {
             // 多个负责人就弹出分配比例，先分配比例再结束
             if (row.chargeId.length !== 0)
                 this.initEditDirectorRate(row)
             else {
-                //没有负责人就直接结束
-                const res = await startOrFinish({ id: row.id, finishTime: formatDate(new Date()) + " 00:00:00" })
-                if (res.code === 200) {
-                    this.$message.success(res.data)
-                    this.getSubInfo(this.caseId)
-                } else {
-                    this.$message.error(res.msg)
-                }
+                //没有负责人选择日期后直接结束
+                this.pickFinishTime.pickFinishTimeVisible = true
+                this.pickFinishTime.preFinishCaseSubId = row.id
+            }
+        },
+        // 提交完结
+        async submitFinishInfo() {
+            if(this.curCaseSubObj.startTime>this.pickFinishTime.preFinishTime){
+                this.$message.error('结束时间不能小于开始时间')
+                return
+            }
+            const res = await startOrFinish({ id: this.pickFinishTime.preFinishCaseSubId, finishTime: this.pickFinishTime.preFinishTime})
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.pickFinishTime.pickFinishTimeVisible = false
+                this.getSubInfo(this.caseId)
+            } else {
+                this.$message.error(res.msg)
             }
         },
         //手动点了开始阶段
@@ -781,15 +820,14 @@ export default {
             const res = await countUser(row.id)
             this.directorList = res.data
             this.curCaseSubObj = { ...row }
+            // 仅有一个负责人，则比例默认置为100
+            if(this.directorList.length === 1){
+                this.directorList[0].value = 100
+            }
             this.editDirectorRate = true
         },
         //提交积分比例（插入比例数据，修改子流程完结状态）
         async submitDirectorRate() {
-            //检查积分比例是否合理
-            var sum = 0;
-            this.directorList.forEach(item => {
-                sum += +item.value
-            })
             // 2023.10.27 泽伟哥说取消限制积分必须是100%
             // if (sum !== 100) {
             //     this.$message.error("积分总和不为100，请检查积分比例")
@@ -805,23 +843,9 @@ export default {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
                         type: 'warning'
-                    }).then(async () => {
-
-                        const res = await startOrFinish({ id: this.curCaseSubObj.id, finishTime: formatDate(new Date()) + " 00:00:00" })
-                        if (res.code === 200) {
-                            this.$message.success(res.data)
-                            this.getSubInfo(this.caseId)
-                        } else {
-                            this.$message.error(res.msg)
-                        }
-
-                    }).catch((error) => {
-                        console.log(error)
-                        this.$message({
-                            type: 'info',
-                            message: '已取消完结'
-                        });
-
+                    }).then(() => {
+                        this.pickFinishTime.pickFinishTimeVisible = true
+                        this.pickFinishTime.preFinishCaseSubId = this.curCaseSubObj.id
                     })
                 } else {
                     this.getSubInfo(this.caseId)
@@ -931,7 +955,7 @@ export default {
             } else {
                 this.presetTime = formatDate(timeAdd(this.curCaseSubObj.startTime, this.curCaseSubObj.planDays, this.curCaseSubObj.unforcedDays, this.delayApplyObject.applyDays))
             }
-        }
+        },
     }
 }
 </script>

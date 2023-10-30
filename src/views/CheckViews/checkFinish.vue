@@ -33,6 +33,8 @@
                 </el-table-column>
                 <el-table-column prop="applyTime" label="申请完结时间">
                 </el-table-column>
+                <el-table-column prop="estimateValue" label="预计积分" width="80">
+                </el-table-column>
                 <el-table-column prop="planDays" label="计划时间">
                 </el-table-column>
                 <el-table-column prop="executionDays" label="执行时间">
@@ -73,6 +75,11 @@
                         <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
                     </template>
                 </el-table-column>
+                <el-table-column label="获得积分">
+                    <template slot-scope="scope">
+                        <el-input :value="scope.row.value*1.0/100*curObj.estimateValue" placeholder="工作内容" disabled></el-input>
+                    </template>
+                </el-table-column>
             </el-table>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editDirectorRate = false">取 消</el-button>
@@ -90,6 +97,16 @@
                         <el-tag effect="dark" type="danger" v-else-if="scope.row.status === 2">拒绝</el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="类型">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
+                        <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="description" label="描述">
+                </el-table-column>
+                
                 <el-table-column prop="rejectReason" label="拒绝原因">
                 </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
@@ -98,8 +115,7 @@
                 </el-table-column>
                 <el-table-column prop="createTime" label="申请创建时间">
                 </el-table-column>
-                <el-table-column prop="description" label="描述">
-                </el-table-column>
+                
                 <el-table-column prop="checkName" label="审核人">
                 </el-table-column>
                 <el-table-column prop="checkTime" label="审核时间">
@@ -271,16 +287,17 @@ export default {
         },
         //提交积分比例（插入比例数据，修改子流程完结状态）
         async submitDirectorRate() {
-            //检查积分比例是否合理
-            var sum = 0;
-            this.directorList.forEach(item => {
-                sum += +item.value
-            })
-            // console.log(sum)
-            if (sum !== 100) {
-                this.$message.error("积分总和不为100，请检查积分比例")
-                return
-            }
+            // 2023.10.27 泽伟哥说取消限制积分必须是100%
+            // //检查积分比例是否合理
+            // var sum = 0;
+            // this.directorList.forEach(item => {
+            //     sum += +item.value
+            // })
+            // // console.log(sum)
+            // if (sum !== 100) {
+            //     this.$message.error("积分总和不为100，请检查积分比例")
+            //     return
+            // }
             const res = await submitDirectorValue(this.directorList)
             if (res.code === 200) {
                 this.$message.success(res.data)
