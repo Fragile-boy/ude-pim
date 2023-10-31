@@ -1,48 +1,48 @@
 import { exceptionSub } from "@/api/caseSub"
-import {getApplyList} from '@/api/caseDelayApply'
+import { getApplyList } from '@/api/caseDelayApply'
 import { getFinishApplyList } from "@/api/caseFinishApply"
 import { applyList } from "@/api/applyCaseSub"
 import { applyTaskList } from "@/api/applyTask"
-import { formatDate,timeAdd } from "@/utils/common"
+import { formatDate, timeAdd } from "@/utils/common"
 
-export default{
-    namespaced:true,
-    state:{
+export default {
+    namespaced: true,
+    state: {
         //异常专案阶段
-        subList:[],
+        subList: [],
         //延期申请
-        delayList:[],
+        delayList: [],
         //完结申请
-        finishList:[],
-        caseSubList:[],
-        taskList:[]
+        finishList: [],
+        caseSubList: [],
+        taskList: []
     },
-    mutations:{
+    mutations: {
         //更新异常阶段列表
-        updateSubList(state, payLoad){
+        updateSubList(state, payLoad) {
             state.subList = payLoad
         },
         //更新延期列表
-        updateDelayList(state,payLoad){
+        updateDelayList(state, payLoad) {
             state.delayList = payLoad
         },
         //更新完结列表
-        updateFinishList(state, payLoad){
+        updateFinishList(state, payLoad) {
             state.finishList = payLoad
         },
-        updateCaseSubList(state,payLoad){
+        updateCaseSubList(state, payLoad) {
             state.caseSubList = payLoad
         },
-        updateTaskList(state,payLoad){
+        updateTaskList(state, payLoad) {
             state.taskList = payLoad
         }
 
     },
-    actions:{
+    actions: {
         //获得异常阶段列表
         async exceptionSub(ctx) {
             const res = await exceptionSub()
-            ctx.commit('updateSubList',res.data)
+            ctx.commit('updateSubList', res.data)
         },
         //获得延期阶段列表
         async getDelay(ctx) {
@@ -56,17 +56,23 @@ export default{
         //获得完结申请列表
         async getFinish(ctx) {
             var res = await getFinishApplyList()
-            res.data.forEach(item=>item.estimateValue = item.estimateValue.toFixed(2))
+            res.data.forEach(item => {
+                try {
+                    item.estimateValue = item.estimateValue.toFixed(2)
+                } catch (error) {
+                    item.estimateValue = "错误！"
+                }
+            })
             ctx.commit('updateFinishList', res.data)
         },
         async getCaseSubApplyList(ctx) {
             const res = await applyList()
-            ctx.commit('updateCaseSubList',res.data)
+            ctx.commit('updateCaseSubList', res.data)
         },
         async getTaskList(ctx) {
             const res = await applyTaskList()
             res.data.forEach(item => item.predictTime = timeAdd(item.createTime, item.planDays))
-            ctx.commit('updateTaskList',res.data)
+            ctx.commit('updateTaskList', res.data)
         },
     }
 }

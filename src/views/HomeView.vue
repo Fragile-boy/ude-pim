@@ -2,11 +2,23 @@
   <el-container class="home-container">
     <!-- 头部区域 -->
     <el-header>
+
+
       <img src="@/assets/logo_mini.png" alt="">
+
+
+
       <!-- <span style="color:red">(开发测试中...请稍后访问)</span> -->
       <span>新技研进度管理系统<span style="font-size: 10px;">(测试版)</span></span>
-      <el-button round size="medium" @click="handleLogout()">{{ user === null ? '' : user.name }}<i class="el-icon-switch-button
-"></i></el-button>
+
+
+      <el-button round size="medium" @click="handleLogout()">
+        {{ user === null ? '' : user.name }}
+        <i class="el-icon-switch-button"></i>
+      </el-button>
+
+
+
     </el-header>
     <!-- 主体区域 -->
     <el-container>
@@ -23,7 +35,7 @@
         <div style="margin-bottom: 10px; margin-top: -10px;">
           <NavigationBar></NavigationBar>
         </div>
-        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException','caseAnalysis']">
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis']">
           <router-view></router-view>
         </keep-alive>
 
@@ -40,11 +52,12 @@ export default {
   components: { NavigationBar },
   data() {
     return {
-      isCollapse: false
+      isCollapse: false,
+
     }
   },
   created() {
-
+    
   },
   computed: {
     ...mapState(['user'])
@@ -64,7 +77,7 @@ export default {
       })
       // this.$router.push('/login')
 
-    }
+    },
   }
 }
 </script>

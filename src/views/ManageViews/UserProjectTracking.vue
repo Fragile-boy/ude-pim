@@ -97,7 +97,8 @@
                 <el-col :span="23" v-if="user.status === 2 || user.type === 1">
                     <el-row>
                         <el-col :span="21">
-                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注" @change="submitCommitForm"></el-input>
+                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注"
+                                @change="submitCommitForm"></el-input>
                         </el-col>
                         <el-col :span="1" :offset="1">
                             <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
@@ -130,7 +131,7 @@
                 <el-card class="box-card" style="width: 55%;">
                     <h2>备注信息</h2>
                     <ul v-show="!showAllCommit">
-                        <li v-for="(o, index) in commitForm.content.slice(0,4)" :key="o.id" class="text item">
+                        <li v-for="(o, index) in commitForm.content.slice(0, 4)" :key="o.id" class="text item">
                             <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
                         </li>
                     </ul>
@@ -151,11 +152,11 @@
 
             </div>
         </el-card>
-         
+
         <el-card class="gantt-chart">
             <div id="ganttChart" style="width: 100%; height: 300px;"></div>
         </el-card>
-        
+
         <div class="charts-area" v-show="!commitVisible">
 
             <el-card class="pie-chart">
@@ -168,9 +169,9 @@
             </el-card>
         </div>
 
-        
 
-        
+
+
     </div>
 </template>
 
@@ -213,7 +214,7 @@ export default {
             //当前用户所有未开始的任务
             exceptionList: [],
             // 是否显示所有备注
-            showAllCommit:false,
+            showAllCommit: false,
         }
     },
     async mounted() {
@@ -497,14 +498,13 @@ export default {
             obj.stack = stack
             obj.type = "bar";
             obj.label = {
-                normal: {
-                    show: true,
-                    color: "#000",
-                    position: "insideTopRight",
-                    formatter: function (params) {
-                        var data = new Date(params.value)
-                        return data.getMonth() + 1 + "-" + data.getDate()
-                    }
+                show: true,
+                color: "#000",
+                position: "right",
+                fontSize: 20,
+                formatter: function (params) {
+                    var data = new Date(params.value)
+                    return data.getMonth() + 1 + "/" + data.getDate()
                 }
             }
             obj.zlevel = zlevel
@@ -659,7 +659,7 @@ export default {
         // 提交备注信息
         async submitCommitForm() {
             //判断备注信息是否为空或者内容太少
-            if (this.commitForm.newContent === null||this.commitForm.newContent ==='') {
+            if (this.commitForm.newContent === null || this.commitForm.newContent === '') {
                 this.$message({
                     message: '备注内容不能为空',
                     type: 'warning'
@@ -722,7 +722,7 @@ export default {
             this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
             this.updateView()
         },
-        showAll(){
+        showAll() {
             this.showAllCommit = !this.showAllCommit
         }
     }
@@ -754,13 +754,13 @@ export default {
     display: flex;
 }
 
-.viewItem{
-    color:#3DA3E2;
+.viewItem {
+    color: #3DA3E2;
     text-decoration: none;
 }
 
-.viewItem:hover{
-    color:#EB4056;
+.viewItem:hover {
+    color: #EB4056;
     text-decoration: underline;
 }
 </style>

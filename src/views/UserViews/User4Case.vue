@@ -19,7 +19,7 @@
             </el-row>
             <h2>执行专案</h2>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo">
+            <el-table :data="userInfo" @cell-dblclick="navigateToDetailPage">
                 <el-table-column label="进度" width="260">
                     <template slot-scope="scope">
                         <el-progress :stroke-width="24" :percentage="scope.row.percentage"
@@ -72,6 +72,8 @@
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="level" label="难度"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column prop="lastFinishTime" label="上阶段完结时间"></el-table-column>
+                <el-table-column prop="interruptDays" label="中断时间(天)"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" content="开始执行" placement="top">
@@ -91,6 +93,10 @@
         </el-card>
 
         <br>
+        <el-card class="gantt-chart">
+            <div id="ganttChart" style="width: 100%; height: 300px;"></div>
+        </el-card>
+
         <div class="charts-area">
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
@@ -127,7 +133,8 @@
                 </el-form-item>
 
                 <el-form-item label="申请天数" prop="applyDays">
-                    <el-input type="number" v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数" @input="computePresetTime"></el-input>
+                    <el-input type="number" v-model.number="delayApplyObject.applyDays" placeholder="请输入要申请的天数"
+                        @input="computePresetTime"></el-input>
                 </el-form-item>
 
                 <el-form-item label="预计完成时间" v-if="delayApplyObject.presetFinishTime">
@@ -142,11 +149,12 @@
 
 
         <el-dialog title="多负责人确认" width="30%" :visible.sync="updateDescriptionVisible" @close="closeDescriptionForm">
-            <h2>请简述各负责人的工作</h2>
+            <h2>请简述自己负责的工作及持续时间</h2>
             <br>
             <el-form label-width="90px" ref="descriptionFormRef" class="form">
                 <el-form-item v-for="item in directors" :label="item.name" :key="item.id">
-                    <el-input v-model="item.description" placeholder="请简述工作内容"></el-input>
+                    <el-input v-model="item.description" placeholder="例：CCD调试，累计执行15个工作日"
+                        :disabled="item.userId !== user.id"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -222,8 +230,8 @@
         </el-dialog>
 
         <el-dialog title="选择开始日期" :visible.sync="selectStartTimeVisible" width="30%">
-            <el-date-picker v-model="curInterruptTask.startTime" type="date" placeholder="选择开始日期" value-format="yyyy-MM-dd HH:mm:ss"
-                @input="changeTime">
+            <el-date-picker v-model="curInterruptTask.startTime" type="date" placeholder="选择开始日期"
+                value-format="yyyy-MM-dd HH:mm:ss" @input="changeTime">
             </el-date-picker>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="selectStartTimeVisible = false">取 消</el-button>
@@ -237,12 +245,12 @@
 import { mapState } from 'vuex'
 import { timeSub, timeAdd, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
-import { unfinishedSubList,startOrFinish } from '@/api/caseSub'
+import { unfinishedSubList, startOrFinish } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
 import { saveApply } from '@/api/caseDelayApply'
 import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
-import { saveApplyCaseSub} from '@/api/applyCaseSub'
+import { saveApplyCaseSub } from '@/api/applyCaseSub'
 import { saveApplyTask } from '@/api/applyTask'
 
 export default {
@@ -324,23 +332,27 @@ export default {
             //当前用户所有未开始的任务
             exceptionList: [],
             //选择中止专案阶段的开始时间
-            selectStartTimeVisible:false,
+            selectStartTimeVisible: false,
             //当前申请开始的专案任务
             curInterruptTask: {},
+            // 甘特图
+            gantt: null,
         }
     },
-    created() {
+    async created() {
         // 获取申请的列表
         // this.getDelayApplyList()
         // this.getFinishApplyList()
-        this.getTaskByUserId()
+        await this.getTaskByUserId()
+        this.initGantt()
         this.getUnfinishedCaseList()
         this.getExceptionList()
     },
     mounted() {
-        this.initPie(),
-            this.initBur(),
-            this.applyCaseSubVisible = this.$route.query.applyCaseSubVisible
+        this.initPie()
+        this.initBur()
+
+        this.applyCaseSubVisible = this.$route.query.applyCaseSubVisible
         this.applyTaskVisible = this.$route.query.applyTaskVisible
     },
     computed: {
@@ -352,6 +364,10 @@ export default {
             const res = await getExceptionList(this.user.id)
             if (res.code === 200) {
                 this.exceptionList = res.data
+                this.exceptionList.forEach(item => {
+                    item.lastFinishTime = formatDate(item.lastFinishTime)
+                    item.interruptDays = timeSub(item.lastFinishTime, new Date()) - 1
+                })
             } else {
                 this.$message.error(res.msg)
             }
@@ -451,7 +467,6 @@ export default {
         },
         //尝试完结任务
         async tryFinish(row) {
-            console.log(row)
             // 看是专案类还是其他类
             // 专案类就要看有几个负责人
             // 多个负责人就打开任务描述窗口
@@ -465,11 +480,11 @@ export default {
                         //打开更新工作描述窗口
                         this.openUpdateDescription(res.data)
                     } else {
-                        this.openSelectFinishTIme(row)
+                        this.openSelectFinishTime(row)
                     }
                 }
             } else {
-                this.openSelectFinishTIme(row)
+                this.openSelectFinishTime(row)
             }
         },
         //打开更新工作描述窗口
@@ -478,7 +493,7 @@ export default {
             this.directors = info
         },
         //打开填写完结日期的窗口
-        openSelectFinishTIme(row) {
+        openSelectFinishTime(row) {
             this.curTask = { ...row }
             this.selectFinishTimeVisible = true
         },
@@ -488,6 +503,10 @@ export default {
         },
         //完结任务
         async submitFinish() {
+            if (this.curTask.applyTime < this.curTask.startTime) {
+                this.$message.error("结束时间小于开始时间，请检查输入")
+                return
+            }
             this.curTask.applyId = this.user.id
             this.curTask.applyTime = format4back(this.curTask.applyTime)
             const res = await saveFinishApply(this.curTask)
@@ -501,16 +520,28 @@ export default {
         //提交各负责人的工作描述
         async submitDirectorJobDescription() {
             for (var i = 0; i < this.directors.length; i++) {
+                if(this.directors[i].userId===this.user.id&&(this.directors[i].description===null||this.directors[i].description==='')){
+                    this.$message.error("你对自己的工作描述为空，请检查后重新提交")
+                    return
+                }
                 if (!('description' in this.directors[i]) || this.directors[i].description === null || this.directors[i].description === '') {
-                    this.$message.error("有负责人的描述为空，请互相核对，若未参与可填写无")
+                    // 有负责人的描述为空，说明还未填写，仅更新描述，不提交完结
+                    const res = await updateDescription(this.directors)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.updateDescriptionVisible = false
+                    } else {
+                        this.$message.error(res.error)
+                    }
                     return
                 }
             }
+            // 所有人的描述都有了，则说明准备结束了
             const res = await updateDescription(this.directors)
             if (res.code === 200) {
                 this.$message.success(res.data)
                 this.updateDescriptionVisible = false
-                setTimeout(() => this.openSelectFinishTIme({ caseSubId: this.directors[0].caseSubId }), 500)
+                setTimeout(() => this.openSelectFinishTime({ caseSubId: this.directors[0].caseSubId }), 200)
 
             } else {
                 this.$message.error(res.error)
@@ -736,14 +767,14 @@ export default {
             })
         },
         // 中止专案重启
-        tryStart(row){
-            this.curInterruptTask = {...row}
+        tryStart(row) {
+            this.curInterruptTask = { ...row }
             this.selectStartTimeVisible = true
         },
         //启动阶段
-        async launch(){
+        async launch() {
             const res = await startOrFinish(this.curInterruptTask)
-            if(res.code===200){
+            if (res.code === 200) {
                 this.$message.success(res.data)
                 //刷新界面
                 this.getTaskByUserId()
@@ -753,11 +784,154 @@ export default {
         },
         // 计算执行时间
         computePresetTime() {
-            if(this.delayApplyObject.applyDays===''){
+            if (this.delayApplyObject.applyDays === '') {
                 this.delayApplyObject.presetFinishTime = null
                 return
             }
             this.delayApplyObject.presetFinishTime = formatDate(timeAdd(this.delayApplyObject.startTime, this.delayApplyObject.planDays, this.delayApplyObject.unforcedDays, this.delayApplyObject.applyDays))
+        },
+        // 初始化甘特图对象
+        initGanttObj(obj, stack, start, color, zlevel, name) {
+            obj.name = name
+            obj.stack = stack
+            obj.type = "bar";
+            obj.label = {
+                show: true,
+                color: "#000",
+                position: "right",
+                fontSize: 20,
+                formatter: function (params) {
+                    var data = new Date(params.value)
+                    return data.getMonth() + 1 + "/" + data.getDate()
+                }
+
+            }
+            obj.zlevel = zlevel
+            if (start) {
+                obj.itemStyle = {
+
+                    color: "#fff"
+
+                }
+            } else {
+                obj.itemStyle =
+                {
+
+                    color: color,
+                    borderColor: "#fff",
+                    borderWidth: 2,
+
+                }
+            }
+            obj.data = []
+            return obj
+        },
+        // 初始化甘特图
+        initGantt() {
+            this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
+            // 初始化y轴坐标
+            var yAxis = [];
+            for (let i = this.userInfo.length - 1; i >= 0; i--) {
+                yAxis.push(this.userInfo[i].description)
+            }
+            var dataSeries = []
+            // 计划时间
+            var planTime_start = {};
+            var planTime_end = {};
+            planTime_start = this.initGanttObj(planTime_start, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
+
+            // 外界因素延期
+            var standardTime = {};
+            standardTime = this.initGanttObj(standardTime, "bar0", false, "skyblue", 2, "目标完成时间")
+
+            // 执行时间
+            var execTime_end = {};
+            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "当前时间")
+
+            for (let i = this.userInfo.length - 1; i >= 0; i--) {
+                planTime_start.data.push(new Date(this.userInfo[i].startTime))
+                planTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays)))
+                standardTime.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays, this.userInfo[i].unforcedDays)))
+                execTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].executionDays)))
+            }
+
+
+            dataSeries.push(planTime_start)
+            dataSeries.push(planTime_end)
+            dataSeries.push(standardTime)
+            dataSeries.push(execTime_end)
+
+            var option = {
+                backgroundColor: "#fff",
+                title: {
+                    text: "执行甘特图",
+                    padding: 20,
+                    textStyle: {
+                        fontSize: 17,
+                        fontWeight: "bolder",
+                        color: "#333"
+                    },
+                    subtextStyle: {
+                        fontSize: 13,
+                        fontWeight: "bolder"
+                    }
+                },
+                legend: {
+                    data: ['开始时间', '预计完成时间', '目标完成时间', '当前时间'],
+                    align: "right",
+                    right: 80,
+                    top: 50
+                },
+                grid: {
+                    containLabel: true,
+                    show: false,
+                    right: 130,
+                    left: 40,
+                    bottom: 40,
+                    top: 90
+                },
+                xAxis: {
+                    type: "time",
+                    axisLabel: {
+                        "show": true,
+                        "interval": 0
+                    }
+                },
+                yAxis: {
+                    axisLabel: {
+                        show: true,
+                        interval: 0,
+                    },
+                    data: yAxis
+                },
+                tooltip: {
+                    trigger: "axis",
+                    formatter: function (params) {
+                        var res = ''
+                        res += params[0].axisValue + '<br/>';
+                        for (var i = 0; i < params.length; i++) {
+                            res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
+                                params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
+                        }
+                        return res
+                    }
+                },
+                series: dataSeries,
+            }
+            this.gantt.setOption(option);
+        },
+        // 双击跳转到详情页
+        navigateToDetailPage(row, column) {
+            if (row.caseId !== null) {
+                this.$router.push({
+                    path: '/case2sub',
+                    query: {
+                        caseId: row.caseId,
+                        caseName: row.description.split("→")[0]
+                    }
+                })
+            }
         }
     }
 }

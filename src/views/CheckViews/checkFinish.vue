@@ -77,7 +77,7 @@
                 </el-table-column>
                 <el-table-column label="获得积分">
                     <template slot-scope="scope">
-                        <el-input :value="scope.row.value*1.0/100*curObj.estimateValue" placeholder="工作内容" disabled></el-input>
+                        <el-input :value="scope.row.value*1.0/100*curObj.estimateValue" disabled></el-input>
                     </template>
                 </el-table-column>
             </el-table>
@@ -239,6 +239,8 @@ export default {
                         this.$message.error(res.msg)
                         return
                     }
+                    // 给个提示
+                    this.$message.success(res.data)
                     this.$confirm('您正在通过该阶段的完结申请, 是否继续?', '提示', {
                         confirmButtonText: '确定',
                         cancelButtonText: '取消',
