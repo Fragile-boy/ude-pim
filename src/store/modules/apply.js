@@ -28,7 +28,7 @@ export default {
             if (state.delayList.length < payLoad.length) {
                 Notification({
                     title: '延期申请',
-                    message: `系统收到了新的延期申请，目前有${payLoad.length-state.delayList.length}条申请待审核`,
+                    message: `系统收到了新的延期申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
                     duration: 0
                 });
@@ -40,7 +40,7 @@ export default {
             if (state.finishList.length < payLoad.length) {
                 Notification({
                     title: '完结申请',
-                    message: `系统收到了新的完结申请，目前有${payLoad.length-state.finishList.length}条申请待审核`,
+                    message: `系统收到了新的完结申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
                     duration: 0
                 });
@@ -51,7 +51,7 @@ export default {
             if (state.caseSubList.length < payLoad.length) {
                 Notification({
                     title: '专案类申请',
-                    message: `系统收到了新的专案类申请，目前有${payLoad.length-state.caseSubList.length}条申请待审核`,
+                    message: `系统收到了新的专案类申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
                     duration: 0
                 });
@@ -62,7 +62,7 @@ export default {
             if (state.taskList.length < payLoad.length) {
                 Notification({
                     title: '任务申请',
-                    message: `系统收到了新的任务申请，目前有${payLoad.length-state.taskList.length}条申请待审核`,
+                    message: `系统收到了新的任务申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
                     duration: 0
                 });
@@ -91,7 +91,8 @@ export default {
             var res = await getFinishApplyList()
             res.data.forEach(item => {
                 try {
-                    item.estimateValue = item.estimateValue.toFixed(2)
+
+                    item.estimateValue = item.estimateValue===null?null:item.estimateValue.toFixed(2)
                 } catch (error) {
                     item.estimateValue = "错误！"
                 }

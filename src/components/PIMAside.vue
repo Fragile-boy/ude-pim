@@ -109,8 +109,10 @@ export default {
             }, 60000)
         } else if (this.user.type === 0) {
             this.getLogList()
+            this.exceptionSub()
             setInterval(() => {
                 this.getLogList()
+                this.exceptionSub()
             }, 60000)
         }
     },

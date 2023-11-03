@@ -233,7 +233,6 @@ export default {
             this.initBar()
             this.initGantt()
         }, 100)
-
     },
     computed: {
         ...mapState(['user'])

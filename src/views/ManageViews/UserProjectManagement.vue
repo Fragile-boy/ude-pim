@@ -8,7 +8,7 @@
         </div>
         <el-card>
             <!-- 搜索区域 -->
-            <el-row :gutter="20">
+            <el-row :gutter="5">
                 <el-col :span="2">
                     <el-button type="warning" icon="el-icon-right" @click="openCharts">图表统计</el-button>
                 </el-col>
@@ -53,7 +53,15 @@
                     <el-button type="primary" @click="filter()">查询</el-button>
                 </el-col>
 
-                <el-col :span="3" :offset="5">
+                <el-col :span="1" :offset="3">
+                    <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
+                </el-col>
+
+                <el-col :span="1">
+                    <el-button type="primary" icon="el-icon-bottom" round @click="changeUser(1)"></el-button>
+                </el-col>
+
+                <el-col :span="3">
                     <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
                         <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                             <el-option v-for="item in group.children" :key="item.value" :label="item.label"
@@ -203,6 +211,8 @@ export default {
                 }
             ],
             curUser: null,
+            curIndex:0,
+            curGroup:0,
         }
     },
     created() {
@@ -237,7 +247,7 @@ export default {
 
                 //计算其他统计信息
                 this.statisticsObj.sumTask = this.allTaskList.length
-                this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask-this.statisticsObj.delayTask)*100/this.statisticsObj.sumTask
+                this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask - this.statisticsObj.delayTask) * 100 / this.statisticsObj.sumTask
                 this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.executionDays - this.statisticsObj.delayDays) * 100 / this.statisticsObj.executionDays
 
                 //筛选信息
@@ -315,7 +325,7 @@ export default {
             var { data: res } = await getUserList()
             console.log(res)
             for (var i = 0; i < res.length; i++) {
-                if(res[i].status >= 2)
+                if (res[i].status >= 2)
                     continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
@@ -332,8 +342,26 @@ export default {
                 sumTask: 0,
                 taskAchievingRate: 0,
                 avgAchievingRate: 0,
-            },
-                this.getFinishedTaskList()
+            }
+            this.getFinishedTaskList()
+        },
+        //修改当前科员
+        changeUser(value) {
+            this.curIndex += value
+            if (this.curIndex >= this.directorOptions[this.curGroup].children.length) {
+                this.curGroup = 1 - this.curGroup
+                this.curIndex = 0
+            }
+            if (this.curIndex < 0) {
+                this.curGroup = 1 - this.curGroup
+                this.curIndex = this.directorOptions[this.curGroup].children.length - 1
+            }
+            this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
+            // 初始化统计信息，否则会累加
+            this.statisticsObj.executionDays = 0
+            this.statisticsObj.delayDays = 0
+            this.statisticsObj.delayTask = 0
+            this.getFinishedTaskList()
         },
     }
 }

@@ -56,8 +56,8 @@
           </el-row>
         </div>
 
-        <el-table :data="pageInfo" border stripe max-height=600 @cell-dblclick="handleDoubleClick">
-          <el-table-column type="index" label="编号" width="50">
+        <el-table :data="pageInfo" border stripe max-height=600 @cell-dblclick="handleDoubleClick" style="font-size:15px">
+          <el-table-column type="index" label="编号" width="55">
           </el-table-column>
           <el-table-column prop="name" label="任务名" width="260">
           </el-table-column>
@@ -81,9 +81,11 @@
           </el-table-column>
           <el-table-column prop="status" label="执行状态">
             <template slot-scope="scope">
-              <el-tag effect="dark" :type="showtype(scope.row.status)" disable-transitions>{{
-                number2status(scope.row.status)
-              }}</el-tag>
+              <el-tag effect="dark" type="warning" v-if="isInterrupt(scope.row)" style="font-size:15px">中断</el-tag>
+              <el-tag effect="dark" type="warning" v-else-if="scope.row.finishTime!==null&&scope.row.executionDays>scope.row.planDay" style="font-size:15px">延误完成</el-tag>
+              <el-tag effect="dark" type="primary" v-else-if="scope.row.finishTime!==null&&scope.row.executionDays<=scope.row.planDay" style="font-size:15px">正常完成</el-tag>
+              <el-tag effect="dark" type="danger" v-else-if="scope.row.executionDays>scope.row.planDay" style="font-size:15px">已延误</el-tag>
+              <el-tag effect="dark" type="success" v-else style="font-size:15px">执行中</el-tag>
             </template>
 
           </el-table-column>
@@ -256,6 +258,7 @@ export default {
   computed: {
     ...mapState('caseM', ['caseList', 'queryList']),
     ...mapState(['user']),
+    ...mapState('apply',['subList'])
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
@@ -295,30 +298,6 @@ export default {
           executionDays: row.executionDays
         }
       })
-    },
-    showtype(tag) {
-      if (tag === 0)
-        return "primary"
-      else if (tag === 1)
-        return "success"
-      else if (tag === 2)
-        return "danger"
-      else if (tag === 3)
-        return "warning"
-    },
-    number2status(status) {
-      if (status === 0)
-        return "正在执行"
-      else if (status === 1)
-        return "正常完成"
-      else if (status === 2)
-        return "已延误"
-      else if (status === 3)
-        return "延误完成"
-      else if (status === 4)
-        return "未开始"
-      else if (status === 5)
-        return "中断"
     },
     transformStatus(status) {
       if (status === "正在执行")
@@ -440,6 +419,13 @@ export default {
         } else
           this.$message.error(res.msg)
       })
+    },
+    isInterrupt(row){
+      for(var i=0;i<this.subList.length;i++){
+        if(row.name===this.subList[i].caseName)
+          return true
+      }
+      return false
     }
   }
 }
