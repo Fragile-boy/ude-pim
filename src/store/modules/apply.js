@@ -4,6 +4,7 @@ import { getFinishApplyList } from "@/api/caseFinishApply"
 import { applyList } from "@/api/applyCaseSub"
 import { applyTaskList } from "@/api/applyTask"
 import { formatDate, timeAdd } from "@/utils/common"
+import { Notification } from 'element-ui'
 
 export default {
     namespaced: true,
@@ -24,16 +25,48 @@ export default {
         },
         //更新延期列表
         updateDelayList(state, payLoad) {
+            if (state.delayList.length < payLoad.length) {
+                Notification({
+                    title: '延期申请',
+                    message: `系统收到了新的延期申请，目前有${payLoad.length-state.delayList.length}条申请待审核`,
+                    type:'warning',
+                    duration: 0
+                });
+            }
             state.delayList = payLoad
         },
         //更新完结列表
         updateFinishList(state, payLoad) {
+            if (state.finishList.length < payLoad.length) {
+                Notification({
+                    title: '完结申请',
+                    message: `系统收到了新的完结申请，目前有${payLoad.length-state.finishList.length}条申请待审核`,
+                    type:'warning',
+                    duration: 0
+                });
+            }
             state.finishList = payLoad
         },
         updateCaseSubList(state, payLoad) {
+            if (state.caseSubList.length < payLoad.length) {
+                Notification({
+                    title: '专案类申请',
+                    message: `系统收到了新的专案类申请，目前有${payLoad.length-state.caseSubList.length}条申请待审核`,
+                    type:'warning',
+                    duration: 0
+                });
+            }
             state.caseSubList = payLoad
         },
         updateTaskList(state, payLoad) {
+            if (state.taskList.length < payLoad.length) {
+                Notification({
+                    title: '任务申请',
+                    message: `系统收到了新的任务申请，目前有${payLoad.length-state.taskList.length}条申请待审核`,
+                    type:'warning',
+                    duration: 0
+                });
+            }
             state.taskList = payLoad
         }
 

@@ -237,10 +237,10 @@ const router = new VueRouter({
 //管理员权限界面
 const authUrls = ['/caseList', '/subManage'
   , '/templeteManage', '/taskManage', '/delay', '/finish', '/study'
-  , '/caseApply', '/caseAnalysis', '/userList', '/userProject']
+  , '/caseApply', '/userList', '/userProject']
 
 //用户界面
-const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception']
+const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception','/caseAnalysis']
 
 
 router.beforeEach(async (to, from, next) => {

@@ -1,5 +1,5 @@
 import { logList,checkLog } from "@/api/log"
-
+import { Notification } from "element-ui"
 
 
 const state = {
@@ -11,7 +11,15 @@ export default {
     state,
     mutations: {
         updateLogList(state,logList){
-            state.logList = logList
+            if (state.logList.length < logList.length) {
+                Notification({
+                    title: '系统消息',
+                    message: `系统收到了新的消息，目前有${logList.length-state.logList.length}条消息待阅`,
+                    type:'warning',
+                    duration: 0
+                });
+            }
+            state.logList = logList 
         }
     },
     actions: {

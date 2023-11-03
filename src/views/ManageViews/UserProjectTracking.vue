@@ -98,7 +98,7 @@
                     <el-row>
                         <el-col :span="21">
                             <el-input v-model="commitForm.newContent" placeholder="请输入最新备注"
-                                @change="submitCommitForm"></el-input>
+                                @keyup.enter.native="submitCommitForm"></el-input>
                         </el-col>
                         <el-col :span="1" :offset="1">
                             <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
@@ -657,7 +657,8 @@ export default {
             this.commitVisible = true
         },
         // 提交备注信息
-        async submitCommitForm() {
+        async submitCommitForm(msg) {
+            console.log(msg)
             //判断备注信息是否为空或者内容太少
             if (this.commitForm.newContent === null || this.commitForm.newContent === '') {
                 this.$message({
@@ -670,6 +671,7 @@ export default {
             commmitObj.caseSubId = this.commitForm.caseSubId
             commmitObj.content = this.commitForm.newContent
             commmitObj.createUser = this.user.id
+            console.log(commmitObj)
             var res = await saveCommit(commmitObj)
             if (res.code === 200) {
                 this.$message.success(res.data)

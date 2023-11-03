@@ -18,13 +18,16 @@
           <el-button icon="el-icon-right" round type="primary" @click="nextPage(1)"></el-button>
         </el-col>
       </el-row>
+
       <el-row>
         <el-col :span="1" :offset="23">
           <el-button type="danger" icon="el-icon-circle-close" @click="showCaseSubGantt = false"
             v-show="showCaseSubGantt"></el-button>
         </el-col>
       </el-row>
+
       <div id="caseSubGanttChart" style="width: 100%; height: 700px;" v-show="showCaseSubGantt"></div>
+      <div id="caseSubBarChart" style="width: 100%; height: 700px;" v-show="showCaseSubGantt"></div>
     </el-card>
   </div>
 </template>
@@ -51,14 +54,6 @@ export default {
   },
   async created() {
     await this.getCaseList(true)
-    // this.caseList.sort(function (a, b) {
-    //   if (a.startTime < b.startTime)
-    //     return -1
-    //   else if (a.startTime > b.startTime)
-    //     return 1
-    //   else
-    //     return 0
-    // })
     for (let i = 0; i < this.caseList.length; i++) {
       this.map.set(this.caseList[i].name, this.caseList[i])
     }
@@ -108,7 +103,7 @@ export default {
           var data = new Date(params.value)
           if (fullTime) {
             if (zlevel === 4 || zlevel === 1)
-              return (''+data.getFullYear()).substring(2,4)+"/"+(data.getMonth() + 1) + "/" + data.getDate()
+              return ('' + data.getFullYear()).substring(2, 4) + "/" + (data.getMonth() + 1) + "/" + data.getDate()
             return ''
           } else {
             if (zlevel === 1)
@@ -231,7 +226,9 @@ export default {
         this.showCaseSubGantt = true
         setTimeout(() => {
           this.caseSubGantt = this.$echarts.init(document.getElementById('caseSubGanttChart'))
+          this.caseSubBar = this.$echarts.init(document.getElementById('caseSubBarChart'))
           this.initCaseSubGantt(params.name, caseObj)
+          this.initCaseSubBar(params.name, caseObj)
         }, 100)
         // params 会包含点击的图表元素的各种信息，如name, dataIndex, data等。
       });
@@ -334,7 +331,7 @@ export default {
       var option = {
         backgrindColor: "#fff",
         title: {
-          text: caseName,
+          text: caseName+"  甘特图",
           padding: 20,
           textStyle: {
             fontSize: 17,
@@ -397,8 +394,88 @@ export default {
         series: dataSeries,
       }
       this.caseSubGantt.setOption(option);
+    },
+    // 初始化子流程条形图
+    initCaseSubBar(caseName, caseObj) {
+      
+      this.subInfo.forEach(item=>{
+        item.executionDays = timeSub(item.startTime,item.finishTime)
+        item.executionDays -= item.unforcedDays===null?0:item.unforcedDays
+      })
+      console.log(this.subInfo)
+      var option = {
+        backgrindColor: "#fff",
+        title: {
+          text: caseName+"  执行条形图",
+          padding: 20,
+          textStyle: {
+            fontSize: 17,
+            fontWeight: "bolder",
+            color: "#333"
+          },
+          subtextStyle: {
+            fontSize: 13,
+            fontWeight: "bolder"
+          }
+        },
+        legend: {
+          data: ['计划时间', '执行时间'],
+          align: "right",
+          right: 80,
+          top: 50
+        },
+        grid: {
+          containLabel: true,
+          show: false,
+          right: 130,
+          left: 40,
+          bottom: 40,
+          top: 90
+        },
+        xAxis: {
+          axisLabel: {
+            show: true,
+            interval: 0,
+            fontSize:20,
+            fontWeight:"bolder"
+          },
+          data:this.subInfo.map(item=>item.subName)
+        },
+        yAxis: {
+          axisLabel: {
+            show: true,
+            interval: 0,
+            fontSize: 15,
+            fontWeight: "bolder"
+          },
+        },
+        tooltip: {
+          trigger: "axis",
+          // formatter: function (params) {
+          // }
+        },
+        series: [
+          {
+            name:'计划时间',
+            type:'bar',
+            data:this.subInfo.map(item=>item.planDays),
+            label:{
+              show:true,
+              position:'top',
+            }
+          },{
+            name:'执行时间',
+            type:'bar',
+            data:this.subInfo.map(item=>item.executionDays),
+            label:{
+              show:true,
+              position:'top',
+            }
+          }
+        ]
+      }
+      this.caseSubBar.setOption(option);
     }
-
   }
 }
 </script>

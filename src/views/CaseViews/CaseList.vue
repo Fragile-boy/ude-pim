@@ -165,7 +165,7 @@
                 </el-table-column>
                 <el-table-column prop="realSort" label="序号">
                 </el-table-column>
-                <el-table-column proplanDaysdirectorOptionsp="name" label="名称">
+                <el-table-column prop="name" label="名称">
                 </el-table-column>
                 <el-table-column label="难度">
                     <template slot-scope="scope">
@@ -335,6 +335,8 @@ export default {
             case_sub_sort: 0,
             //控制select多选组件强制刷新
             forceUpdateKey: null,
+            // 模板列表
+            templateList:[]
         }
     },
     computed: {
@@ -427,6 +429,7 @@ export default {
             this.defaultDays = {}
             if (res.code === 200) {
                 this.relationSub = res.data
+                console.log(this.relationSub)
                 //绑定默认难度下的每个流程的计划天数
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
