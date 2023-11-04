@@ -53,7 +53,7 @@
                 </el-table-column>
                 <el-table-column prop="finishTime" label="完结时间">
                 </el-table-column>
-                <el-table-column label="操作" width="240">
+                <el-table-column label="操作" width="300">
                     <template slot-scope="scope">
                         <el-button type="primary" icon="el-icon-edit" @click="editCase(scope.row)" size="mini"
                             round></el-button>
@@ -71,8 +71,16 @@
                             <el-button type="success" size="mini" icon="el-icon-success" round
                                 @click="terminateCase(scope.row, false)"></el-button>
                         </el-tooltip>
-                        <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteCase(scope.row)"
-                            round></el-button>
+                        <el-button type="danger" size="mini" icon="el-icon-delete" @click="deleteCase(scope.row)" round>
+                        </el-button>
+                        <el-tooltip effect="dark" content="专案详情" placement="top" v-if="scope.row.hasSub">
+                            <el-button type="primary" size="mini" icon="el-icon-s-promotion" round
+                                @click="jump2detail(scope.row)"></el-button>
+                        </el-tooltip>
+                        <el-tooltip effect="dark" content="子流程编辑" placement="top" v-if="scope.row.hasSub">
+                            <el-button type="primary" size="mini" icon="el-icon-s-operation" round
+                                @click="openEditCaseSub(scope.row)"></el-button>
+                        </el-tooltip>
 
                     </template>
                 </el-table-column>
@@ -154,7 +162,7 @@
                 </el-dropdown>
             </el-col>
             <!-- <el-button type="warning"></el-button> -->
-            <el-button type="primary" @click="openAddRelationSub()">按流程</el-button>
+            <el-button type="primary" @click="openAddRelationSub(1)">按流程</el-button>
         </el-dialog>
 
         <!-- 新增关联子流程表单 -->
@@ -236,6 +244,101 @@
                 <el-button @click="addTempleteRelationSubVisible = false">取 消</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="编辑子流程" :visible.sync="editCaseSubRelationVisible" width="70%">
+            <el-table :data="subInfo" border stripe>
+                <el-table-column type="expand">
+                    <template slot-scope="scope">
+                        <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
+                            <el-col :span="2">
+                                <el-tag class="chargeNameTag" @click="getCaseByUserId(scope.row.chargeId[index], item)">
+                                    {{ item }}
+                                </el-tag>
+                            </el-col>
+                        </el-row>
+                        <el-tag v-if="scope.row.chargeId.length === 0">暂无负责人</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="subName" label="子流程"></el-table-column>
+                <el-table-column prop="sort" label="执行顺序" style="display:flex;align-items: center;">
+                    <template slot-scope="scope">
+                        <el-button round type="primary" size="mini" icon="el-icon-minus"
+                            @click="scope.row.sort--"></el-button>
+                        <span style="font-size:20px;padding-left:5px;padding-right:5px">{{ scope.row.sort }}</span>
+                        <el-button round type="primary" size="mini" icon="el-icon-plus"
+                            @click="scope.row.sort++"></el-button>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="startTime" label="开始时间"></el-table-column>
+                <el-table-column prop="finishTime" label="完成时间"></el-table-column>
+                <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+
+                        <el-tooltip effect="dark" content="添加在该阶段之后" placement="top">
+                            <el-button type="primary" size="mini" icon="el-icon-plus" round
+                                @click="openAddRelationSub(2, scope.row)">
+                            </el-button>
+                        </el-tooltip>
+
+                        <el-tooltip effect="dark" content="删除该阶段" placement="top" v-if="scope.row.startTime === null">
+                            <el-button type="danger" size="mini" icon="el-icon-delete" round
+                                @click="deleteRelationSub(scope.row)">
+                            </el-button>
+                        </el-tooltip>
+
+                    </template>
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="warning" @click="updateCaseSubSort()">修改顺序并刷新</el-button>
+                <el-button type="primary" @click="editCaseSubRelationVisible = false">确 定</el-button>
+                <el-button @click="editCaseSubRelationVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
+
+        <el-dialog :title="`添加新阶段(${lastSubObj.subName}之后)`" :visible.sync="addNewSubVisible" width="30%"
+            @close="newSubObj = {}">
+            <el-form :rules="addNewSubRules" :model="newSubObj" ref="addNewSubFormRef" label-width="80px">
+                <el-form-item label="子流程" prop="id">
+                    <el-select v-model="newSubObj.id" placeholder="请选择子流程">
+                        <el-option v-for="item in relationSub" :key="item.id" :label="item.name" :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-row>
+                    <el-col :span="12">
+                        <el-form-item label="难度" prop="level">
+                            <el-select v-model="newSubObj.level" placeholder="请选择难度" @change="getPresetDays(newSubObj)">
+                                <el-option v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="item" :value="item">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+
+                    <el-col :span="12">
+                        <el-form-item label="计划时间" prop="planDays">
+                            <el-input v-model="newSubObj.planDays"></el-input>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
+
+                <el-form-item label="负责人" prop="chargeId">
+                    <el-select v-model="newSubObj.chargeId" multiple placeholder="请选择负责人">
+                        <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                            <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-option-group>
+                    </el-select>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="addNewSub()">确 定</el-button>
+                <el-button @click="addNewSubVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -245,8 +348,8 @@ import { getUserList, getUserStatus } from '@/api/user'
 import { addCase, getList, editCase, deleteCase, terminateCase } from '@/api/case'
 import { checkResult } from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
-import { insertRelation } from '@/api/caseSub'
-import { getTempleteList, getSubsByTemplateId } from '@/api/templete'
+import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
+import { getTempleteList, getSubsByTemplateId, saveTemplete } from '@/api/templete'
 export default {
     data() {
         var checkCost = (rule, value, callback) => {
@@ -336,7 +439,31 @@ export default {
             //控制select多选组件强制刷新
             forceUpdateKey: null,
             // 模板列表
-            templateList:[]
+            templateList: [],
+            // 勾选关联子流程后存储勾选顺序，用于后续直接生成模板
+            subTemplate: {
+                // 描述
+                description: '',
+                // 子流程id列表
+                subIds: []
+            },
+            // 子流程编辑界面显示
+            editCaseSubRelationVisible: false,
+            // 子流程数据
+            subInfo: [],
+            // 添加新的阶段到专案界面
+            addNewSubVisible: false,
+            // 表单校验规则
+            addNewSubRules: {
+                id: [{ required: true, message: '请选择要插入的子流程', trigger: 'blur' }],
+                level: [{ required: true, message: '请选择难度', trigger: 'blur' }],
+                planDays: [{ required: true, message: '计划时间不能为空', trigger: 'blur' }],
+                chargeId: [{ required: true, message: '请选择负责人', trigger: 'blur' }],
+            },
+            // 新增阶段信息
+            newSubObj: {},
+            // 新增阶段前一个阶段信息
+            lastSubObj: {},
         }
     },
     computed: {
@@ -417,26 +544,36 @@ export default {
             })
         },
         //打开添加子流程弹窗口
-        async openAddRelationSub() {
+        async openAddRelationSub(mode, lastSubObj) {
             //获取子流程数据
-            await this.getAllSub()
-            this.addRelationSubVisible = true
+            await this.getAllSub(mode)
+            // 1是关联子流程的时候，按流程勾选界面  2是编辑子流程的时候，新增子流程到专案界面
+            if (mode === 1)
+                this.addRelationSubVisible = true
+            else if (mode === 2) {
+                this.addNewSubVisible = true
+                this.newSubObj.sort = lastSubObj.sort + 1
+                this.lastSubObj = { ...lastSubObj }
+            }
         },
         //初始化所有子流程数据
-        async getAllSub() {
+        //mode: 1是关联子流程的时候，按流程勾选界面  2是编辑子流程的时候，新增子流程到专案界面
+        async getAllSub(mode) {
             const res = await getAllSub()
             //存储默认的计划天数
             this.defaultDays = {}
             if (res.code === 200) {
                 this.relationSub = res.data
-                console.log(this.relationSub)
+                if (mode === 2)
+                    return
+                // console.log(this.relationSub)
                 //绑定默认难度下的每个流程的计划天数
                 for (var i = 0; i < this.relationSub.length; i++) {
                     const r = await getPresetDay({ subId: this.relationSub[i].id, level: this.curLevel })
                     this.defaultDays[this.relationSub[i].id] = r.data
                     this.relationSub[i].chargeId = [this.curDirector]
                 }
-                console.log(this.defaultDays)
+                // console.log(this.defaultDays)
             } else {
                 this.$message.error(res.msg)
                 return
@@ -447,7 +584,7 @@ export default {
             const res = await getUserList()
             if (res.code === 200) {
                 this.allUser = res.data
-                console.log(this.allUser)
+                // console.log(this.allUser)
             } else {
                 this.$message.error(res.msg)
                 return
@@ -455,8 +592,12 @@ export default {
         },
         //获取子流程特定难度的对应的计划天数
         async getPresetDays(row) {
-            row.subId = row.id
-            const res = await getPresetDay({ subId: row.subId, level: row.level })
+            if (!('id' in row)) {
+                this.$message.error("未找到子流程数据，请确认是否已经选择子流程")
+                this.$set(row, 'level', null)
+                return
+            }
+            const res = await getPresetDay({ subId: row.id, level: row.level })
             this.$set(row, 'planDays', res.data)
         },
         //选择子流程后的回调函数
@@ -510,20 +651,46 @@ export default {
             //id本来是子流程的id，结果变成了专案子流程的id，可恶的bug
             for (var i = 0; i < this.insertInfo.length; i++)
                 this.insertInfo[i].id = null
-            console.log(this.insertInfo)
+
+
+
             const res = await insertRelation(this.insertInfo)
             if (res.code === 200) {
                 this.$message.success(res.data)
                 this.addRelationSubVisible = false
                 this.addRelationMenuVisible = false
                 this.getTableDate()
+
+                this.subTemplate.subIds = this.insertInfo.map(item => item.subId)
+                // 是否将当前选择作为新的专案
+                this.$confirm('存储模板', '是否要将当前勾选顺序存储为模板', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.$prompt('请输入模板描述（名称）', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        inputPattern: /^\S+$/,
+                        inputErrorMessage: '模板描述不可为空'
+                    }).then(async ({ value }) => {
+                        this.subTemplate.description = value
+                        const res = await saveTemplete(this.subTemplate)
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                        } else {
+                            this.$message.error(res.msg)
+                        }
+                    })
+                })
+
             } else {
                 this.$message.error(res.msg)
             }
         },
         //打开添加关联关系菜单界面，并做一些初始化
         async openAddRelationMenu(row) {
-            console.log(row)
+            // console.log(row)
             //获得当前id 
             this.curCaseId = row.id
             //获取当前难度
@@ -580,7 +747,7 @@ export default {
                 this.relationTemplateSub[i].caseId = this.curCaseId
                 this.relationTemplateSub[i].id = null
             }
-            console.log(this.relationTemplateSub)
+            // console.log(this.relationTemplateSub)
             const res = await insertRelation(this.relationTemplateSub)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -629,6 +796,74 @@ export default {
                     this.$message.error(res.msg)
                 }
             })
+        },
+        jump2detail(row) {
+            this.$router.push({
+                path: '/case2sub',
+                query: {
+                    caseName: row.name,
+                    caseId: row.id
+                }
+            })
+        },
+        // 打开子流程编辑界面
+        async openEditCaseSub(row) {
+            //获得当前id 
+            this.newSubObj.caseId = row.id
+            //获取当前难度
+            this.curLevel = row.level
+
+            this.editCaseSubRelationVisible = true
+            var res = await getSubList(row.id)
+            if (res.code === 200) {
+                this.subInfo = res.data
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        // 添加子流程到专案
+        addNewSub() {
+            this.$refs.addNewSubFormRef.validate(async valid => {
+                if (!valid)
+                    return
+                this.newSubObj.subId = this.newSubObj.id
+                this.newSubObj.id = null
+                console.log(this.newSubObj)
+                var res = await insertCaseSub(this.newSubObj)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.addNewSubVisible = false
+                }
+                // 重新加载该界面
+                var res = await getSubList(this.newSubObj.caseId)
+                if (res.code === 200) {
+                    this.subInfo = res.data
+                }
+            })
+        },
+        // 删除关联子流程
+        async deleteRelationSub(row) {
+            var res = await removeCaseSub(row)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                // 重新加载该界面
+                var res = await getSubList(row.caseId)
+                if (res.code === 200) {
+                    this.subInfo = res.data
+                }
+            }
+        },
+        // 修改子流程执行顺序
+        async updateCaseSubSort() {
+            var res = await updateCaseSubSort(this.subInfo)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                // 重新加载该界面
+                var res = await getSubList(this.newSubObj.caseId)
+                if (res.code === 200) {
+                    this.subInfo = res.data
+                }
+            }
         }
     }
 }

@@ -11,6 +11,7 @@
     "clipboard": "^2.0.11",
     "echarts": "^5.4.3",
     "element-ui": "^2.4.5",
+    "html2canvas": "^1.4.1",
     "vue": "^2.6.14",
     "vue-router": "^3.5.1",
     "vuex": "^3.6.2"

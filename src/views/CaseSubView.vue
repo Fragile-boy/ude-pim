@@ -16,7 +16,7 @@
                     <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
                 </el-col>
                 <el-col :span="2">
-                    <span @dblclick="showExecutionGantt" style="font-size:25px;padding-left: 17px;">专案进度</span>
+                    <span style="font-size:25px;padding-left: 17px;">专案进度</span>
                 </el-col>
                 <el-col :span="6">
                     <el-progress :stroke-width="26" :percentage="casePercentage" :color="caseScheduleColor"
@@ -24,9 +24,8 @@
                     </el-progress>
                 </el-col>
                 <el-col :span="2">
-                    <span @dblclick="showExecutionGantt" style="font-size:25px;padding-left: 17px;">时间进度</span>
+                    <span style="font-size:25px;padding-left: 17px;">时间进度</span>
                 </el-col>
-                <!--  -->
                 <el-col :span="6">
                     <el-progress :stroke-width="26" :percentage="caseSchedulePercentage" :color="scheduleColor"
                         define-back-color="#ebeef5" style="white-space: nowrap;">
@@ -159,6 +158,13 @@
                         </template>
                     </el-table-column>
                 </el-table>
+                <!-- 翻页按钮 -->
+                <el-row style="margin-bottom:-20px">
+                    <el-col :span="1"><el-button round type="primary" icon="el-icon-back"
+                            @click="turnPage(-1)"></el-button></el-col>
+                    <el-col :span="1" :offset="22"><el-button round type="primary" icon="el-icon-right"
+                            @click="turnPage(1)"></el-button></el-col>
+                </el-row>
             </div>
 
 
@@ -456,6 +462,8 @@ export default {
             subInfo: [],
             caseName: '',
             caseId: null,
+            // 当前专案在caseM的列表中的下标，用于切换专案
+            caseIndex: null,
             // 专案计划时间和执行时间信息
             casePlanDays: 0,
             caseExecutionDays: 0,
@@ -566,6 +574,7 @@ export default {
     },
     computed: {
         ...mapState(['user']),
+        ...mapState('caseM', ['caseList'])
     },
     created() {
         this.caseId = this.$route.query.caseId
@@ -573,6 +582,13 @@ export default {
 
         //获取所有负责人
         this.getAllUser()
+        // 获取专案在列表中的下标
+        for (var i = 0; i < this.caseList.length; i++) {
+            if (this.caseList[i].id === this.caseId) {
+                this.caseIndex = i
+                break
+            }
+        }
     },
     async mounted() {
         await this.getSubInfo(this.$route.query.caseId)
@@ -582,6 +598,11 @@ export default {
     methods: {
         //获取子流程的信息
         async getSubInfo(caseId) {
+            // 初始化统计信息
+            this.caseFinishDays = 0
+            this.casePlanDays = 0
+            this.caseExecutionDays = 0
+
             var res = await getSubList(caseId)
             this.subInfo = res.data
             for (let i = 0; i < this.subInfo.length; i++) {
@@ -596,7 +617,7 @@ export default {
                 if (i === 0)
                     this.subInfo[i].ideaTime = this.subInfo[i].targetTime
                 else if (typeof (this.subInfo[i - 1].ideaTime) !== 'undefined') {
-                    this.subInfo[i].ideaTime = timeAdd(this.subInfo[i - 1].ideaTime, this.subInfo[i].planDays)
+                    this.subInfo[i].ideaTime = timeAdd(this.subInfo[i - 1].ideaTime, this.subInfo[i].planDays, 1)
                 }
                 //实际完成时间
                 this.subInfo[i].finishTime = formatDate(this.subInfo[i].finishTime)
@@ -1065,7 +1086,20 @@ export default {
                     type: 'time',
                     axisLabel: {
                         show: true,
-                        interval: 0
+                        interval: 0,
+                        fontSize: 25,
+                        fontWeight: "bolder",
+                        formatter: function (value) {
+                            // 将日期转换为年份
+                            var data = new Date(value)
+                            var year = data.getFullYear();
+                            return '{fontSize|' + year + '-'+ (data.getMonth()+1) +'}';
+                        },
+                        rich: {
+                            fontSize: {
+                                fontSize: 25
+                            }
+                        }
                     }
                 },
                 yAxis: {
@@ -1103,7 +1137,7 @@ export default {
                     show: true,
                     color: "#000",
                     position: "right",
-                    offset:[0,-40],
+                    offset: [0, -30],
                     fontSize: 20,
                     formatter: function (params) {
                         var data = new Date(params.value)
@@ -1131,6 +1165,19 @@ export default {
             obj.data = []
             return obj
         },
+        // 翻页
+        async turnPage(value) {
+            this.caseIndex += value
+            if (this.caseIndex < 0) {
+                this.caseIndex = this.caseList.length - 1
+            } else if (this.caseIndex >= this.caseList.length) {
+                this.caseIndex = 0
+            }
+            this.caseId = this.caseList[this.caseIndex].id
+            this.caseName = this.caseList[this.caseIndex].name
+            await this.getSubInfo(this.caseId)
+            this.showExecutionGantt()
+        }
     }
 }
 </script>

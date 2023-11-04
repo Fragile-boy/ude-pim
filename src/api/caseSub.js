@@ -55,3 +55,18 @@ export const planFinishCount=(obj)=>{
 export const getCaseId = (id) => {
     return service.get(`/caseSub/${id}`)
 }
+
+// 插入子流程
+export const insertCaseSub = (obj)=>{
+    return service.post('/caseSub/insertCaseSub',obj)
+}
+
+// 删除子流程
+export const removeCaseSub = (obj)=>{
+    return service.put('/caseSub/removeCaseSub',obj)
+}
+
+// 修改专案子流程顺序
+export const updateCaseSubSort = (obj)=>{
+    return service.put('/caseSub/updateCaseSubSort', obj)
+}

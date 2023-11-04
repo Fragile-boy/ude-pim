@@ -10,6 +10,8 @@ import LoginView from '../views/LoginView.vue'
 
 // 404未找到界面
 import NotFind from '@/views/NotFind.vue'
+// 禁止访问界面
+import NoAccess from '@/views/NoAccess.vue'
 
 
 // 专案管理界面
@@ -224,6 +226,11 @@ const routes = [
     component: LoginView
   },
   {
+    path:'/noaccess',
+    name:'禁止访问',
+    component:NoAccess
+  },
+  {
     path: '*',
     component: NotFind
   }
@@ -242,6 +249,10 @@ const authUrls = ['/caseList', '/subManage'
 //用户界面
 const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception','/caseAnalysis']
 
+// 禁止访问界面
+// '/caseList'
+const forbiddenUrls = []
+
 
 router.beforeEach(async (to, from, next) => {
   if(to.path==='/login'){
@@ -256,6 +267,14 @@ router.beforeEach(async (to, from, next) => {
   }
 
   user = JSON.parse(user)
+
+  // 检查禁止访问，正在开发的界面
+  if(forbiddenUrls.includes(to.path)){
+    if(user.name!=='余博'){
+      next('/noaccess')
+      return
+    }
+  }
 
   //检查权限界面
   if (authUrls.includes(to.path)) {

@@ -55,57 +55,63 @@
 
           </el-row>
         </div>
+        <div ref="caseTableRef">
+          <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px">
+            <el-table-column type="index" label="编号" width="55">
+            </el-table-column>
+            <el-table-column prop="name" label="任务名" width="260">
+            </el-table-column>
+            <el-table-column prop="curStage" label="当前阶段">
+            </el-table-column>
+            <el-table-column prop="level" label="难度">
+            </el-table-column>
+            <el-table-column prop="directorName" label="负责人">
+            </el-table-column>
+            <el-table-column prop="startTime" label="开始时间">
+            </el-table-column>
+            <el-table-column prop="presetTime" label="预计完成时间">
+            </el-table-column>
+            <el-table-column prop="finishTime" label="实际完成时间">
+            </el-table-column>
+            <el-table-column prop="planDay" label="计划天数">
+            </el-table-column>
+            <el-table-column prop="executionDays" label="执行天数">
+            </el-table-column>
+            <el-table-column prop="unforcedDay" label="外界因素延期">
+            </el-table-column>
+            <el-table-column prop="status" label="执行状态">
+              <template slot-scope="scope">
+                <el-tag effect="dark" type="warning" v-if="isInterrupt(scope.row)" style="font-size:15px">中断</el-tag>
+                <el-tag effect="dark" type="warning"
+                  v-else-if="scope.row.finishTime !== null && scope.row.executionDays > scope.row.planDay"
+                  style="font-size:15px">延误完成</el-tag>
+                <el-tag effect="dark" type="primary"
+                  v-else-if="scope.row.finishTime !== null && scope.row.executionDays <= scope.row.planDay"
+                  style="font-size:15px">正常完成</el-tag>
+                <el-tag effect="dark" type="danger" v-else-if="scope.row.executionDays > scope.row.planDay"
+                  style="font-size:15px">已延误</el-tag>
+                <el-tag effect="dark" type="success" v-else style="font-size:15px">执行中</el-tag>
+              </template>
 
-        <el-table :data="pageInfo" border stripe max-height=600 @cell-dblclick="handleDoubleClick" style="font-size:15px">
-          <el-table-column type="index" label="编号" width="55">
-          </el-table-column>
-          <el-table-column prop="name" label="任务名" width="260">
-          </el-table-column>
-          <el-table-column prop="curStage" label="当前阶段">
-          </el-table-column>
-          <el-table-column prop="level" label="难度">
-          </el-table-column>
-          <el-table-column prop="directorName" label="负责人">
-          </el-table-column>
-          <el-table-column prop="startTime" label="开始时间">
-          </el-table-column>
-          <el-table-column prop="presetTime" label="预计完成时间">
-          </el-table-column>
-          <el-table-column prop="finishTime" label="实际完成时间">
-          </el-table-column>
-          <el-table-column prop="planDay" label="计划天数">
-          </el-table-column>
-          <el-table-column prop="executionDays" label="执行天数">
-          </el-table-column>
-          <el-table-column prop="unforcedDay" label="外界因素延期">
-          </el-table-column>
-          <el-table-column prop="status" label="执行状态">
-            <template slot-scope="scope">
-              <el-tag effect="dark" type="warning" v-if="isInterrupt(scope.row)" style="font-size:15px">中断</el-tag>
-              <el-tag effect="dark" type="warning" v-else-if="scope.row.finishTime!==null&&scope.row.executionDays>scope.row.planDay" style="font-size:15px">延误完成</el-tag>
-              <el-tag effect="dark" type="primary" v-else-if="scope.row.finishTime!==null&&scope.row.executionDays<=scope.row.planDay" style="font-size:15px">正常完成</el-tag>
-              <el-tag effect="dark" type="danger" v-else-if="scope.row.executionDays>scope.row.planDay" style="font-size:15px">已延误</el-tag>
-              <el-tag effect="dark" type="success" v-else style="font-size:15px">执行中</el-tag>
-            </template>
+            </el-table-column>
+            <el-table-column label="操作" width="120">
+              <template slot-scope="scope">
+                <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
+                  <el-button type="info" size="mini" icon="el-icon-info" round @click="showSub(scope.row)"></el-button>
+                </el-tooltip>
+                <el-tooltip effect="dark" content="个人详情" placement="top" :enterable="false">
+                  <el-button type="danger" size="mini" icon="el-icon-s-custom" round
+                    @click="showPerson(scope.row)"></el-button>
+                </el-tooltip>
+              </template>
 
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template slot-scope="scope">
-              <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
-                <el-button type="info" size="mini" icon="el-icon-info" round @click="showSub(scope.row)"></el-button>
-              </el-tooltip>
-              <el-tooltip effect="dark" content="个人详情" placement="top" :enterable="false">
-                <el-button type="danger" size="mini" icon="el-icon-s-custom" round
-                  @click="showPerson(scope.row)"></el-button>
-              </el-tooltip>
-            </template>
-
-          </el-table-column>
-        </el-table>
+            </el-table-column>
+          </el-table>
+        </div>
         <!-- 分页区域 -->
         <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
-          @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 9, 10, 20]" :page-size="size"
-          layout="total, sizes, prev, pager, next" :total="total">
+          @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 9, 10, 15, 20, 30]"
+          :page-size="size" layout="total, sizes, prev, pager, next" :total="total">
         </el-pagination>
       </div>
     </el-card>
@@ -149,6 +155,7 @@
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { deleteCommit, getById, saveCommit } from '@/api/caseSubCommit';
 import { getUserList } from '@/api/user'
+import html2canvas from 'html2canvas'
 export default {
   name: 'indexPage',
   data() {
@@ -258,7 +265,7 @@ export default {
   computed: {
     ...mapState('caseM', ['caseList', 'queryList']),
     ...mapState(['user']),
-    ...mapState('apply',['subList'])
+    ...mapState('apply', ['subList'])
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
@@ -420,12 +427,31 @@ export default {
           this.$message.error(res.msg)
       })
     },
-    isInterrupt(row){
-      for(var i=0;i<this.subList.length;i++){
-        if(row.name===this.subList[i].caseName)
+    isInterrupt(row) {
+      for (var i = 0; i < this.subList.length; i++) {
+        if (row.name === this.subList[i].caseName)
           return true
       }
       return false
+    },
+    // 截图
+    async captureScreenshot() {
+      // 获取截图区域的DOM元素
+      const screenshotArea = this.$refs.caseTableRef;
+      // 使用html2canvas截图
+      await html2canvas(screenshotArea).then(canvas => {
+        // 将canvas转换为图片URL
+        const imgData = canvas.toDataURL();
+
+        // 创建一个新的图片元素，并设置图片URL为截图结果
+        const img = new Image();
+        img.src = imgData;
+
+        // 打开一个新窗口显示截图结果
+        const newWindow = window.open();
+        newWindow.document.write('<img src="' + img.src + '" />');
+      });
+
     }
   }
 }
