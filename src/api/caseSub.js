@@ -70,3 +70,13 @@ export const removeCaseSub = (obj)=>{
 export const updateCaseSubSort = (obj)=>{
     return service.put('/caseSub/updateCaseSubSort', obj)
 }
+
+// 获得负责的子流程（仅包括专案，用于日历的显示）
+export const getChargeCaseSub = (id)=>{
+    return service.get(`/caseSub/getChargeCaseSub/${id}`)
+}
+
+// 获得正在执行的子流程（仅包括专案，用于日历的显示）
+export const getExecuting=()=>{
+    return service.get("/caseSub/getExecuting")
+}

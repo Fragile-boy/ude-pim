@@ -34,6 +34,7 @@ service.interceptors.response.use((res) => {
       message:res.data.msg,
       type:'error'
     })
+    return res.data
   }else
     return res.data
 }, (error) => {

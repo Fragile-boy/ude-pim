@@ -19,7 +19,7 @@
                 <span>审批流程<el-badge :value="subList.length" is-dot
                         v-if="subList.length || delayList.length || finishList.length || taskList.length || caseSubList.length" /></span>
             </template>
-            <el-menu-item index="/exception"><i class="el-icon-s-tools"></i>异常专案处理<el-badge :value="subList.length"
+            <el-menu-item index="/exception"><i class="el-icon-s-tools"></i>中断专案<el-badge :value="subList.length"
                     v-if="subList.length" /></el-menu-item>
             <el-menu-item index="/delay"><i class="el-icon-s-tools"></i>延期申请<el-badge :value="delayList.length"
                     v-if="delayList.length" /></el-menu-item>
@@ -60,6 +60,13 @@
                     v-if="logList.length" /></el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+        </el-submenu>
+
+        <el-submenu index="6" v-if="user.type === 0">
+            <template slot="title">
+                <i class="el-icon-s-opportunity"></i>
+                <span>部门数据</span>
+            </template>
             <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
             <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
             <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>

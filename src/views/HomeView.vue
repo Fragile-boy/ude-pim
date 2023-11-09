@@ -6,17 +6,13 @@
 
       <img src="@/assets/logo_mini.png" alt="">
 
-
-
       <!-- <span style="color:red">(开发测试中...请稍后访问)</span> -->
       <span>新技研进度管理系统<span style="font-size: 10px;">(测试版)</span></span>
-
-
+      
       <el-button round size="medium" @click="handleLogout()">
         {{ user === null ? '' : user.name }}
         <i class="el-icon-switch-button"></i>
       </el-button>
-
 
 
     </el-header>
@@ -35,7 +31,7 @@
         <div style="margin-bottom: 10px; margin-top: -10px;">
           <NavigationBar></NavigationBar>
         </div>
-        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis']">
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage']">
           <router-view></router-view>
         </keep-alive>
 

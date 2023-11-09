@@ -26,7 +26,7 @@
         </el-col>
       </el-row>
 
-      <div id="caseSubGanttChart" style="width: 100%; height: 700px;" v-show="showCaseSubGantt"></div>
+      <div id="caseSubGanttChart" style="width: 100%; height: 1000px;" v-show="showCaseSubGantt"></div>
       <div id="caseSubBarChart" style="width: 100%; height: 700px;" v-show="showCaseSubGantt"></div>
     </el-card>
   </div>
@@ -97,17 +97,18 @@ export default {
       obj.label = {
         show: true,
         color: "#000",
-        position: fullTime ? "insideTopRight" : "right",
+        // position: fullTime ? "insideTopRight" : "right",
+        position: "right",
         fontSize: 16,
         formatter: function (params) {
           var data = new Date(params.value)
           if (fullTime) {
-            if (zlevel === 4 || zlevel === 1)
-              return ('' + data.getFullYear()).substring(2, 4) + "/" + (data.getMonth() + 1) + "/" + data.getDate()
+            if (zlevel === 4 || zlevel === 1||zlevel===2)
+              return ('' + data.getFullYear()).substring(2, 4) + "-" + (data.getMonth() + 1) + "-" + data.getDate()
             return ''
           } else {
-            if (zlevel === 1)
-              return data.getMonth() + 1 + "/" + data.getDate()
+            if (zlevel === 1 || zlevel === 2)
+              return data.getMonth() + 1 + "-" + data.getDate()
             return ''
           }
         }
@@ -135,8 +136,10 @@ export default {
       // series数据集
       var dataSeries = []
       // 开始时间
-      var startTime = {}
-      startTime = this.initGanttObj(startTime, "bar0", true, "#fff", 4, "开始时间", true)
+      var startTime_0 = {}
+      var startTime_1 = {}
+      startTime_0 = this.initGanttObj(startTime_0, "bar0", true, "#fff", 4, "开始时间", true)
+      startTime_1 = this.initGanttObj(startTime_1, "bar1", true, "#fff", 4, "开始时间", true)
       // 预计完成时间
       var predictTime = {}
       predictTime = this.initGanttObj(predictTime, "bar0", false, "#6ED77E", 3, "预计完成", true)
@@ -145,16 +148,18 @@ export default {
       targetTime = this.initGanttObj(targetTime, "bar0", false, "skyblue", 2, "目标时间", true)
       // 完结时间
       var finishTime = {}
-      finishTime = this.initGanttObj(finishTime, "bar0", false, "#E23D3D", 1, "完成时间", true)
+      finishTime = this.initGanttObj(finishTime, "bar1", false, "#FF7F50", 1, "完成时间", true)
       for (let i = this.finishCaseList.length - 1; i >= 0; i--) {
-        startTime.data.push(new Date(this.finishCaseList[i].startTime))
+        startTime_0.data.push(new Date(this.finishCaseList[i].startTime))
+        startTime_1.data.push(new Date(this.finishCaseList[i].startTime))
         predictTime.data.push(new Date(this.finishCaseList[i].presetTime))
         targetTime.data.push(new Date(timeAdd(this.finishCaseList[i].presetTime, this.finishCaseList[i].unforcedDay === null ? 0 : this.finishCaseList[i].unforcedDay, 1)))
         finishTime.data.push(new Date(this.finishCaseList[i].finishTime))
         yAxis.push(this.finishCaseList[i].name)
       }
 
-      dataSeries.push(startTime)
+      dataSeries.push(startTime_0)
+      dataSeries.push(startTime_1)
       dataSeries.push(predictTime)
       dataSeries.push(targetTime)
       dataSeries.push(finishTime)
@@ -191,8 +196,37 @@ export default {
         xAxis: {
           type: "time",
           axisLabel: {
-            "show": true,
-            "interval": 0
+            show: true,
+            interval: 0,
+            formatter: function (value) {
+              var data = new Date(value);
+              var year = data.getFullYear();
+              var month = data.getMonth() + 1;
+              var day = data.getDate();
+
+              if (day > 1) {
+                // 如果是天，字体大小为30
+                return '{fontSizeMini|' + day + '}';
+              } else if (month > 1) {
+                // 如果是月份，字体大小为原始大小
+                return '{fontSize|' + month + '月' + '}';
+              } else {
+                // 如果是年份，字体大小为原始大小
+                return '{fontSizeLarge|' + year + '年' + '}';
+              }
+            },
+            rich: {
+              fontSizeMini: {
+                fontSize: 20
+              },
+              fontSize: {
+                fontSize: 25
+              },
+              fontSizeLarge: {
+                fontSize: 30
+              }
+
+            },
           }
         },
         yAxis: {
@@ -240,8 +274,10 @@ export default {
       // series数据集
       var dataSeries = []
       // 开始时间
-      var startTime = {}
-      startTime = this.initGanttObj(startTime, "bar0", true, "#fff", 4, "开始时间", true)
+      var startTime_0 = {}
+      var startTime_1 = {}
+      startTime_0 = this.initGanttObj(startTime_0, "bar0", true, "#fff", 4, "开始时间", true)
+      startTime_1 = this.initGanttObj(startTime_1, "bar1", true, "#fff", 4, "开始时间", true)
       // 预计完成时间
       var predictTime = {}
       predictTime = this.initGanttObj(predictTime, "bar0", false, "#6ED77E", 3, "预计完成", true)
@@ -250,15 +286,17 @@ export default {
       targetTime = this.initGanttObj(targetTime, "bar0", false, "skyblue", 2, "目标时间", true)
       // 完结时间
       var finishTime = {}
-      finishTime = this.initGanttObj(finishTime, "bar0", false, "#E23D3D", 1, "完成时间", true)
+      finishTime = this.initGanttObj(finishTime, "bar1", false, "#FF7F50", 1, "完成时间", true)
       for (let i = this.finishCaseList.length - 1; i >= 0; i--) {
-        startTime.data.push(new Date(this.finishCaseList[i].startTime))
+        startTime_0.data.push(new Date(this.finishCaseList[i].startTime))
+        startTime_1.data.push(new Date(this.finishCaseList[i].startTime))
         predictTime.data.push(new Date(this.finishCaseList[i].presetTime))
         targetTime.data.push(new Date(timeAdd(this.finishCaseList[i].presetTime, this.finishCaseList[i].unforcedDay === null ? 0 : this.finishCaseList[i].unforcedDay, 1)))
         finishTime.data.push(new Date(this.finishCaseList[i].finishTime))
         yAxis.push(this.finishCaseList[i].name)
       }
-      dataSeries.push(startTime).unforcedDay
+      dataSeries.push(startTime_0)
+      dataSeries.push(startTime_1)
       dataSeries.push(predictTime)
       dataSeries.push(targetTime)
       dataSeries.push(finishTime)
@@ -297,8 +335,10 @@ export default {
       // series数据集
       var dataSeries = []
       // 开始时间
-      var startTime = {}
-      startTime = this.initGanttObj(startTime, "bar0", true, "#fff", 4, "开始时间", false)
+      var startTime_1 = {}
+      var startTime_2 = {}
+      startTime_1 = this.initGanttObj(startTime_1, "bar0", true, "#fff", 4, "开始时间", false)
+      startTime_2 = this.initGanttObj(startTime_2, "bar1", true, "#fff", 4, "开始时间", false)
       // 预计完成时间
       var predictTime = {}
       predictTime = this.initGanttObj(predictTime, "bar0", false, "#6ED77E", 3, "预计完成", false)
@@ -307,9 +347,10 @@ export default {
       targetTime = this.initGanttObj(targetTime, "bar0", false, "skyblue", 2, "目标时间", false)
       // 完结时间
       var finishTime = {}
-      finishTime = this.initGanttObj(finishTime, "bar0", false, "#E23D3D", 1, "完成时间", false)
+      finishTime = this.initGanttObj(finishTime, "bar1", false, "#FF7F50", 1, "完成时间", false)
       for (let i = this.subInfo.length - 1; i >= 0; i--) {
-        startTime.data.push(new Date(this.subInfo[i].startTime))
+        startTime_1.data.push(new Date(this.subInfo[i].startTime))
+        startTime_2.data.push(new Date(this.subInfo[i].startTime))
         predictTime.data.push(new Date(this.subInfo[i].targetTime))
         targetTime.data.push(new Date(this.subInfo[i].standardTime))
         finishTime.data.push(new Date(this.subInfo[i].finishTime))
@@ -318,12 +359,14 @@ export default {
 
       // 计划工期显示
       yAxis.push("计划工期")
-      startTime.data.push(new Date(this.subInfo[0].startTime))
+      startTime_1.data.push(new Date(this.subInfo[0].startTime))
+      startTime_2.data.push(new Date(this.subInfo[0].startTime))
       predictTime.data.push(new Date(caseObj.presetTime))
       targetTime.data.push(new Date(timeAdd(caseObj.presetTime, caseObj.unforcedDay === null ? 0 : caseObj.unforcedDay, 1)))
       finishTime.data.push(new Date(timeAdd(caseObj.startTime, caseObj.unforcedDay === null ? 0 : caseObj.unforcedDay, 1, caseObj.executionDays)))
 
-      dataSeries.push(startTime)
+      dataSeries.push(startTime_1)
+      dataSeries.push(startTime_2)
       dataSeries.push(predictTime)
       dataSeries.push(targetTime)
       dataSeries.push(finishTime)
@@ -331,10 +374,10 @@ export default {
       var option = {
         backgrindColor: "#fff",
         title: {
-          text: caseName+"  甘特图",
+          text: caseName,
           padding: 20,
           textStyle: {
-            fontSize: 17,
+            fontSize: 24,
             fontWeight: "bolder",
             color: "#333"
           },
@@ -360,8 +403,37 @@ export default {
         xAxis: {
           type: "time",
           axisLabel: {
-            "show": true,
-            "interval": 0
+            show: true,
+            interval: 0,
+            formatter: function (value) {
+              var data = new Date(value);
+              var year = data.getFullYear();
+              var month = data.getMonth() + 1;
+              var day = data.getDate();
+
+              if (day > 1) {
+                // 如果是天，字体大小为30
+                return '{fontSizeMini|' + day + '}';
+              } else if (month > 1) {
+                // 如果是月份，字体大小为原始大小
+                return '{fontSize|' + month + '月' + '}';
+              } else {
+                // 如果是年份，字体大小为原始大小
+                return '{fontSizeLarge|' + year + '年' + '}';
+              }
+            },
+            rich: {
+              fontSizeMini: {
+                fontSize: 20
+              },
+              fontSize: {
+                fontSize: 25
+              },
+              fontSizeLarge: {
+                fontSize: 30
+              }
+
+            },
           }
         },
         yAxis: {
@@ -397,16 +469,16 @@ export default {
     },
     // 初始化子流程条形图
     initCaseSubBar(caseName, caseObj) {
-      
-      this.subInfo.forEach(item=>{
-        item.executionDays = timeSub(item.startTime,item.finishTime)
-        item.executionDays -= item.unforcedDays===null?0:item.unforcedDays
+
+      this.subInfo.forEach(item => {
+        item.executionDays = timeSub(item.startTime, item.finishTime)
+        item.executionDays -= +item.unforcedDays
       })
       console.log(this.subInfo)
       var option = {
         backgrindColor: "#fff",
         title: {
-          text: caseName+"  执行条形图",
+          text: caseName + "  执行条形图",
           padding: 20,
           textStyle: {
             fontSize: 17,
@@ -436,10 +508,10 @@ export default {
           axisLabel: {
             show: true,
             interval: 0,
-            fontSize:20,
-            fontWeight:"bolder"
+            fontSize: 20,
+            fontWeight: "bolder"
           },
-          data:this.subInfo.map(item=>item.subName)
+          data: this.subInfo.map(item => item.subName)
         },
         yAxis: {
           axisLabel: {
@@ -456,20 +528,20 @@ export default {
         },
         series: [
           {
-            name:'计划时间',
-            type:'bar',
-            data:this.subInfo.map(item=>item.planDays),
-            label:{
-              show:true,
-              position:'top',
+            name: '计划时间',
+            type: 'bar',
+            data: this.subInfo.map(item => item.planDays),
+            label: {
+              show: true,
+              position: 'top',
             }
-          },{
-            name:'执行时间',
-            type:'bar',
-            data:this.subInfo.map(item=>item.executionDays),
-            label:{
-              show:true,
-              position:'top',
+          }, {
+            name: '执行时间',
+            type: 'bar',
+            data: this.subInfo.map(item => item.executionDays),
+            label: {
+              show: true,
+              position: 'top',
             }
           }
         ]

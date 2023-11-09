@@ -520,7 +520,7 @@ export default {
         //提交各负责人的工作描述
         async submitDirectorJobDescription() {
             for (var i = 0; i < this.directors.length; i++) {
-                if(this.directors[i].userId===this.user.id&&(this.directors[i].description===null||this.directors[i].description==='')){
+                if (this.directors[i].userId === this.user.id && (this.directors[i].description === null || this.directors[i].description === '')) {
                     this.$message.error("你对自己的工作描述为空，请检查后重新提交")
                     return
                 }
@@ -932,7 +932,7 @@ export default {
                     }
                 })
             }
-        }
+        },
     }
 }
 </script>
@@ -951,5 +951,6 @@ export default {
     .bar-chart {
         width: 70%;
     }
+
 }
 </style>

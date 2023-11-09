@@ -24,3 +24,7 @@ export const submitDirectorValue = (obj) => {
 export const updateDescription=(obj)=>{
     return service.put('/caseSubUser/updateDescription',obj)
 }
+
+export const updateChargeCaseSub=(obj)=>{
+    return service.put('/caseSubUser/updateChargeCaseSub',obj)
+}

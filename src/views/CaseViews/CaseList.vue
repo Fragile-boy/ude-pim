@@ -351,6 +351,7 @@ import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
 import { getTempleteList, getSubsByTemplateId, saveTemplete } from '@/api/templete'
 export default {
+    name:'caseManage',
     data() {
         var checkCost = (rule, value, callback) => {
             if (value < 0)

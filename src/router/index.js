@@ -56,6 +56,9 @@ import UserInfo from '@/views/UserViews/UserInfo.vue'
 // 需求界面
 import Demand from '@/components/Demand.vue'
 
+// 测试界面
+import test from '@/components/TestFunction.vue'
+
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
 
@@ -229,6 +232,10 @@ const routes = [
     path:'/noaccess',
     name:'禁止访问',
     component:NoAccess
+  },
+  {
+    path:'/test',
+    component:test
   },
   {
     path: '*',

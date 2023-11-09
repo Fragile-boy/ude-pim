@@ -13,7 +13,7 @@
                 <el-table-column label="描述" prop="description"></el-table-column>
                 <el-table-column label="类型">
                     <template slot-scope="scope">
-                        <el-tag type="danger" v-if="scope.row.type === 0">bug</el-tag>
+                        <el-tag type="danger" v-if="!scope.row.type">BUG</el-tag>
                         <el-tag type="primary" v-else>需求</el-tag>
                     </template>
                 </el-table-column>

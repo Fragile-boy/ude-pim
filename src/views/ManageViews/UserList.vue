@@ -52,8 +52,8 @@
                 <el-table-column label="职务">
                     <template slot-scope="scope">
                         <el-tag effect="dark" v-if="scope.row.status === 0">机构</el-tag>
-                        <el-tag effect="dark" type="success" v-else-if="scope.row.status===1">电控</el-tag>
-                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status===2">助理</el-tag>
+                        <el-tag effect="dark" type="success" v-else-if="scope.row.status === 1">电控</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 2">助理</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作">
@@ -190,13 +190,44 @@
                 <el-button type="primary" @click="updatePassword()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="更换负责人" :visible.sync="chargeCaseSubVisible" width="40%">
+            <el-table :data="chargingTask">
+                <el-table-column prop="desc" label="描述"></el-table-column>
+                <el-table-column label="开始时间">
+                    <template slot-scope="scope">
+                        <el-tag effect="dark" type="info" v-if="scope.row.startTime === null">未开始</el-tag>
+                        <el-tag effect="dark" type="primary" v-else>{{scope.row.startTime}}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="负责人">
+                    <template slot-scope="scope">
+                        <el-select v-model="scope.row.userId" placeholder="请选择负责人">
+                            <el-option v-for="item in allUser" :key="item.id" :label="item.name" :value="item.id">
+                            </el-option>
+                        </el-select>
+                    </template>
+                </el-table-column>
+                <el-table-column label="操作">
+                    <template slot-scope="scope">
+                        <el-button type="danger" icon="el-icon-delete" @click=deleteByChargeId(scope.row.caseSubId,scope.row.userId)></el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="updateChargeTask()">确 定</el-button>
+                <el-button @click="chargeCaseSubVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { getUserPage, saveUser, getUserById, updateUser, removeUser } from '@/api/user'
 import { mapActions, mapState } from 'vuex'
-import { updatePassword } from '@/api/user'
+import { updatePassword,getUserList } from '@/api/user'
+import { getChargeCaseSub } from '@/api/caseSub'
+import {removeDirector,updateChargeCaseSub} from '@/api/caseSubUser'
 export default {
     data() {
         var checkNumber = (rule, value, callback) => {
@@ -218,9 +249,9 @@ export default {
             callback()
         }
 
-        var checkEmail = (rule, value, callback)=>{
+        var checkEmail = (rule, value, callback) => {
             //正则表达式验证电子邮箱地址
-            if(/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)){
+            if (/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value)) {
                 callback()
             }
             callback(new Error('电子邮箱格式不正确'))
@@ -264,7 +295,7 @@ export default {
                 name: '',
                 number: '',
                 status: null,
-                email:''
+                email: ''
             },
             //修改密码，修改个人信息
             editUserVisible: false,
@@ -278,9 +309,9 @@ export default {
                 number: [
                     { validator: checkNumber, trigger: 'blur' }
                 ],
-                email:[
-                    {required:true,message: '电子邮箱不能为空', trigger: 'blur' },
-                    {validator:checkEmail,trigger:'blur'}
+                email: [
+                    { required: true, message: '电子邮箱不能为空', trigger: 'blur' },
+                    { validator: checkEmail, trigger: 'blur' }
                 ]
             },
             passwordInfo: {
@@ -295,16 +326,27 @@ export default {
                     { validator: checkSecond, trigger: 'blur' }
                 ]
             },
+            // 正在负责的任务
+            chargingTask: [],
+            chargeCaseSubVisible: false,
+            allUser: []
         }
     },
     created() {
         this.getUserPage()
+        this.getAllUser()
     },
-    computed:{
+    computed: {
         ...mapState(['user'])
     },
     methods: {
         ...mapActions(['editUserInfo']),
+        async getAllUser(){
+            var res = await getUserList()
+            if(res.code===200){
+                this.allUser = res.data
+            }
+        },
         async getUserPage() {
             const res = await getUserPage(this.queryInfo)
             this.userList = res.data.records
@@ -372,11 +414,13 @@ export default {
                 this.$message.success(res.data)
                 this.getUserPage()
             } else {
-                this.$message({
-                    type: 'error',
-                    message: res.msg,
-                    duration: 5000
-                })
+                if (res.msg === "当前职员还有未完成的专案类任务，请为他负责的专案子阶段重新选择负责人后重试") {
+                    setTimeout(async () => {
+                        var r = await getChargeCaseSub(id)
+                        this.chargingTask = r.data
+                        this.chargeCaseSubVisible = true
+                    }, 1000)
+                }
             }
         },
         //设置按钮
@@ -415,6 +459,25 @@ export default {
                 }
             })
         },
+        // 删除负责人
+        async deleteByChargeId(caseSubId,userId){
+            var res = await removeDirector({caseSubId:caseSubId,userId:userId})
+            if(res.code===200){
+                this.$message.success(res.data)
+                this.chargingTask = this.chargingTask.filter(item=>item.caseSubId!==caseSubId||item.userId!==userId)
+            }else{
+                this.$message.error(res.msg)
+            }
+        },
+        // 更新负责人
+        async updateChargeTask(){
+            var res = await updateChargeCaseSub(this.chargingTask)
+            if(res.code===200){
+                this.$message.success(res.data)
+                this.chargingTask = []
+                this.chargeCaseSubVisible = false
+            }
+        }
     }
 }
 </script>

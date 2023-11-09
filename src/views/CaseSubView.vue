@@ -79,6 +79,35 @@
                         </template>
                     </el-table-column>
 
+                    <el-table-column label="操作" width="180">
+                        <template slot-scope="scope">
+                            <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
+                                <el-button type="info" size="mini" icon="el-icon-info" round
+                                    @click="openCommentView(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
+                                v-if="(user.type === 1 || scope.row.chargeId.includes(user.id)) && scope.row.startTime === null">
+                                <el-button type="success" size="mini" icon="el-icon-video-play" round
+                                    @click="launch(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="结束阶段" placement="top" :enterable="false"
+                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime === null">
+                                <el-button type="danger" size="mini" icon="el-icon-success" round
+                                    @click="finish(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
+                                <el-button v-if="user.type === 1" type="primary" size="mini" icon="el-icon-edit" round
+                                    @click="openEditCaseSub(scope.row)"></el-button>
+                            </el-tooltip>
+                            <el-tooltip
+                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
+                                effect="dark" content="分配比例" placement="top" :enterable="false">
+                                <el-button type="warning" size="mini" icon="el-icon-setting" round
+                                    @click="initEditDirectorRate(scope.row)"></el-button>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+
                     <el-table-column prop="subName" label="子流程">
                     </el-table-column>
 
@@ -129,34 +158,6 @@
 
                     </el-table-column>
 
-                    <el-table-column label="操作" width="180">
-                        <template slot-scope="scope">
-                            <el-tooltip effect="dark" content="查看备注" placement="top" :enterable="false">
-                                <el-button type="info" size="mini" icon="el-icon-info" round
-                                    @click="openCommentView(scope.row)"></el-button>
-                            </el-tooltip>
-                            <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
-                                v-if="(user.type === 1 || scope.row.chargeId.includes(user.id)) && scope.row.startTime === null">
-                                <el-button type="success" size="mini" icon="el-icon-video-play" round
-                                    @click="launch(scope.row)"></el-button>
-                            </el-tooltip>
-                            <el-tooltip effect="dark" content="结束阶段" placement="top" :enterable="false"
-                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime === null">
-                                <el-button type="danger" size="mini" icon="el-icon-success" round
-                                    @click="finish(scope.row)"></el-button>
-                            </el-tooltip>
-                            <el-tooltip effect="dark" content="编辑阶段" placement="top" :enterable="false">
-                                <el-button v-if="user.type === 1" type="primary" size="mini" icon="el-icon-edit" round
-                                    @click="openEditCaseSub(scope.row)"></el-button>
-                            </el-tooltip>
-                            <el-tooltip
-                                v-if="user.type === 1 && scope.row.startTime !== null && scope.row.finishTime !== null && scope.row.chargeId.length !== 0"
-                                effect="dark" content="分配比例" placement="top" :enterable="false">
-                                <el-button type="warning" size="mini" icon="el-icon-setting" round
-                                    @click="initEditDirectorRate(scope.row)"></el-button>
-                            </el-tooltip>
-                        </template>
-                    </el-table-column>
                 </el-table>
                 <!-- 翻页按钮 -->
                 <el-row style="margin-bottom:-20px">
@@ -172,7 +173,7 @@
 
         <!-- 甘特图显示区域 -->
         <el-card>
-            <div id="ganttChart" style="width: 100%; height: 700px;"></div>
+            <div id="ganttChart" style="width: 100%; height: 1000px;"></div>
         </el-card>
 
         <!-- 显示负责人手头的子流程 -->
@@ -466,6 +467,7 @@ export default {
             caseIndex: null,
             // 专案计划时间和执行时间信息
             casePlanDays: 0,
+            caseUnforcedDays: 0,
             caseExecutionDays: 0,
             caseFinishDays: 0,
             drawer: false,
@@ -602,6 +604,7 @@ export default {
             this.caseFinishDays = 0
             this.casePlanDays = 0
             this.caseExecutionDays = 0
+            this.caseUnforcedDays = 0
 
             var res = await getSubList(caseId)
             this.subInfo = res.data
@@ -627,6 +630,8 @@ export default {
                 this.casePlanDays += this.subInfo[i].planDays
                 // 计算完成的阶段时间总和
                 this.caseFinishDays += this.subInfo[i].finishTime === null ? 0 : this.subInfo[i].planDays
+                // 计算总外界因素延期时间
+                this.caseUnforcedDays += this.subInfo[i].unforcedDays === null ? 0 : this.subInfo[i].unforcedDays
 
                 //执行天数
                 if (this.subInfo[i].startTime !== null) {
@@ -896,15 +901,15 @@ export default {
         },
         //设置单元格颜色
         setCellColor({ row, column, rowIndex, columnIndex }) {
-            if (columnIndex === 4)
+            if (columnIndex === 5)
                 return 'background-color:#fceadb'
-            else if (columnIndex === 5)
-                return 'background-color:#e1bbb8'
             else if (columnIndex === 6)
-                return 'background-color:#C6DEF8'
+                return 'background-color:#e1bbb8'
             else if (columnIndex === 7)
-                return 'background-color:#B9BFBF'
+                return 'background-color:#C6DEF8'
             else if (columnIndex === 8)
+                return 'background-color:#B9BFBF'
+            else if (columnIndex === 9)
                 return 'background-color:#B4EBB1'
         },
         //关闭申请延期窗口
@@ -1026,9 +1031,11 @@ export default {
         showExecutionGantt() {
             var dataSeries = []
             // 计划时间
-            var planTime_start = {};
+            var planTime_start_0 = {};
+            var planTime_start_1 = {};
             var planTime_end = {};
-            planTime_start = this.initGanttObj(planTime_start, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_0 = this.initGanttObj(planTime_start_0, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_1 = this.initGanttObj(planTime_start_1, "bar1", true, "#6ED77E", 4, "开始时间")
             planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
 
             // 外界因素延期
@@ -1037,26 +1044,38 @@ export default {
 
             // 执行时间
             var execTime_end = {};
-            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "完成/当前时间")
+            execTime_end = this.initGanttObj(execTime_end, "bar1", false, "#FF7F50", 1, "完成/当前时间")
+
+            // y轴标签
+            var yAxis = []
 
             for (let i = this.subInfo.length - 1; i >= 0; i--) {
                 if (this.subInfo[i].startTime === null)
                     continue
-                planTime_start.data.push(new Date(this.subInfo[i].startTime))
+                planTime_start_0.data.push(new Date(this.subInfo[i].startTime))
+                planTime_start_1.data.push(new Date(this.subInfo[i].startTime))
                 planTime_end.data.push(new Date(this.subInfo[i].targetTime))
                 standardTime.data.push(new Date(this.subInfo[i].standardTime))
                 execTime_end.data.push(this.subInfo[i].finishTime === null ? new Date() : new Date(this.subInfo[i].finishTime))
+                yAxis.push(this.subInfo[i].subName)
             }
+            yAxis.push("计划工期")
+            planTime_start_0.data.push(new Date(this.subInfo[0].startTime))
+            planTime_start_1.data.push(new Date(this.subInfo[0].startTime))
+            planTime_end.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays)))
+            standardTime.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays, this.caseUnforcedDays)))
+            execTime_end.data.push(new Date())
 
 
-            dataSeries.push(planTime_start)
+            dataSeries.push(planTime_start_0)
+            dataSeries.push(planTime_start_1)
             dataSeries.push(planTime_end)
             dataSeries.push(standardTime)
             dataSeries.push(execTime_end)
 
             var option = {
                 title: {
-                    text: "执行甘特图",
+                    text: this.caseName,
                     padding: 20,
                     textStyle: {
                         fontSize: 17,
@@ -1086,37 +1105,60 @@ export default {
                     type: 'time',
                     axisLabel: {
                         show: true,
-                        interval: 0,
-                        fontSize: 25,
-                        fontWeight: "bolder",
+                        interval: 5,
                         formatter: function (value) {
-                            // 将日期转换为年份
-                            var data = new Date(value)
+                            var data = new Date(value);
                             var year = data.getFullYear();
-                            return '{fontSize|' + year + '-'+ (data.getMonth()+1) +'}';
+                            var month = data.getMonth() + 1;
+                            var day = data.getDate();
+
+                            if (day > 1) {
+                                // 如果是天，字体大小为30
+                                return '{fontSizeMini|' + day + '}';
+                            } else if (month > 1) {
+                                // 如果是月份，字体大小为原始大小
+                                return '{fontSize|' + month + '月' + '}';
+                            } else {
+                                // 如果是年份，字体大小为原始大小
+                                return '{fontSizeLarge|' + year + '年' + '}';
+                            }
                         },
                         rich: {
+                            fontSizeMini: {
+                                fontSize: 20
+                            },
                             fontSize: {
                                 fontSize: 25
+                            },
+                            fontSizeLarge: {
+                                fontSize: 30
                             }
-                        }
-                    }
+
+                        },
+                    },
                 },
                 yAxis: {
                     axisLabel: {
                         show: true,
                         interval: 0,
-                        fontSize: 25,
+                        fontSize: 18, // 调整字体大小以提高可读性
+                        color: '#555', // 轻微调暗颜色以降低视觉疲劳
                         fontWeight: "bolder"
                     },
-                    data: this.subInfo.filter(item => item.startTime !== null).map(item => item.subName).reverse()
+                    data: yAxis,
+                    type: 'category',
+                    boundaryGap: true, // 确保条形图完全显示
                 },
                 tooltip: {
                     trigger: "axis",
                     formatter: function (params) {
                         var res = ''
                         res += params[0].axisValue + '<br/>';
+                        var set = new Set()
                         for (var i = 0; i < params.length; i++) {
+                            if(set.has(params[i].seriesName))
+                                continue
+                            set.add(params[i].seriesName)
                             res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
                         }
@@ -1132,16 +1174,16 @@ export default {
             obj.name = name
             obj.stack = stack
             obj.type = "bar";
-            if (zlevel === 1) {
+            // 表示结束时间
+            if (zlevel <= 2) {
                 obj.label = {
                     show: true,
-                    color: "#000",
+                    color: "#333333",
                     position: "right",
-                    offset: [0, -30],
-                    fontSize: 20,
+                    fontSize: 18,
                     formatter: function (params) {
                         var data = new Date(params.value)
-                        return data.getMonth() + 1 + "/" + data.getDate()
+                        return data.getMonth() + 1 + "-" + data.getDate()
                     }
                 }
             }

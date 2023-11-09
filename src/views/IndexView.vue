@@ -6,6 +6,8 @@
         <el-breadcrumb-item>专案详情</el-breadcrumb-item>
       </el-breadcrumb>
     </div>
+
+
     <el-card class="box-card">
       <div class="indexTable">
         <div class="query" style="margin-bottom: 15px;">
@@ -57,7 +59,17 @@
         </div>
         <div ref="caseTableRef">
           <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px">
-            <el-table-column type="index" label="编号" width="55">
+            <el-table-column label="操作" width="120">
+              <template slot-scope="scope">
+                <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
+                  <el-button type="info" size="mini" icon="el-icon-info" round @click="showSub(scope.row)"></el-button>
+                </el-tooltip>
+                <el-tooltip effect="dark" content="个人详情" placement="top" :enterable="false">
+                  <el-button type="danger" size="mini" icon="el-icon-s-custom" round
+                    @click="showPerson(scope.row)"></el-button>
+                </el-tooltip>
+              </template>
+
             </el-table-column>
             <el-table-column prop="name" label="任务名" width="260">
             </el-table-column>
@@ -81,31 +93,23 @@
             </el-table-column>
             <el-table-column prop="status" label="执行状态">
               <template slot-scope="scope">
-                <el-tag effect="dark" type="warning" v-if="isInterrupt(scope.row)" style="font-size:15px">中断</el-tag>
+                <el-tag effect="dark" type="info" v-if="scope.row.startTime===null" style="font-size:15px"
+                  size="small">未开始</el-tag>
+                <el-tag effect="dark" type="warning" v-else-if="isInterrupt(scope.row)" style="font-size:15px"
+                  size="small">中断</el-tag>
                 <el-tag effect="dark" type="warning"
                   v-else-if="scope.row.finishTime !== null && scope.row.executionDays > scope.row.planDay"
-                  style="font-size:15px">延误完成</el-tag>
+                  style="font-size:15px" size="small">延误完成</el-tag>
                 <el-tag effect="dark" type="primary"
                   v-else-if="scope.row.finishTime !== null && scope.row.executionDays <= scope.row.planDay"
-                  style="font-size:15px">正常完成</el-tag>
+                  style="font-size:15px" size="small">正常完成</el-tag>
                 <el-tag effect="dark" type="danger" v-else-if="scope.row.executionDays > scope.row.planDay"
-                  style="font-size:15px">已延误</el-tag>
-                <el-tag effect="dark" type="success" v-else style="font-size:15px">执行中</el-tag>
+                  style="font-size:15px" size="small">已延误</el-tag>
+                <el-tag effect="dark" type="success" v-else style="font-size:15px" size="small">执行中</el-tag>
               </template>
 
             </el-table-column>
-            <el-table-column label="操作" width="120">
-              <template slot-scope="scope">
-                <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
-                  <el-button type="info" size="mini" icon="el-icon-info" round @click="showSub(scope.row)"></el-button>
-                </el-tooltip>
-                <el-tooltip effect="dark" content="个人详情" placement="top" :enterable="false">
-                  <el-button type="danger" size="mini" icon="el-icon-s-custom" round
-                    @click="showPerson(scope.row)"></el-button>
-                </el-tooltip>
-              </template>
 
-            </el-table-column>
           </el-table>
         </div>
         <!-- 分页区域 -->
@@ -113,6 +117,29 @@
           @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 9, 10, 15, 20, 30]"
           :page-size="size" layout="total, sizes, prev, pager, next" :total="total">
         </el-pagination>
+
+        <!-- 日历显示 -->
+        <el-calendar>
+          <template slot="dateCell" slot-scope="{data}">
+
+            <div style="width: 100%;height: 100%;font-size: 25px; text-align: center;line-height: 70px;"
+              :style="{ 'background-color': isFinishDay(data.day) ? 'skyblue' : isSunDay(data.day) ? '#5BEE58' : 'white' }">
+              <el-tooltip v-if="isFinishDay(data.day)" placement="top">
+                <template #content>
+                  <div v-html="tooltipContent(data.day)" style="font-size: 15px;"></div>
+                </template>
+                <p style="color:#F13E32">{{ formatData(data.day) + '★' }}</p>
+              </el-tooltip>
+              <el-tooltip v-else-if="isToday(data.day)" content="就在今天!" placement="top">
+                <p>{{ formatData(data.day) + '✔️' }}</p>
+              </el-tooltip>
+
+              <p v-else>
+                {{ formatData(data.day) }}
+              </p>
+            </div>
+          </template>
+        </el-calendar>
       </div>
     </el-card>
 
@@ -154,8 +181,10 @@
 <script>
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { deleteCommit, getById, saveCommit } from '@/api/caseSubCommit';
+import { getExecuting } from '@/api/caseSub';
 import { getUserList } from '@/api/user'
 import html2canvas from 'html2canvas'
+import { timeAdd } from '@/utils/common';
 export default {
   name: 'indexPage',
   data() {
@@ -229,15 +258,19 @@ export default {
       },
       //负责人列表
       users: [],
+      executingList: [],
     }
   },
   async created() {
     await this.getCaseList(this.showMode)
-    var pageSize = +localStorage.getItem('pim_caseTable_pageSize')
-    this.pageSize = pageSize === 0 ? 10 : pageSize
     this.caseInfo = this.caseList
     this.getTableDate()
     this.getAllUser()
+    this.getExecutingList()
+  },
+  mounted() {
+    var pageSize = +JSON.parse(localStorage.getItem('pim_caseTable_pageSize'))
+    this.size = pageSize === 0 ? 10 : pageSize
   },
   watch: {
     queryList: {
@@ -279,6 +312,13 @@ export default {
   methods: {
     ...mapActions('caseM', ['getCaseList']),
     ...mapMutations('caseM', ['queryCase']),
+    async getExecutingList() {
+      const res = await getExecuting()
+      if (res.code === 200) {
+        this.executingList = res.data
+        this.executingList.forEach(item => item.presetTime = timeAdd(item.startTime, item.planDays, +item.unforcedDays,+item.applyDelay))
+      }
+    },
     async getAllUser() {
       const res = await getUserList()
       if (res.code === 200) {
@@ -359,7 +399,7 @@ export default {
     },
     //页面大小发生变化
     handleSizeChange(val) {
-      localStorage.setItem('pim_caseTable_pageSize', val)
+      localStorage.setItem('pim_caseTable_pageSize', JSON.stringify(val))
       this.size = val
       this.page = 1
       this.getTableDate()
@@ -452,10 +492,46 @@ export default {
         newWindow.document.write('<img src="' + img.src + '" />');
       });
 
-    }
+    },
+    isSunDay(date) {
+      date = new Date(date)
+      return date.getDay() === 0
+    },
+    formatData(date) {
+      var array = date.split("-")
+      if (+array[2] === 1)
+        return array[1] + "月"
+      else
+        return +array[2]
+    },
+    isToday(date) {
+      const today = new Date().toISOString().slice(0, 10);
+      return date === today
+    },
+    isFinishDay(date) {
+      var str = ''
+      for (let i = 0; i < this.executingList.length; i++) {
+        if (this.executingList[i].presetTime === date) {
+          str += this.executingList[i].description
+          str += '\n'
+        }
+      }
+      return str
+    },
+    tooltipContent(day) {
+      const content = this.isFinishDay(day);
+      // 把换行符转换成 <br> 标签
+      return content.replace(/\n/g, '<br>');
+    },
   }
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.cell-content {
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+}
+</style>
 

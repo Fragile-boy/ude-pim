@@ -82,8 +82,28 @@
           </el-row> -->
         </el-card>
 
+        <!-- 日历显示 -->
+        <el-calendar style="width: 50%;">
+          <template slot="dateCell" slot-scope="{data}">
+
+            <div style="width: 100%;height: 100%;font-size: 25px; text-align: center;line-height: 70px;"
+              :style="{ 'background-color': isFinishDay(data.day)?'skyblue':isSunDay(data.day) ? '#5BEE58' : 'white' }">
+              <el-tooltip v-if="isFinishDay(data.day)" :content="isFinishDay(data.day)" placement="top">
+                <p style="color:#F13E32">{{ formatData(data.day) + '★' }}</p>
+              </el-tooltip>
+              <el-tooltip v-else-if="isToday(data.day)" content="就在今天!" placement="top">
+                <p>{{ formatData(data.day) + '✔️' }}</p>
+              </el-tooltip>
+
+              <p v-else>
+                {{ formatData(data.day) }}
+              </p>
+            </div>
+          </template>
+        </el-calendar>
+
         <!-- 图表 -->
-        <el-card class="taskCharts">
+        <!-- <el-card class="taskCharts">
           <div v-if="this.taskList.length !== 0">
             <div style="display: inline-block;">
               <h1>任务类型</h1>
@@ -96,8 +116,9 @@
             </div>
           </div>
           <el-empty v-else description="欢迎新人，今后这里会是你的任务展示区域哦！"></el-empty>
-        </el-card>
+        </el-card> -->
       </div>
+
 
 
       <!-- 卡片区域 -->
@@ -168,7 +189,7 @@
 <script>
 import { mapActions, mapState } from 'vuex'
 import { taskList } from '@/api/task'
-import { timeSub } from '@/utils/common'
+import { timeSub, timeAdd } from '@/utils/common'
 import { updatePassword } from '@/api/user'
 export default {
   data() {
@@ -231,7 +252,8 @@ export default {
           { validator: checkSecond, trigger: 'blur' }
         ]
       },
-      caseName: ''
+      caseName: '',
+      today: new Date(),
     }
   },
   computed: {
@@ -243,10 +265,10 @@ export default {
   },
   async mounted() {
     await this.initTaskList()
-    this.typePie = this.$echarts.init(document.getElementById('typePie'));
-    this.statusPie = this.$echarts.init(document.getElementById('statusPie'));
+    // this.typePie = this.$echarts.init(document.getElementById('typePie'));
+    // this.statusPie = this.$echarts.init(document.getElementById('statusPie'));
 
-    this.renderPieChart()
+    // this.renderPieChart()
   },
   methods: {
     ...mapActions(['editUserInfo']),
@@ -255,7 +277,8 @@ export default {
       if (res.code === 200) {
         this.taskList = res.data
         for (var i = 0; i < this.taskList.length; i++) {
-          this.taskList[i].percentage = (timeSub(this.taskList[i].startTime, new Date()) * 100.0 / this.taskList[i].planDays).toFixed()
+          this.taskList[i].presetTime = timeAdd(this.taskList[i].startTime, this.taskList[i].planDays, this.taskList[i].unforcedDays,this.taskList[i].applyDelay)
+          this.taskList[i].percentage = (timeSub(this.taskList[i].startTime, new Date()) * 100.0 / (this.taskList[i].planDays+ +this.taskList[i].unforcedDays+ +this.taskList[i].applyDelay)).toFixed()
           if (this.taskList[i].percentage >= 100)
             this.taskList[i].percentage = 100
         }
@@ -446,8 +469,32 @@ export default {
           caseName: this.caseName
         }
       })
+    },
+    isSunDay(date) {
+      date = new Date(date)
+      return date.getDay() === 0
+    },
+    formatData(date) {
+      var array = date.split("-")
+      if (+array[2] === 1)
+        return array[1] + "月"
+      else
+        return +array[2]
+    },
+    isToday(date) {
+      const today = new Date().toISOString().slice(0, 10);
+      return date === today
+    },
+    isFinishDay(date) {
+      for (let i = 0; i < this.taskList.length; i++) {
+        if (this.taskList[i].presetTime === date) {
+          return this.taskList[i].description
+        }
+      }
+      return false
     }
   },
+
 
 }
 </script>
