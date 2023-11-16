@@ -431,7 +431,7 @@
 
         <!-- 开始阶段的时候选择日期窗口 -->
         <el-dialog title="选择开始日期" :visible.sync="pickStartTime.pickStartTimeVisible" width="30%">
-            <el-date-picker v-model="pickStartTime.preStartTime" type="date" placeholder="选择完结日期"
+            <el-date-picker v-model="pickStartTime.preStartTime" type="date" placeholder="选择开始日期"
                 value-format="yyyy-MM-dd HH:mm:ss">
             </el-date-picker>
             <span slot="footer" class="dialog-footer">

@@ -8,12 +8,14 @@
         </div>
         <el-card v-if="!showApply">
             <el-row>
-                <el-col :span="2" :offset="22">
+                <el-col :span="4" :offset="20">
                     <el-button icon="el-icon-s-claim" type="warning" @click="showApply = true">我的申请</el-button>
+                    <el-button icon="el-icon-s-comment" type="info" @click="showHistory = true"
+                        v-if="!showHistory">历史消息</el-button>
                 </el-col>
             </el-row>
             <!-- 日志任务的详情 -->
-            <el-table :data="logList">
+            <el-table :data="logList" v-if="!showHistory">
                 <el-table-column prop="content" label="消息"></el-table-column>
                 <el-table-column prop="createName" label="操作人"></el-table-column>
                 <el-table-column prop="createTime" label="消息时间"></el-table-column>
@@ -23,6 +25,21 @@
                     </template>
                 </el-table-column>
             </el-table>
+            <!-- 历史消息 -->
+            <div v-if="showHistory">
+                <el-table :data="historyLogList">
+                    <el-table-column prop="content" label="消息" width="1200"></el-table-column>
+                    <el-table-column prop="createName" label="操作人"></el-table-column>
+                    <el-table-column prop="createTime" label="消息时间"></el-table-column>
+                </el-table>
+                <!-- 分页区域 -->
+                <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange" :current-page.sync="queryObj.page" :page-sizes="[8, 10, 15, 20, 30]"
+                    :page-size="queryObj.pageSize" layout="total, sizes, prev, pager, next" :total="total">
+                </el-pagination>
+                <el-button style="margin-top: 10px;" type="primary" icon="el-icon-back"
+                    @click="showHistory = false">返回</el-button>
+            </div>
         </el-card>
 
         <el-card v-if="showApply">
@@ -39,7 +56,8 @@
                 <el-table-column prop="createTime" label="创建时间"></el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-button type="danger" size="medium" round @click="removeCaseSubApply(scope.row.id)">撤 回</el-button>
+                        <el-button type="danger" size="medium" round @click="removeCaseSubApply(scope.row.id)">撤
+                            回</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -108,24 +126,32 @@
 </template>
 
 <script>
-import { checkLog } from '@/api/log'
+import { getHistoryLogByUserId } from '@/api/log'
 import { mapActions, mapState } from 'vuex'
-import { checkingApplyCaseSub,removeCaseSubApply} from '@/api/applyCaseSub'
-import { checkingApplyTask,removeTaskApply} from '@/api/applyTask'
-import { getDelayListByUserId,removeDelayApply} from '@/api/caseDelayApply'
+import { checkingApplyCaseSub, removeCaseSubApply } from '@/api/applyCaseSub'
+import { checkingApplyTask, removeTaskApply } from '@/api/applyTask'
+import { getDelayListByUserId, removeDelayApply } from '@/api/caseDelayApply'
 import { getFinishListByUserId, removeFinishApply } from '@/api/caseFinishApply'
 export default {
     data() {
         return {
             showApply: false,
+            showHistory: false,
+            queryObj: {
+                page: 1,
+                pageSize: 8
+            },
             applyCaseSubList: [],
             applyTaskList: [],
             delayList: [],
             finishList: [],
+            historyLogList: [],
+            total:null,
         }
     },
     created() {
         this.getAllList()
+        this.getLogWithMe()
     },
     computed: {
         ...mapState('log', ['logList']),
@@ -133,6 +159,26 @@ export default {
     },
     methods: {
         ...mapActions('log', ['getLogList', 'checkMessage']),
+        // 获取个人相关的历史消息
+        async getLogWithMe() {
+            this.queryObj.userId = this.user.id
+            const res = await getHistoryLogByUserId(this.queryObj)
+            if (res.code === 200) {
+                this.historyLogList = res.data.records
+                this.total = res.data.total
+                console.log(this.historyLogList)
+            }
+
+        },
+        handleSizeChange(val){
+            this.queryObj.pageSize = val
+            this.queryObj.page = 1
+            this.getLogWithMe()
+        },
+        handleCurrentChange(val){
+            this.queryObj.page = val
+            this.getLogWithMe()
+        },
         async handleCheckMessage(row) {
             const res = await this.checkMessage(row)
             this.$message.success(res.data)
@@ -190,7 +236,7 @@ export default {
                 if (res.code === 200) {
                     this.$message.success(res.data)
                     this.getAllList()
-                }else{
+                } else {
                     this.$message.error(res.msg)
                 }
             })
@@ -206,7 +252,7 @@ export default {
                 if (res.code === 200) {
                     this.$message.success(res.data)
                     this.getAllList()
-                }else{
+                } else {
                     this.$message.error(res.msg)
                 }
             })
@@ -222,7 +268,7 @@ export default {
                 if (res.code === 200) {
                     this.$message.success(res.data)
                     this.getAllList()
-                }else{
+                } else {
                     this.$message.error(res.msg)
                 }
             })
@@ -238,7 +284,7 @@ export default {
                 if (res.code === 200) {
                     this.$message.success(res.data)
                     this.getAllList()
-                }else{
+                } else {
                     this.$message.error(res.msg)
                 }
             })

@@ -8,10 +8,10 @@
         </div>
         <el-card>
             <el-row>
-                <el-col :span="2" v-if="user.type === 0">
-                    <el-button type="warning" @click="$router.push('/exception')">异常专案讨论</el-button>
+                <el-col :span="2">
+                    <el-button type="warning" @click="navigateToUserProjectManagerPage()">近况追踪</el-button>
                 </el-col>
-                <el-col :span="1" :offset="user.type === 0 ? 17 : 19">
+                <el-col :span="1" :offset="17">
                     <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
                 </el-col>
                 <el-col :span="1">
@@ -29,11 +29,11 @@
             </el-row>
             <br>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo">
+            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
                         <el-progress :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'"></el-progress>
+                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : scope.row.finishedOwnWork ? 'primary' : 'exception' : 'success'"></el-progress>
                     </template>
                 </el-table-column>
                 <el-table-column prop="comment" label="备注"></el-table-column>
@@ -154,7 +154,7 @@
         </el-card>
 
         <el-card class="gantt-chart">
-            <div id="ganttChart" style="width: 100%; height: 300px;"></div>
+            <div id="ganttChart" style="width: 100%; height: 500px;"></div>
         </el-card>
 
         <div class="charts-area" v-show="!commitVisible">
@@ -169,7 +169,16 @@
             </el-card>
         </div>
 
-
+        <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+            <el-table :data="delayList">
+                <el-table-column prop="applyReason" label="延期原因" width="550">
+                </el-table-column>
+                <el-table-column prop="applyDays" label="延期天数">
+                </el-table-column>
+                <el-table-column prop="delayType" label="延期类型">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
 
 
     </div>
@@ -180,6 +189,7 @@ import { timeSub, formatDate, timeAdd } from '@/utils/common'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
 import { getUserList } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
+import { getDelayById } from '@/api/caseDelayApply'
 import { mapState } from 'vuex'
 
 export default {
@@ -215,6 +225,10 @@ export default {
             exceptionList: [],
             // 是否显示所有备注
             showAllCommit: false,
+            // 延期列表
+            delayList: [],
+            // 抽屉
+            delayDrawer: false
         }
     },
     async mounted() {
@@ -261,10 +275,11 @@ export default {
         async getTaskByUserId() {
             const res = await taskList(this.curUser)
             this.userInfo = res.data
-            console.log(this.userInfo)
+            // console.log(this.userInfo)
 
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
+                this.userInfo[i].executionDays -= +this.userInfo[i].unforcedDays
                 var presetTime = new Date(this.userInfo[i].startTime)
                 presetTime = presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays + this.userInfo[i].unforcedDays - 1)
                 this.userInfo[i].presetTime = presetTime
@@ -298,12 +313,20 @@ export default {
                     this.commitForm.content = ''
                     this.commitForm.caseName = '暂无数据'
                     this.commitForm.subName = '暂无数据'
+                    return
                 }
+                var caseSubCount = 0
                 for (var i = 0; i < this.userInfo.length; i++) {
                     if (this.userInfo[i].caseSubId !== null) {
+                        caseSubCount++
                         this.openCommentView(this.userInfo[i])
                         break
                     }
+                }
+                if (caseSubCount === 0) {
+                    this.commitForm.content = ''
+                    this.commitForm.caseName = '暂无数据'
+                    this.commitForm.subName = '暂无数据'
                 }
             }
         },
@@ -316,7 +339,7 @@ export default {
                 return `已延误${row.applyDelay - row.leftDelay}天`
             }
             //算上今天，剩余天数+1
-            return `执行剩余${row.planDays + +row.unforcedDays + 1 - row.executionDays}天`
+            return `执行剩余${row.planDays + 1 - row.executionDays}天`
         },
 
         //获取所有科员信息
@@ -500,10 +523,12 @@ export default {
                 show: true,
                 color: "#000",
                 position: "right",
-                fontSize: 20,
+                fontSize: 15,
                 formatter: function (params) {
                     var data = new Date(params.value)
-                    return data.getMonth() + 1 + "/" + data.getDate()
+                    if (zlevel === 1 || zlevel === 2)
+                        return data.getMonth() + 1 + "-" + data.getDate()
+                    return ""
                 }
             }
             obj.zlevel = zlevel
@@ -535,9 +560,11 @@ export default {
             }
             var dataSeries = []
             // 计划时间
-            var planTime_start = {};
+            var planTime_start_0 = {};
+            var planTime_start_1 = {};
             var planTime_end = {};
-            planTime_start = this.initGanttObj(planTime_start, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_0 = this.initGanttObj(planTime_start_0, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_1 = this.initGanttObj(planTime_start_1, "bar1", true, "#6ED77E", 4, "开始时间")
             planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
 
             // 外界因素延期
@@ -546,17 +573,19 @@ export default {
 
             // 执行时间
             var execTime_end = {};
-            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "当前时间")
+            execTime_end = this.initGanttObj(execTime_end, "bar1", false, "#E23D3D", 1, "当前时间")
 
             for (let i = this.userInfo.length - 1; i >= 0; i--) {
-                planTime_start.data.push(new Date(this.userInfo[i].startTime))
+                planTime_start_0.data.push(new Date(this.userInfo[i].startTime))
+                planTime_start_1.data.push(new Date(this.userInfo[i].startTime))
                 planTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays)))
                 standardTime.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays, this.userInfo[i].unforcedDays)))
-                execTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].executionDays)))
+                execTime_end.data.push(new Date())
             }
 
 
-            dataSeries.push(planTime_start)
+            dataSeries.push(planTime_start_0)
+            dataSeries.push(planTime_start_1)
             dataSeries.push(planTime_end)
             dataSeries.push(standardTime)
             dataSeries.push(execTime_end)
@@ -608,8 +637,12 @@ export default {
                     trigger: "axis",
                     formatter: function (params) {
                         var res = ''
+                        var set = new Set()
                         res += params[0].axisValue + '<br/>';
                         for (var i = 0; i < params.length; i++) {
+                            if (set.has(params[i].seriesName))
+                                continue
+                            set.add(params[i].seriesName)
                             res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
                         }
@@ -725,6 +758,42 @@ export default {
         },
         showAll() {
             this.showAllCommit = !this.showAllCommit
+        },
+        // 跳转到专案统计界面
+        navigateToUserProjectManagerPage() {
+            this.$router.push({
+                path: '/userProject',
+                query: {
+                    curUser: this.curUser
+                }
+            })
+        },
+        // 监听双击事件
+        handleDoubleClick(row, column) {
+            if (column.label === "描述")
+                this.navigateToDetailPage(row)
+            else if (column.label === "外因延期")
+                this.showDelay(row, "外界因素延期")
+            else if (column.label === "人为延期")
+                this.showDelay(row, "人为因素延期")
+        },
+        // 双击跳转到详情页()
+        navigateToDetailPage(row) {
+            if (row.caseId !== null) {
+                this.$router.push({
+                    path: '/case2sub',
+                    query: {
+                        caseId: row.caseId,
+                        caseName: row.description.split("→")[0]
+                    }
+                })
+            }
+        },
+        // 显示不可抗力延期
+        async showDelay(row, delayType) {
+            var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
+            this.delayList = res.data
+            this.delayDrawer = true
         }
     }
 }
@@ -764,4 +833,9 @@ export default {
     color: #EB4056;
     text-decoration: underline;
 }
+
+.el-drawer .ltr{
+    background-color: skyblue;
+}
+
 </style>

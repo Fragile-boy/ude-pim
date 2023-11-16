@@ -251,10 +251,10 @@ const router = new VueRouter({
 //管理员权限界面
 const authUrls = ['/caseList', '/subManage'
   , '/templeteManage', '/taskManage', '/delay', '/finish', '/study'
-  , '/caseApply', '/userList', '/userProject']
+  , '/caseApply', '/userList']
 
 //用户界面
-const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception','/caseAnalysis']
+const userUrls = ['/user/index', '/user/info', '/user/progress', '/user/statistics', '/user/chart','/userProjectTracking','/exception','/caseAnalysis','/userProject']
 
 // 禁止访问界面
 // '/caseList'
@@ -277,7 +277,7 @@ router.beforeEach(async (to, from, next) => {
 
   // 检查禁止访问，正在开发的界面
   if(forbiddenUrls.includes(to.path)){
-    if(user.name!=='余博'){
+    if(user.name!=='admin'){
       next('/noaccess')
       return
     }

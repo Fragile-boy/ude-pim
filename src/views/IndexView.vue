@@ -93,7 +93,7 @@
             </el-table-column>
             <el-table-column prop="status" label="执行状态">
               <template slot-scope="scope">
-                <el-tag effect="dark" type="info" v-if="scope.row.startTime===null" style="font-size:15px"
+                <el-tag effect="dark" type="info" v-if="scope.row.startTime === null" style="font-size:15px"
                   size="small">未开始</el-tag>
                 <el-tag effect="dark" type="warning" v-else-if="isInterrupt(scope.row)" style="font-size:15px"
                   size="small">中断</el-tag>
@@ -316,7 +316,7 @@ export default {
       const res = await getExecuting()
       if (res.code === 200) {
         this.executingList = res.data
-        this.executingList.forEach(item => item.presetTime = timeAdd(item.startTime, item.planDays, +item.unforcedDays,+item.applyDelay))
+        this.executingList.forEach(item => item.presetTime = timeAdd(item.startTime, item.planDays, +item.unforcedDays, +item.applyDelay))
       }
     },
     async getAllUser() {
@@ -527,11 +527,12 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 .cell-content {
   height: 20px;
   line-height: 20px;
   padding: 0;
 }
+
 </style>
 

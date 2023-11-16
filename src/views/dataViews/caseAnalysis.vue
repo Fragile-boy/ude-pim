@@ -243,7 +243,11 @@ export default {
           formatter: function (params) {
             var res = ''
             res += params[0].axisValue + '<br/>';
+            var set = new Set();
             for (var i = 0; i < params.length; i++) {
+              if (set.has(params[i].seriesName))
+                continue
+              set.add(params[i].seriesName)
               res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
             }
@@ -450,8 +454,11 @@ export default {
           formatter: function (params) {
             var res = ''
             res += params[0].axisValue + '<br/>';
+            var set = new Set()
             for (var i = 0; i < params.length; i++) {
-
+              if (set.has(params[i].seriesName))
+                continue
+              set.add(params[i].seriesName)
               res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
             }

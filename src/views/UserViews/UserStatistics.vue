@@ -204,26 +204,14 @@ export default {
         this.total = this.allTaskList.length
         this.allTaskList.forEach(s => {
           s.executionDays = timeSub(s.startTime, s.finishTime)
-          s.executionDays -=s.unforcedDays===null?0:s.unforcedDays
-          //累加执行时长
-          this.statisticsObj.executionDays += s.executionDays
           s.achievingRate = +(s.planDays * 100 / s.executionDays).toFixed()
           s.isDelay = s.achievingRate < 100
-          if (s.isDelay) {
-            //累加延误时长
-            this.statisticsObj.delayDays += s.executionDays - s.planDays
-            this.statisticsObj.delayTask++
-          }
         })
 
-        //计算其他统计信息
-        this.statisticsObj.sumTask = this.allTaskList.length
-        this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask - this.statisticsObj.delayTask) * 100 / this.statisticsObj.sumTask
-        this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.executionDays - this.statisticsObj.delayDays) * 100 / this.statisticsObj.executionDays
+        
 
-        //筛选信息
-        this.filterList = this.allTaskList
-        this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
+        // 保持筛选状态
+        this.filter()
       } else {
         this.$message.error(res.msg)
       }
@@ -278,9 +266,33 @@ export default {
         this.filterList = this.filterList.filter(i => +i.isDelay === this.finishType)
       }
 
+      // 重置统计信息
+      this.generateStatistics(this.filterList)
+      
       this.pageInfo.page = 1
       this.showList = this.filterList.slice((this.pageInfo.page - 1) * this.pageInfo.pageSize, this.pageInfo.page * this.pageInfo.pageSize)
       this.total = this.filterList.length
+    },
+    // 生成统计信息
+    generateStatistics(array) {
+      // 初始化统计信息，否则会累加
+      this.statisticsObj.executionDays = 0
+      this.statisticsObj.delayDays = 0
+      this.statisticsObj.delayTask = 0
+      array.forEach(s => {
+        //累加执行时长
+        this.statisticsObj.executionDays += s.executionDays
+        if (s.isDelay) {
+          //累加延误时长
+          this.statisticsObj.delayDays += s.executionDays - (s.planDays + +s.unforcedDays)
+          this.statisticsObj.delayTask++
+        }
+      })
+
+      //计算其他统计信息
+      this.statisticsObj.sumTask = array.length
+      this.statisticsObj.taskAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.sumTask - this.statisticsObj.delayTask) * 100 / this.statisticsObj.sumTask
+      this.statisticsObj.avgAchievingRate = this.statisticsObj.sumTask === 0 ? 0 : (this.statisticsObj.executionDays - this.statisticsObj.delayDays) * 100 / this.statisticsObj.executionDays
     },
     openCharts() {
       this.$router.push({

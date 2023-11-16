@@ -69,7 +69,7 @@
             <el-table-column>
               <template slot-scope="scope">
                 <el-progress :text-inside="true" :stroke-width="26" :percentage="+scope.row.percentage"
-                  :status="scope.row.percentage >= 60 ? scope.row.percentage == 100 ? 'exception' : 'warning' : 'success'"></el-progress>
+                  :status="scope.row.percentage >= 60 ? scope.row.percentage == 100 ? scope.row.finishedOwnWork?'primary':'exception' : 'warning' : 'success'"></el-progress>
               </template>
             </el-table-column>
           </el-table>
@@ -87,7 +87,7 @@
           <template slot="dateCell" slot-scope="{data}">
 
             <div style="width: 100%;height: 100%;font-size: 25px; text-align: center;line-height: 70px;"
-              :style="{ 'background-color': isFinishDay(data.day)?'skyblue':isSunDay(data.day) ? '#5BEE58' : 'white' }">
+              :style="{ 'background-color': isFinishDay(data.day) ? 'skyblue' : isSunDay(data.day) ? '#5BEE58' : 'white' }">
               <el-tooltip v-if="isFinishDay(data.day)" :content="isFinishDay(data.day)" placement="top">
                 <p style="color:#F13E32">{{ formatData(data.day) + '★' }}</p>
               </el-tooltip>
@@ -276,11 +276,23 @@ export default {
       const res = await taskList(this.user.id)
       if (res.code === 200) {
         this.taskList = res.data
+        var delayCount = 0
         for (var i = 0; i < this.taskList.length; i++) {
-          this.taskList[i].presetTime = timeAdd(this.taskList[i].startTime, this.taskList[i].planDays, this.taskList[i].unforcedDays,this.taskList[i].applyDelay)
-          this.taskList[i].percentage = (timeSub(this.taskList[i].startTime, new Date()) * 100.0 / (this.taskList[i].planDays+ +this.taskList[i].unforcedDays+ +this.taskList[i].applyDelay)).toFixed()
-          if (this.taskList[i].percentage >= 100)
+          this.taskList[i].presetTime = timeAdd(this.taskList[i].startTime, this.taskList[i].planDays, this.taskList[i].unforcedDays, this.taskList[i].applyDelay)
+          this.taskList[i].percentage = (timeSub(this.taskList[i].startTime, new Date()) * 100.0 / (this.taskList[i].planDays + +this.taskList[i].unforcedDays + +this.taskList[i].applyDelay)).toFixed()
+          if (this.taskList[i].percentage >= 100) {
+            if (this.taskList[i].finishedOwnWork === 0)
+              delayCount++
             this.taskList[i].percentage = 100
+          }
+        }
+        if (delayCount) {
+          this.$notify({
+            title: '错误',
+            message: '你当前有' + delayCount + '个任务进度已滞后，请及时申请延期确定下一个交期',
+            duration: 0,
+            type: 'error'
+          });
         }
       } else {
         this.$message.error(res.msg)

@@ -16,7 +16,7 @@ export default {
                     title: '系统消息',
                     message: `系统收到了新的消息，目前有${logList.length}条消息待阅`,
                     type:'warning',
-                    duration: 0
+                    duration: 5000
                 });
             }
             state.logList = logList 

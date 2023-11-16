@@ -20,7 +20,7 @@
                 <el-table-column label="创建人" prop="createName"></el-table-column>
                 <el-table-column label="创建时间" prop="createTime"></el-table-column>
                 <el-table-column label="完成时间" prop="updateTime"></el-table-column>
-                <el-table-column label="操作" v-if="user.name === '余博'">
+                <el-table-column label="操作" v-if="user.name === 'admin'">
                     <template slot-scope="scope">
                         <el-button type="success" @click="finishDemand(scope.row)" v-if="scope.row.updateTime===null">完成
                         </el-button>

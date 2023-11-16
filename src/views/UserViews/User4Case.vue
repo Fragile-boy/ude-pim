@@ -19,11 +19,11 @@
             </el-row>
             <h2>执行专案</h2>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo" @cell-dblclick="navigateToDetailPage">
+            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
                 <el-table-column label="进度" width="260">
                     <template slot-scope="scope">
                         <el-progress :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'"></el-progress>
+                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : scope.row.finishedOwnWork ? 'primary' : 'exception' : 'success'"></el-progress>
                     </template>
                 </el-table-column>
                 <el-table-column prop="comment" label="备注"></el-table-column>
@@ -94,7 +94,7 @@
 
         <br>
         <el-card class="gantt-chart">
-            <div id="ganttChart" style="width: 100%; height: 300px;"></div>
+            <div id="ganttChart" style="width: 100%; height: 500px;"></div>
         </el-card>
 
         <div class="charts-area">
@@ -238,6 +238,17 @@
                 <el-button type="primary" @click="launch()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+            <el-table :data="delayList">
+                <el-table-column prop="applyReason" label="延期原因" width="550">
+                </el-table-column>
+                <el-table-column prop="applyDays" label="延期天数">
+                </el-table-column>
+                <el-table-column prop="delayType" label="延期类型">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
     </div>
 </template>
 
@@ -247,7 +258,7 @@ import { timeSub, timeAdd, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList, startOrFinish } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
-import { saveApply } from '@/api/caseDelayApply'
+import { saveApply,getDelayById } from '@/api/caseDelayApply'
 import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
 import { saveApplyCaseSub } from '@/api/applyCaseSub'
@@ -337,6 +348,10 @@ export default {
             curInterruptTask: {},
             // 甘特图
             gantt: null,
+            // 延期列表
+            delayList: [],
+            // 抽屉
+            delayDrawer: false
         }
     },
     async created() {
@@ -359,7 +374,7 @@ export default {
         ...mapState(['user'])
     },
     methods: {
-        // 获取当前用户的所有未开始的任务
+        // 获取当前用户的中断未开始的任务
         async getExceptionList() {
             const res = await getExceptionList(this.user.id)
             if (res.code === 200) {
@@ -400,6 +415,7 @@ export default {
                 this.userInfo[i].presetTime = presetTime
                 //分为已延误和未延误
                 var today = new Date()
+                var delayCount = 0
                 today.setHours(0, 0, 0, 0)
                 //还未截止
                 if (today <= this.userInfo[i].presetTime) {
@@ -415,13 +431,16 @@ export default {
                     //判断是否在延期期限内
                     if (this.userInfo[i].leftDelay >= 0) {
                         this.userInfo[i].percentage = (delayDay / this.userInfo[i].applyDelay) * 100
-                    } else
+                    } else {
                         this.userInfo[i].percentage = (timeSub(this.userInfo[i].startTime, today) / this.userInfo[i].planDays) * 100
+                        delayCount++
+                    }
                 }
                 this.userInfo[i].presetTime = formatDate(this.userInfo[i].presetTime)
                 this.userInfo[i].comment = this.percentageText(this.userInfo[i])
                 if (this.userInfo[i].percentage > 100)
                     this.userInfo[i].percentage = 100
+
             }
         },
 
@@ -802,7 +821,9 @@ export default {
                 fontSize: 20,
                 formatter: function (params) {
                     var data = new Date(params.value)
-                    return data.getMonth() + 1 + "/" + data.getDate()
+                    if (zlevel === 1 || zlevel === 2)
+                        return data.getMonth() + 1 + "/" + data.getDate()
+                    return ""
                 }
 
             }
@@ -836,9 +857,11 @@ export default {
             }
             var dataSeries = []
             // 计划时间
-            var planTime_start = {};
+            var planTime_start_0 = {};
+            var planTime_start_1 = {};
             var planTime_end = {};
-            planTime_start = this.initGanttObj(planTime_start, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_0 = this.initGanttObj(planTime_start_0, "bar0", true, "#6ED77E", 4, "开始时间")
+            planTime_start_1 = this.initGanttObj(planTime_start_1, "bar1", true, "#6ED77E", 4, "开始时间")
             planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
 
             // 外界因素延期
@@ -847,17 +870,19 @@ export default {
 
             // 执行时间
             var execTime_end = {};
-            execTime_end = this.initGanttObj(execTime_end, "bar0", false, "#E23D3D", 1, "当前时间")
+            execTime_end = this.initGanttObj(execTime_end, "bar1", false, "#E23D3D", 1, "当前时间")
 
             for (let i = this.userInfo.length - 1; i >= 0; i--) {
-                planTime_start.data.push(new Date(this.userInfo[i].startTime))
+                planTime_start_0.data.push(new Date(this.userInfo[i].startTime))
+                planTime_start_1.data.push(new Date(this.userInfo[i].startTime))
                 planTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays)))
                 standardTime.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].planDays, this.userInfo[i].unforcedDays)))
                 execTime_end.data.push(new Date(timeAdd(this.userInfo[i].startTime, this.userInfo[i].executionDays)))
             }
 
 
-            dataSeries.push(planTime_start)
+            dataSeries.push(planTime_start_0)
+            dataSeries.push(planTime_start_1)
             dataSeries.push(planTime_end)
             dataSeries.push(standardTime)
             dataSeries.push(execTime_end)
@@ -909,8 +934,12 @@ export default {
                     trigger: "axis",
                     formatter: function (params) {
                         var res = ''
+                        var set = new Set()
                         res += params[0].axisValue + '<br/>';
                         for (var i = 0; i < params.length; i++) {
+                            if (set.has(params[i].seriesName))
+                                continue
+                            set.add(params[i].seriesName)
                             res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
                                 params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
                         }
@@ -921,8 +950,17 @@ export default {
             }
             this.gantt.setOption(option);
         },
-        // 双击跳转到详情页
-        navigateToDetailPage(row, column) {
+        // 监听双击事件
+        handleDoubleClick(row, column) {
+            if (column.label === "描述")
+                this.navigateToDetailPage(row)
+            else if (column.label === "外因延期")
+                this.showDelay(row, "外界因素延期")
+            else if (column.label === "人为延期")
+                this.showDelay(row, "人为因素延期")
+        },
+        // 双击跳转到详情页()
+        navigateToDetailPage(row) {
             if (row.caseId !== null) {
                 this.$router.push({
                     path: '/case2sub',
@@ -933,6 +971,12 @@ export default {
                 })
             }
         },
+        // 显示不可抗力延期
+        async showDelay(row, delayType) {
+            var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
+            this.delayList = res.data
+            this.delayDrawer = true
+        }
     }
 }
 </script>
