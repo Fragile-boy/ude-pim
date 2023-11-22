@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div v-if="true||user.type===1">
+    <div v-if="user!=null&&user.type===1">
       <el-button type="primary" @click="switchBackendPort" v-if="!dev" size="mini" round>切换开发环境</el-button>
       <el-button type="success" @click="switchBackendPort" v-else size="mini" round>切换测试环境</el-button>
     </div>

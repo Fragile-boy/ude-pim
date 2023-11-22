@@ -406,7 +406,6 @@ export default {
         async getTaskByUserId() {
             const res = await taskList(this.user.id)
             this.userInfo = res.data
-            console.log(this.userInfo)
 
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
@@ -471,7 +470,6 @@ export default {
         submitDelayApply() {
             this.$refs.applyDelayFormRef.validate(async (valid) => {
                 if (valid) {
-                    console.log(this.delayApplyObject)
                     this.delayApplyObject.applyId = this.user.id
                     const res = await saveApply(this.delayApplyObject)
                     if (res.code === 200) {

@@ -1,6 +1,6 @@
 <template>
     <div class="schedule">
-        <h1 style="text-align: center; color:white"><i class=el-icon-price-tag ></i>待办事项</h1>
+        <h1 style="text-align: center; color:white"><i class=el-icon-price-tag></i>待办事项</h1>
         <div style="margin-left: 100px;margin-right: 100px;margin-bottom: 20px;">
             <div v-for="task in schedule" :key="task.addTime">
                 <div class="my-card" v-if="!task.checked">
@@ -24,18 +24,19 @@
                     已完成<i :class="{ 'el-icon-arrow-down': showFinish, 'el-icon-arrow-right': !showFinish }"></i>
                 </el-button>
             </el-dropdown>
+            <!-- <el-button type="warning" style="margin-left: 5px;" v-if="true||user.type===0">打包申请任务</el-button> -->
             <div v-if="showFinish">
                 <div v-for="task in schedule" :key="task.addTime">
-                    <div class="my-card" v-if="task.checked">
+                    <div class="my-card_finish" v-if="task.checked">
                         <el-row class="item_center">
                             <el-col :span="21">
                                 <span style="text-decoration: line-through;">{{ task.newTask }}</span>
                             </el-col>
                             <el-col :span="1" :offset="1">
-                                <el-button @click="finishTask(task)" type="primary" size="medium" round>撤销</el-button>
+                                <el-button @click="finishTask(task)" type="primary" size="small" round>撤销</el-button>
                             </el-col>
                             <el-col :span="1">
-                                <el-button @click="delTask(task)" type="danger" size="medium" round>删除</el-button>
+                                <el-button @click="delTask(task)" type="danger" size="small" round>删除</el-button>
                             </el-col>
                         </el-row>
                     </div>
@@ -45,8 +46,8 @@
 
         <div class="bottom-input">
 
-            <el-input v-model="taskObj.newTask" prefix-icon="el-icon-plus" placeholder="添加任务  例：与XXX部门合作解决XXX问题，截止XX日"
-                @keyup.enter.native="addTask()">
+            <el-input style="width:78%" v-model="taskObj.newTask" prefix-icon="el-icon-plus"
+                placeholder="添加任务  例：与XXX部门合作解决XXX问题，截止XX日" @keyup.enter.native="addTask()">
             </el-input>
 
         </div>
@@ -79,17 +80,29 @@
     margin-bottom: 2px;
     font-size: 18px;
 }
-.bottom-input{
+
+.my-card_finish {
+    border-radius: 20px;
+    height: 50px;
+    padding-left: 30px;
+    padding-right: 30px;
+    width: 100%;
+    background-color: #fff;
+    margin-bottom: 2px;
+    font-size: 12px;
+}
+
+.bottom-input {
     position: fixed;
     bottom: 0;
-    width: 90%;
+    width: 100%;
     margin-left: 100px;
-    margin-right: 200px;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
 }
 </style>
 
 <script>
+import { mapState } from 'vuex'
 export default {
     data() {
         return {
@@ -140,6 +153,9 @@ export default {
         this.schedule = JSON.parse(localStorage.getItem('pim_schedule'))
         if (this.schedule === null)
             this.schedule = []
+    },
+    computed: {
+        ...mapState(['user'])
     },
     methods: {
         addTask() {

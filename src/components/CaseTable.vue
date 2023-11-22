@@ -137,7 +137,6 @@ export default {
                         const end = new Date();
                         var start = new Date();
                         start = start.getFullYear() + "-01-01"
-                        console.log(start)
                         start = new Date(start)
                         picker.$emit('pick', [start, end]);
                     }

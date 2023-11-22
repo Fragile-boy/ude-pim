@@ -184,7 +184,6 @@ export default {
         //打开修改子流程表单
         async openEditSub(subObj) {
             const res = await getSubWithLevel(subObj.id)
-            console.log(res.data)
             this.subForm = { ...res.data }
             this.editSubFormVisible = true
         },

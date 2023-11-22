@@ -88,7 +88,6 @@ export default {
             const res = await listFocusPerson(id);
             if (res.code === 200) {
                 this.case2person = res.data
-                console.log(this.case2person)
                 for (var i = 0; i < this.case2person.length; i++) {
                     //执行状态
                     //未开始

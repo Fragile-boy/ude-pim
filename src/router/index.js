@@ -56,6 +56,9 @@ import UserInfo from '@/views/UserViews/UserInfo.vue'
 // 需求界面
 import Demand from '@/components/Demand.vue'
 
+// 待办事项
+import TodoView from '@/components/TodoView.vue'
+
 // 测试界面
 import test from '@/components/TestFunction.vue'
 
@@ -219,6 +222,12 @@ const routes = [
         path: '/demand',
         name: '需求管理',
         component: Demand
+      },
+      //待办事项
+      {
+        path:'/schedule',
+        name:'待办事项',
+        component:TodoView
       }
     ]
   },

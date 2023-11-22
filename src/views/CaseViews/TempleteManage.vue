@@ -135,7 +135,6 @@ export default {
             const res = await getAllSub()
             if (res.code === 200) {
                 this.allSub = res.data
-                console.log(this.allSub)
             } else {
                 this.$message.error(res.msg)
                 return
@@ -189,10 +188,8 @@ export default {
             this.$set(this.editTempleteForm, 'description', temObj.description);
             const res = await getRelationId(temObj.id)
             // this.editTempleteForm.subIds = res.data
-            console.log(res.data)
             this.$set(this.editTempleteForm, 'subIds', res.data);
             this.editTempleteFormVisible = true
-            console.log(this.editTempleteForm)
         },
         // 修改模板
         async editTemplete() {

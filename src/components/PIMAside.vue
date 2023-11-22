@@ -72,6 +72,9 @@
             <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
         </el-submenu>
 
+        <el-menu-item><router-link to="/schedule" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
+                    class="el-icon-s-order"></i>待办事项</router-link></el-menu-item>
+
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"
                 :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
                     class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>

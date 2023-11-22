@@ -829,7 +829,6 @@ export default {
                     return
                 this.newSubObj.subId = this.newSubObj.id
                 this.newSubObj.id = null
-                console.log(this.newSubObj)
                 var res = await insertCaseSub(this.newSubObj)
                 if (res.code === 200) {
                     this.$message.success(res.data)

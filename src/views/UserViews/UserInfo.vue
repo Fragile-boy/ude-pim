@@ -166,7 +166,6 @@ export default {
             if (res.code === 200) {
                 this.historyLogList = res.data.records
                 this.total = res.data.total
-                console.log(this.historyLogList)
             }
 
         },
@@ -220,10 +219,6 @@ export default {
                 return
             }
 
-            console.log(this.applyCaseSubList)
-            console.log(this.applyTaskList)
-            console.log(this.delayList)
-            console.log(this.finishList)
         },
         //撤回完结申请
         removeFinishApply(id) {

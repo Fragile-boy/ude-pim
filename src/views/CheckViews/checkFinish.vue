@@ -347,7 +347,6 @@ export default {
             this.checkHistory()
         },
         openCaseSubDetail(row) {
-            console.log(row)
         },
         async showCommit(row) {
             this.commitVisible = true

@@ -481,7 +481,6 @@ export default {
         item.executionDays = timeSub(item.startTime, item.finishTime)
         item.executionDays -= +item.unforcedDays
       })
-      console.log(this.subInfo)
       var option = {
         backgrindColor: "#fff",
         title: {

@@ -123,7 +123,6 @@ export default {
             })
         },
         finishCaseSub(caseSub) {
-            console.log(caseSub)
             this.$confirm('此操作将提交完结申请, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -155,7 +154,6 @@ export default {
         },
         async confirmFinishDate() {
             if (this.selectedFinishDate) {
-                console.log(this.selectedFinishDate)
                 // 接着，将 formattedFinishDate 作为参数提交给后端
                 var result = await saveFinishApply({
                     caseSubId: this.isDatePickerVisible,

@@ -99,7 +99,6 @@ export default {
         async exceptionSub() {
             const res = await exceptionSub()
             this.subInfo = res.data
-            console.log(this.subInfo)
         },
         //手动点了开始阶段
         async launch(row) {

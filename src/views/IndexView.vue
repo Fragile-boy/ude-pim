@@ -379,7 +379,6 @@ export default {
       if (this.showMode && this.start_stop_time !== null && this.start_stop_time !== '') {
         queryObj.startTime = this.start_stop_time[0]
         queryObj.endTime = this.start_stop_time[1]
-        console.log(queryObj)
       }
 
       //负责人
@@ -428,13 +427,11 @@ export default {
       // 获取专案子流程对应的所有备注
       var res = await getById(this.commitForm.caseSubId)
       res = res.data
-      console.log(res)
       //备注数组必须清空，否则会叠加
       this.commitForm.content = []
       for (var i = 0; i < res.length; i++) {
         this.commitForm.content.push({ content: res[i].content, id: res[i].id })
       }
-      console.log(this.commitForm)
       this.commitVisible = true
     },
     async submitCommitForm() {

@@ -346,7 +346,6 @@ export default {
         async getAllUser() {
             //获取所有科员信息
             var { data: res } = await getUserList()
-            console.log(res)
             for (var i = 0; i < res.length; i++) {
                 if (res[i].status >= 2)
                     continue
@@ -690,7 +689,6 @@ export default {
         },
         // 提交备注信息
         async submitCommitForm(msg) {
-            console.log(msg)
             //判断备注信息是否为空或者内容太少
             if (this.commitForm.newContent === null || this.commitForm.newContent === '') {
                 this.$message({
@@ -702,8 +700,7 @@ export default {
             const commmitObj = {}
             commmitObj.caseSubId = this.commitForm.caseSubId
             commmitObj.content = this.commitForm.newContent
-            commmitObj.createUser = this.user.id
-            console.log(commmitObj)
+            commmitObj.createUser = this.user.idw
             var res = await saveCommit(commmitObj)
             if (res.code === 200) {
                 this.$message.success(res.data)

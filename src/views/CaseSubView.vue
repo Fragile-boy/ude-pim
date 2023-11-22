@@ -931,8 +931,6 @@ export default {
                     if (res.code === 200 && res.data === "添加成功") {
                         this.$message.success(res.data)
                         this.applyDelayVisible = false
-                        console.log(this.curCaseSubObj.unforcedDays)
-                        console.log(this.delayApplyObject.applyDays)
                         //修改延期时间和表格，作为页面不刷新的补偿
                         this.curCaseSubObj.unforcedDays = +this.curCaseSubObj.unforcedDays + +this.delayApplyObject.applyDays
                         this.getUnforcedDays(this.curCaseSubObj)
@@ -976,7 +974,6 @@ export default {
                     this.delayList.forEach(item => this.curCaseSubObj.unforcedDays = this.curCaseSubObj.unforcedDays + +item.applyDays)
                 }
             }).catch((error) => {
-                console.log(error)
                 this.$message({
                     type: 'info',
                     message: '已取消删除'

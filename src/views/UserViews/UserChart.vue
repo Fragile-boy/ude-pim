@@ -231,7 +231,6 @@ export default {
             var endYear = +maxStartTime[0]
             var endMonth = +maxStartTime[1]
 
-            console.log(startYear,startMonth,endYear,endMonth)
             //循环条件
             while(startYear<endYear||(startYear===endYear&&startMonth<=endMonth)){
                 var s_month = startYear+"-"+(startMonth<10?'0'+startMonth++:startMonth++)

@@ -33,7 +33,6 @@ export default {
             this.tabs = this.tabs.filter(tab => tab.path !== path)
         },
         jump2path(tab){
-            console.log(tab)
             this.$router.push({
                 path:tab.path,
                 query:tab.query

@@ -130,7 +130,6 @@ export default {
                         this.$message.error(res.msg)
                     }
                 }).catch((error) => {
-                    console.log(error)
                     this.$message({
                         type: 'info',
                         message: '取消操作'
@@ -147,7 +146,6 @@ export default {
             if (res.code === 200) {
                 this.applyHistoryList = res.data.records
                 this.total = res.data.total
-                console.log(this.applyHistoryList)
             } else {
                 this.$message.error(res.msg)
             }

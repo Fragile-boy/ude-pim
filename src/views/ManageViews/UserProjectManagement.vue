@@ -226,7 +226,6 @@ export default {
         await this.getAllUser()
         this.curUser = this.directorOptions[0].children[0].value
 
-        console.log(this.curUser)
         this.getFinishedTaskList();
     },
     //缓存界面路由导航进入之前
@@ -346,7 +345,6 @@ export default {
         async getAllUser() {
             //获取所有科员信息
             var { data: res } = await getUserList()
-            console.log(res)
             for (var i = 0; i < res.length; i++) {
                 if (res[i].status >= 2)
                     continue

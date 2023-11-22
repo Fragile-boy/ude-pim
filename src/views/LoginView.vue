@@ -44,7 +44,6 @@ import { loginApi } from '@/api/login'
 export default {
     data() {
         var checkUserNumber = (rule, value, callback) => {
-            console.log(value)
             if (!/^\d{6}$/.test(value))
                 return callback(new Error("工号是6位纯数字"))
             else
@@ -79,7 +78,6 @@ export default {
         //登录
         async handlerLogin() {
             this.$refs.loginFormRef.validate(async valid => {
-                console.log(valid)
                 if (!valid) return;
                 const res = await loginApi(this.loginForm)
                 if (res.code == 200) {
