@@ -375,7 +375,7 @@ export default {
                     return
                 }
                 this.$router.push({
-                    path: '/case2sub',
+                    name: '子流程详情',
                     query: {
                         caseName: row.description.split("->")[0],
                         caseId: res

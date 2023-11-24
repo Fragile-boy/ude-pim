@@ -732,7 +732,7 @@ export default {
         //打开专案详情
         openCaseDetail(row) {
             this.$router.push({
-                path: '/case2sub',
+                name: '子流程详情',
                 query: {
                     caseId: row.caseId,
                     caseName: 'description' in row ? row.description.split("→")[0] : row.caseName
@@ -759,7 +759,7 @@ export default {
         // 跳转到专案统计界面
         navigateToUserProjectManagerPage() {
             this.$router.push({
-                path: '/userProject',
+                name: '部员专案统计',
                 query: {
                     curUser: this.curUser
                 }
@@ -778,7 +778,7 @@ export default {
         navigateToDetailPage(row) {
             if (row.caseId !== null) {
                 this.$router.push({
-                    path: '/case2sub',
+                    name: '子流程详情',
                     query: {
                         caseId: row.caseId,
                         caseName: row.description.split("→")[0]

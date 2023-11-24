@@ -327,7 +327,7 @@ export default {
     },
     showSub(row) {
       this.$router.push({
-        path: '/case2sub',
+        name: '子流程详情',
         query: {
           caseId: row.id,
           caseName: row.name

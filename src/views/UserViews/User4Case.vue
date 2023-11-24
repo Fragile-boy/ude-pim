@@ -776,7 +776,7 @@ export default {
         //打开中止专案详情
         openCaseDetail(row) {
             this.$router.push({
-                path: '/case2sub',
+                name: '子流程详情',
                 query: {
                     caseId: row.caseId,
                     caseName: row.caseName,
@@ -961,7 +961,7 @@ export default {
         navigateToDetailPage(row) {
             if (row.caseId !== null) {
                 this.$router.push({
-                    path: '/case2sub',
+                    name: '子流程详情',
                     query: {
                         caseId: row.caseId,
                         caseName: row.description.split("→")[0]

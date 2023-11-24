@@ -800,7 +800,7 @@ export default {
         },
         jump2detail(row) {
             this.$router.push({
-                path: '/case2sub',
+                name: '子流程详情',
                 query: {
                     caseName: row.name,
                     caseId: row.id

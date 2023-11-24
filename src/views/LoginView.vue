@@ -96,10 +96,7 @@ export default {
                         duration: 900
                     })
 
-                    if (res.data.type === 1)
-                        setTimeout(() => this.$router.push('/home'), 1000)
-                    else
-                        setTimeout(() => this.$router.push('/user/index'), 1000)
+                    setTimeout(() => this.$router.push('/common/index'), 1000)
                 } else {
                     this.$message.error(res.msg)
                 }
@@ -115,7 +112,7 @@ export default {
                 })
                 this.setUser(res.data)
                 localStorage.setItem("token", res.data.id)
-                setTimeout(() => this.$router.push('/index'), 1000)
+                setTimeout(() => this.$router.push('/common/index'), 1000)
             }
         }
     }

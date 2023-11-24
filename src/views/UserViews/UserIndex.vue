@@ -471,12 +471,12 @@ export default {
     },
     jump2CaseIndex() {
       this.$router.push({
-        path: '/index',
+        path: '/common/index',
       })
     },
     jump2QueryCase() {
       this.$router.push({
-        path: '/index',
+        path: '/common/index',
         query: {
           caseName: this.caseName
         }

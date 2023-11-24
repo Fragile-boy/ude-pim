@@ -6,11 +6,11 @@
                 <i class="el-icon-s-platform"></i>
                 <span>专案管理</span>
             </template>
-            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
-            <el-menu-item index="/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
-            <el-menu-item index="/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
-            <el-menu-item index="/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
-            <el-menu-item index="/taskManage"><i class="el-icon-s-tools"></i>任务管理</el-menu-item>
+            <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
+            <el-menu-item index="/admin/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
+            <el-menu-item index="/admin/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
+            <el-menu-item index="/admin/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
+            <el-menu-item index="/admin/taskManage"><i class="el-icon-s-tools"></i>任务管理</el-menu-item>
         </el-submenu>
 
         <el-submenu index="2" v-if="user.type === 1">
@@ -19,15 +19,15 @@
                 <span>审批流程<el-badge :value="subList.length" is-dot
                         v-if="subList.length || delayList.length || finishList.length || taskList.length || caseSubList.length" /></span>
             </template>
-            <el-menu-item index="/exception"><i class="el-icon-s-tools"></i>中断专案<el-badge :value="subList.length"
+            <el-menu-item index="/admin/exception"><i class="el-icon-s-tools"></i>中断专案<el-badge :value="subList.length"
                     v-if="subList.length" /></el-menu-item>
-            <el-menu-item index="/delay"><i class="el-icon-s-tools"></i>延期申请<el-badge :value="delayList.length"
+            <el-menu-item index="/admin/delay"><i class="el-icon-s-tools"></i>延期申请<el-badge :value="delayList.length"
                     v-if="delayList.length" /></el-menu-item>
-            <el-menu-item index="/finish"><i class="el-icon-s-tools"></i>完结申请<el-badge :value="finishList.length"
+            <el-menu-item index="/admin/finish"><i class="el-icon-s-tools"></i>完结申请<el-badge :value="finishList.length"
                     v-if="finishList.length" /></el-menu-item>
-            <el-menu-item index="/study"><i class="el-icon-s-tools"></i>任务申请<el-badge :value="taskList.length"
+            <el-menu-item index="/admin/study"><i class="el-icon-s-tools"></i>任务申请<el-badge :value="taskList.length"
                     v-if="taskList.length" /></el-menu-item>
-            <el-menu-item index="/caseApply"><i class="el-icon-s-tools"></i>专案类申请<el-badge :value="caseSubList.length"
+            <el-menu-item index="/admin/caseApply"><i class="el-icon-s-tools"></i>专案类申请<el-badge :value="caseSubList.length"
                     v-if="caseSubList.length" /></el-menu-item>
         </el-submenu>
 
@@ -36,8 +36,8 @@
                 <i class="el-icon-s-data"></i>
                 <span>数据统计</span>
             </template>
-            <el-menu-item index="/monthlyAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
-            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
+            <el-menu-item index="/admin/monthlyAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
+            <el-menu-item index="/common/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
         </el-submenu>
 
         <el-submenu index="4" v-if="user.type === 1">
@@ -45,9 +45,9 @@
                 <i class="el-icon-s-custom"></i>
                 <span>部员管理</span>
             </template>
-            <el-menu-item index="/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
-            <el-menu-item index="/userProject"><i class="el-icon-s-tools"></i>部员专案统计</el-menu-item>
-            <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
+            <el-menu-item index="/admin/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
+            <el-menu-item index="/common/userProject"><i class="el-icon-s-tools"></i>部员专案统计</el-menu-item>
+            <el-menu-item index="/common/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
         </el-submenu>
 
         <el-submenu index="5" v-if="user.type === 0">
@@ -67,19 +67,19 @@
                 <i class="el-icon-s-opportunity"></i>
                 <span>部门数据</span>
             </template>
-            <el-menu-item index="/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
-            <el-menu-item index="/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
-            <el-menu-item index="/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
+            <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
+            <el-menu-item index="/common/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
+            <el-menu-item index="/common/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
         </el-submenu>
 
-        <el-menu-item><router-link to="/schedule" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
+        <el-menu-item><router-link to="/common/schedule" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
                     class="el-icon-s-order"></i>待办事项</router-link></el-menu-item>
 
         <el-menu-item><a target="_blank" href="https://scmail.ude-corp.com/"
                 :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
                     class="el-icon-s-promotion"></i>邮件系统</a></el-menu-item>
 
-        <el-menu-item><router-link to="/demand" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
+        <el-menu-item><router-link to="/common/demand" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
                     class="el-icon-s-check"></i>需求管理</router-link></el-menu-item>
     </el-menu>
 </template>
