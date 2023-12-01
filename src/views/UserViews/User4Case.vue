@@ -20,10 +20,13 @@
             <h2>执行专案</h2>
             <!-- 执行任务的详情 -->
             <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
-                <el-table-column label="进度" width="260">
+                <el-table-column label="进度">
                     <template slot-scope="scope">
-                        <el-progress :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : scope.row.finishedOwnWork ? 'primary' : 'exception' : 'success'"></el-progress>
+                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                            :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
+                        </el-progress>
+                        <el-progress v-else :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
+                        </el-progress>
                     </template>
                 </el-table-column>
                 <el-table-column prop="comment" label="备注"></el-table-column>
@@ -37,26 +40,39 @@
                 <el-table-column prop="description" label="描述"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                <el-table-column prop="pauseStart" label="暂停时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
                 <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
-                        <el-tooltip class="item" effect="dark" content="申请延期" placement="left"
-                            v-if="!scope.row.delayChecking">
+                        <el-tooltip class="item" effect="dark" content="申请延期" placement="top"
+                            v-if="!scope.row.pausing && !scope.row.delayChecking">
                             <el-button size="mini" type="warning" icon="el-icon-timer" round
                                 @click="openDelayApply(scope.row)"></el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="审核中" placement="left" v-else>
+                        <el-tooltip class="item" effect="dark" content="审核中" placement="top"
+                            v-if="!scope.row.pausing && scope.row.delayChecking">
                             <el-button size="mini" type="primary" icon="el-icon-timer" round></el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="完结" placement="right"
-                            v-if="!scope.row.finishChecking">
+                        <el-tooltip class="item" effect="dark" content="完结" placement="top"
+                            v-if="!scope.row.pausing && !scope.row.finishChecking">
                             <el-button size="mini" type="success" icon="el-icon-success" round
                                 @click="tryFinish(scope.row)"></el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="完结审核中" placement="top" v-else>
+                        <el-tooltip class="item" effect="dark" content="完结审核中" placement="top"
+                            v-if="!scope.row.pausing && scope.row.finishChecking">
                             <el-button size="mini" type="primary" icon="el-icon-success" round></el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="暂停" placement="top">
+                            <el-button icon="el-icon-video-pause" type="info" size="mini" round
+                                @click="openPause(scope.row)" v-if="!scope.row.pausing">
+                            </el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="重启" placement="top">
+                            <el-button icon="el-icon-video-play" type="success" size="mini" round
+                                @click="finishPause(scope.row.pauseId)" v-if="scope.row.pausing">
+                            </el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -249,6 +265,14 @@
                 </el-table-column>
             </el-table>
         </el-drawer>
+
+        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%">
+            <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="pauseVisible = false">取 消</el-button>
+                <el-button type="primary" @click="startPause()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -258,11 +282,12 @@ import { timeSub, timeAdd, formatDate, format4back } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList, startOrFinish } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
-import { saveApply,getDelayById } from '@/api/caseDelayApply'
+import { saveApply, getDelayById } from '@/api/caseDelayApply'
 import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
 import { saveApplyCaseSub } from '@/api/applyCaseSub'
 import { saveApplyTask } from '@/api/applyTask'
+import { startPause,finishPause } from '@/api/pause'
 
 export default {
     name: 'case4me',
@@ -351,7 +376,16 @@ export default {
             // 延期列表
             delayList: [],
             // 抽屉
-            delayDrawer: false
+            delayDrawer: false,
+            // 暂停界面
+            pauseVisible: false,
+            // 暂停信息
+            pauseObj: {
+                description: '',
+                taskId: null,
+                caseSubId: null,
+                target:''
+            }
         }
     },
     async created() {
@@ -416,6 +450,8 @@ export default {
                 var today = new Date()
                 var delayCount = 0
                 today.setHours(0, 0, 0, 0)
+                // 是否暂停
+                this.userInfo[i].pauseStart = this.userInfo[i].pauseStart ? formatDate(this.userInfo[i].pauseStart) : null
                 //还未截止
                 if (today <= this.userInfo[i].presetTime) {
                     //已经执行了多少天
@@ -444,6 +480,8 @@ export default {
         },
 
         percentageText(row) {
+            if (row.pausing)
+                return "暂停中"
             if ('leftDelay' in row) {
                 if (row.leftDelay >= 0) {
                     return `延期剩余${row.leftDelay}天`
@@ -974,6 +1012,44 @@ export default {
             var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
             this.delayList = res.data
             this.delayDrawer = true
+        },
+        // 打开暂停界面
+        openPause(row) {
+            this.pauseObj.taskId = row.taskId
+            this.pauseObj.caseSubId = row.caseSubId
+            this.pauseObj.target = row.description
+            this.pauseVisible = true
+        },
+        // 开始暂停
+        async startPause() {
+            if (this.pauseObj.description === null || this.pauseObj.description === '') {
+                this.$message.error("暂停原因不能为空")
+                return
+            }
+            const res = await startPause(this.pauseObj)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.pauseObj.description = ''
+                this.pauseObj.taskId = null
+                this.pauseObj.caseSubId = null
+                this.pauseObj.target = null
+                this.pauseVisible = false
+            }
+            this.getTaskByUserId()
+        },
+        // 停止暂停
+        finishPause(pauseId) {
+            this.$confirm('确定重启该任务吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await finishPause(pauseId)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getTaskByUserId()
+                }
+            })
         }
     }
 }

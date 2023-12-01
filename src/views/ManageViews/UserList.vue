@@ -53,7 +53,7 @@
                     <template slot-scope="scope">
                         <el-tag effect="dark" v-if="scope.row.status === 0">机构</el-tag>
                         <el-tag effect="dark" type="success" v-else-if="scope.row.status === 1">电控</el-tag>
-                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 2">助理</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 2">IE</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作">
@@ -134,25 +134,25 @@
             </span>
         </el-dialog>
 
-        <!-- 修改资料区域 -->
+        <!-- 修改资料区域，指修改自己的资料信息 -->
         <el-dialog title="修改资料" :visible.sync="editUserVisible" width="30%">
-            <el-form ref="editUserRef" :rules="editUserRule" :model="editUser" label-width="80px">
+            <el-form ref="editUserRef" :rules="editUserRule" :model="editingUser" label-width="80px">
                 <el-row :gutter="20">
                     <el-col :span="12">
                         <el-form-item label="姓名" prop="name">
-                            <el-input v-model="editUser.name"></el-input>
+                            <el-input v-model="editingUser.name"></el-input>
                         </el-form-item>
                     </el-col>
 
                     <el-col :span="12">
                         <el-form-item label="工号" prop="number">
-                            <el-input v-model="editUser.number"></el-input>
+                            <el-input v-model="editingUser.number"></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
 
                 <el-form-item label="职务" prop="status">
-                    <el-select v-model="editUser.status" placeholder="请选择职务">
+                    <el-select v-model="editingUser.status" placeholder="请选择职务">
                         <el-option v-for="item in [{ label: '机构', value: 0 }, { label: '电控', value: 1 }]" :key="item.value"
                             :label="item.label" :value="item.value">
                         </el-option>
@@ -160,7 +160,7 @@
                 </el-form-item>
 
                 <el-form-item label="电子邮件" prop="email">
-                    <el-input v-model="editUser.email" placeholder="请输入电子邮件地址"></el-input>
+                    <el-input v-model="editingUser.email" placeholder="请输入电子邮件地址"></el-input>
                 </el-form-item>
 
             </el-form>
@@ -225,7 +225,7 @@
 <script>
 import { getUserPage, saveUser, getUserById, updateUser, removeUser } from '@/api/user'
 import { mapActions, mapState } from 'vuex'
-import { updatePassword,getUserList } from '@/api/user'
+import { updatePassword,getUserListWithAssistants } from '@/api/user'
 import { getChargeCaseSub } from '@/api/caseSub'
 import {removeDirector,updateChargeCaseSub} from '@/api/caseSubUser'
 export default {
@@ -274,7 +274,7 @@ export default {
             statusOps: [
                 { value: 0, label: "机构" },
                 { value: 1, label: "电控" },
-                { value: 2, label: "助理" },
+                { value: 2, label: "IE" },
             ],
             addFormRules: {
                 name: [
@@ -300,7 +300,8 @@ export default {
             //修改密码，修改个人信息
             editUserVisible: false,
             editPasswordVisible: false,
-            editUser: {},
+            // 保存正在修改资料的用户信息
+            editingUser: {},
             editUserRule: {
                 name: [
                     { required: true, message: '名字不可为空', trigger: 'blur' },
@@ -342,7 +343,7 @@ export default {
     methods: {
         ...mapActions(['editUserInfo']),
         async getAllUser(){
-            var res = await getUserList()
+            var res = await getUserListWithAssistants()
             if(res.code===200){
                 this.allUser = res.data
             }
@@ -427,7 +428,7 @@ export default {
         handleCommand(command) {
             if (command === 'editUser') {
                 //修改资料
-                this.editUser = { ...this.user }
+                this.editingUser = { ...this.user }
                 this.editUserVisible = true
             } else {
                 this.editPasswordVisible = true
@@ -436,7 +437,7 @@ export default {
         handleEditUser() {
             this.$refs.editUserRef.validate(async (valid) => {
                 if (valid) {
-                    const res = await this.editUserInfo(this.editUser)
+                    const res = await this.editUserInfo(this.editingUser)
                     if (res.code === 200) {
                         this.$message.success(res.data)
                         this.editUserVisible = false

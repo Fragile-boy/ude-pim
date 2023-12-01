@@ -182,7 +182,7 @@
 import { mapActions, mapState, mapMutations } from 'vuex'
 import { deleteCommit, getById, saveCommit } from '@/api/caseSubCommit';
 import { getExecuting } from '@/api/caseSub';
-import { getUserList } from '@/api/user'
+import { getUserListWithAssistants } from '@/api/user'
 import html2canvas from 'html2canvas'
 import { timeAdd } from '@/utils/common';
 export default {
@@ -320,7 +320,7 @@ export default {
       }
     },
     async getAllUser() {
-      const res = await getUserList()
+      const res = await getUserListWithAssistants()
       if (res.code === 200) {
         this.users = res.data
       }

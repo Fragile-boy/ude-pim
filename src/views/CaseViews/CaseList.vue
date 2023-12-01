@@ -344,14 +344,14 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
-import { getUserList, getUserStatus } from '@/api/user'
+import { getUserListWithAssistants, getUserStatus } from '@/api/user'
 import { addCase, getList, editCase, deleteCase, terminateCase } from '@/api/case'
 import { checkResult } from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
 import { getTempleteList, getSubsByTemplateId, saveTemplete } from '@/api/templete'
 export default {
-    name:'caseManage',
+    name: 'caseManage',
     data() {
         var checkCost = (rule, value, callback) => {
             if (value < 0)
@@ -419,6 +419,11 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
+                },
+                {
+                    value: 2,
+                    label: 'IE',
+                    children: []
                 }
             ],
             //添加关联关系显示标志位
@@ -476,7 +481,7 @@ export default {
         this.getAllUser()
     },
     async mounted() {
-        var { data: res } = await getUserList()
+        var { data: res } = await getUserListWithAssistants()
         for (var i = 0; i < res.length; i++) {
             this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
         }
@@ -582,7 +587,7 @@ export default {
         },
         //获取负责人列表
         async getAllUser() {
-            const res = await getUserList()
+            const res = await getUserListWithAssistants()
             if (res.code === 200) {
                 this.allUser = res.data
                 // console.log(this.allUser)

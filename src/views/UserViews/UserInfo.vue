@@ -8,15 +8,23 @@
         </div>
         <el-card v-if="!showApply">
             <el-row>
-                <el-col :span="4" :offset="20">
+                <el-col :span="4" :offset="20" v-if="user.type === 0">
                     <el-button icon="el-icon-s-claim" type="warning" @click="showApply = true">我的申请</el-button>
+                    <el-button icon="el-icon-s-comment" type="info" @click="showHistory = true"
+                        v-if="!showHistory">历史消息</el-button>
+                </el-col>
+                <el-col :span="2" :offset="22" v-else>
                     <el-button icon="el-icon-s-comment" type="info" @click="showHistory = true"
                         v-if="!showHistory">历史消息</el-button>
                 </el-col>
             </el-row>
             <!-- 日志任务的详情 -->
             <el-table :data="logList" v-if="!showHistory">
-                <el-table-column prop="content" label="消息"></el-table-column>
+                <el-table-column label="消息">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.content }}</div>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="createName" label="操作人"></el-table-column>
                 <el-table-column prop="createTime" label="消息时间"></el-table-column>
                 <el-table-column label="操作">
@@ -28,14 +36,19 @@
             <!-- 历史消息 -->
             <div v-if="showHistory">
                 <el-table :data="historyLogList">
-                    <el-table-column prop="content" label="消息" width="1200"></el-table-column>
+                    <el-table-column label="消息" width="1200">
+                        <template slot-scope="scope">
+                            <div style="white-space: pre-wrap;">{{ scope.row.content }}</div>
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="createName" label="操作人"></el-table-column>
                     <el-table-column prop="createTime" label="消息时间"></el-table-column>
                 </el-table>
                 <!-- 分页区域 -->
                 <el-pagination style="margin-top: 10px;text-align: left;" @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange" :current-page.sync="queryObj.page" :page-sizes="[8, 10, 15, 20, 30]"
-                    :page-size="queryObj.pageSize" layout="total, sizes, prev, pager, next" :total="total">
+                    @current-change="handleCurrentChange" :current-page.sync="queryObj.page"
+                    :page-sizes="[8, 10, 15, 20, 30]" :page-size="queryObj.pageSize"
+                    layout="total, sizes, prev, pager, next" :total="total">
                 </el-pagination>
                 <el-button style="margin-top: 10px;" type="primary" icon="el-icon-back"
                     @click="showHistory = false">返回</el-button>
@@ -146,11 +159,13 @@ export default {
             delayList: [],
             finishList: [],
             historyLogList: [],
-            total:null,
+            total: null,
         }
     },
     created() {
-        this.getAllList()
+        // 仅普通用户需要调用
+        if (this.user.type === 0)
+            this.getAllList()
         this.getLogWithMe()
     },
     computed: {
@@ -169,12 +184,12 @@ export default {
             }
 
         },
-        handleSizeChange(val){
+        handleSizeChange(val) {
             this.queryObj.pageSize = val
             this.queryObj.page = 1
             this.getLogWithMe()
         },
-        handleCurrentChange(val){
+        handleCurrentChange(val) {
             this.queryObj.page = val
             this.getLogWithMe()
         },

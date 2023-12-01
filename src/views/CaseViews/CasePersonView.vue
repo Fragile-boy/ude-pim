@@ -66,7 +66,7 @@ import { timeSub } from '@/utils/common'
 import Clipboard from 'clipboard';
 
 export default {
-    name:'casePersonView',
+    name: 'casePersonView',
     data() {
         return {
             case2person: [],
@@ -88,6 +88,16 @@ export default {
             const res = await listFocusPerson(id);
             if (res.code === 200) {
                 this.case2person = res.data
+
+                // 获取是否含有程序编写，如果含有，则配电阶段积分不乘以2(31是程序编写的subId)
+                var containProgramming = false
+                for (let i = 0; i < this.case2person.length; i++) {
+                    if (this.case2person[i].subId === 31) {
+                        containProgramming = true
+                        break
+                    }
+                }
+
                 for (var i = 0; i < this.case2person.length; i++) {
                     //执行状态
                     //未开始
@@ -116,7 +126,7 @@ export default {
                         if (this.case2person[i].subId !== 7) {
                             //配电要乘以2
                             this.case2person[i].sumValue = (this.case2person[i].planDays * (this.case2person[i].planDays / this.case2person[i].executionDays) ** (2 / 3)).toFixed(2)
-                            if (this.case2person[i].subId === 9)
+                            if (!containProgramming&&this.case2person[i].subId === 9)
                                 this.case2person[i].sumValue *= 2
                             this.case2person[i].value = (this.case2person[i].sumValue * this.case2person[i].directorRate / 100).toFixed(2)
                         }

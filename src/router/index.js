@@ -192,6 +192,12 @@ const routes = [
         name: '专案类申请',
         component: checkApply
       },
+      {
+        // 消息中心页
+        path: 'info',
+        name: '消息中心',
+        component: UserInfo
+      },
 
       //月报分析
       {

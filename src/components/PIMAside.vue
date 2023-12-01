@@ -29,6 +29,8 @@
                     v-if="taskList.length" /></el-menu-item>
             <el-menu-item index="/admin/caseApply"><i class="el-icon-s-tools"></i>专案类申请<el-badge :value="caseSubList.length"
                     v-if="caseSubList.length" /></el-menu-item>
+            <el-menu-item index="/admin/info"><i class="el-icon-s-tools"></i>消息中心<el-badge :value="logList.length"
+                    v-if="logList.length" /></el-menu-item>
         </el-submenu>
 
         <el-submenu index="3" v-if="user.type === 1">
@@ -102,13 +104,15 @@ export default {
         ...mapState('apply', ['delayList', 'subList', 'finishList', 'caseSubList', 'taskList']),
         ...mapState(['user'])
     },
-    async created() {
+    created() {
+        console.log(this.user.type)
         if (this.user.type === 1) {
             this.getDelay()
             this.exceptionSub()
             this.getFinish()
             this.getCaseSubApplyList()
             this.getTaskList()
+            this.getLogList()
             // 设置定时器，每隔1分钟执行一次getDelay，exceptionSub，getFinish，getCaseSubApplyList，getTaskList函数
             setInterval(() => {
                 this.getDelay()
@@ -116,6 +120,7 @@ export default {
                 this.getFinish()
                 this.getCaseSubApplyList()
                 this.getTaskList()
+                this.getLogList()
             }, 60000)
         } else if (this.user.type === 0) {
             this.getLogList()

@@ -31,7 +31,10 @@
                 </el-table-column>
                 <el-table-column prop="delayType" label="延期类型">
                 </el-table-column>
-                <el-table-column prop="applyReason" label="延期原因">
+                <el-table-column label="延期原因" width="250">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.applyReason }}</div>
+                    </template>
                 </el-table-column>
                 <el-table-column prop="applyDays" label="申请天数">
                 </el-table-column>

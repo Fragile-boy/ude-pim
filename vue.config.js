@@ -2,7 +2,7 @@ const { defineConfig } = require("@vue/cli-service")
 
 module.exports = defineConfig({
   publicPath:'./',
-  outputDir: 'dist',
+  outputDir: 'ude-pim',
   devServer: {
     client: {
       overlay: false,

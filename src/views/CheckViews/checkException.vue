@@ -60,7 +60,7 @@
 
 <script>
 import { exceptionSub } from '@/api/caseSub'
-import { getUserList } from '@/api/user'
+import { getUserListWithAssistants } from '@/api/user'
 import { updateCaseSub, startOrFinish } from '@/api/caseSub'
 import { formatDate } from '@/utils/common'
 import { setDirector } from '@/api/caseSubUser'
@@ -83,6 +83,11 @@ export default {
                 {
                     value: 1,
                     label: '电控',
+                    children: []
+                },
+                {
+                    value: 2,
+                    label: 'IE',
                     children: []
                 }
             ],
@@ -115,7 +120,7 @@ export default {
         },
         //获取所有负责人
         async getAllUser() {
-            const res = await getUserList()
+            const res = await getUserListWithAssistants()
             if (res.code === 200) {
                 this.editUser = res.data
                 res.data.forEach((item) => {

@@ -133,7 +133,7 @@
 import { mapState } from 'vuex';
 import { allFinishTask } from '@/api/task'
 import { timeSub } from '@/utils/common';
-import { getUserList } from '@/api/user'
+import { getUserListWithAssistants } from '@/api/user'
 export default {
     name: 'userStatistics',
     data() {
@@ -211,8 +211,14 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
+                },
+                {
+                    value:2,
+                    label:'IE',
+                    children:[]
                 }
             ],
+            userMap:new Map(),
             curUser: null,
             curIndex: 0,
             curGroup: 0,
@@ -344,28 +350,39 @@ export default {
         },
         async getAllUser() {
             //获取所有科员信息
-            var { data: res } = await getUserList()
+            var { data: res } = await getUserListWithAssistants()
             for (var i = 0; i < res.length; i++) {
-                if (res[i].status >= 2)
-                    continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
+            }
+            // 哈希表存储索引信息
+            for (var i = 0; i < this.directorOptions.length; i++) {
+                for(var j=0;j<this.directorOptions[i].children.length;j++){
+                    this.userMap.set(this.directorOptions[i].children[j].value,[i,j])
+                }
             }
         },
         //选中科员变化回调参数
         handleUserChange() {
-            // this.start_stop_time = null
-            // this.curType = null
+            const idxArray = this.userMap.get(this.curUser)
+            this.curGroup = idxArray[0]
+            this.curIndex = idxArray[1]
             this.getFinishedTaskList()
         },
         //修改当前科员
         changeUser(value) {
             this.curIndex += value
             if (this.curIndex >= this.directorOptions[this.curGroup].children.length) {
-                this.curGroup = 1 - this.curGroup
+                if(this.curGroup==this.directorOptions.length-1)
+                    this.curGroup = 0
+                else 
+                    this.curGroup++
                 this.curIndex = 0
             }
             if (this.curIndex < 0) {
-                this.curGroup = 1 - this.curGroup
+                if(this.curGroup==0)
+                    this.curGroup = this.directorOptions.length-1
+                else 
+                    this.curGroup--
                 this.curIndex = this.directorOptions[this.curGroup].children.length - 1
             }
             this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value

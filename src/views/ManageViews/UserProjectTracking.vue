@@ -32,8 +32,11 @@
             <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
-                        <el-progress :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : scope.row.finishedOwnWork ? 'primary' : 'exception' : 'success'"></el-progress>
+                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                            :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
+                        </el-progress>
+                        <el-progress v-else :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
+                        </el-progress>
                     </template>
                 </el-table-column>
                 <el-table-column prop="comment" label="备注"></el-table-column>
@@ -47,11 +50,12 @@
                 <el-table-column prop="description" label="描述" width="260"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="presetTime" label="预计完成"></el-table-column>
+                <el-table-column prop="pauseStart" label="暂停时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
                 <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
                         <!-- 这里后面留着查看信息 -->
                         <el-tooltip class="item" effect="dark" content="显示备注" placement="top">
@@ -180,16 +184,16 @@
             </el-table>
         </el-drawer>
 
-
     </div>
 </template>
 
 <script>
 import { timeSub, formatDate, timeAdd } from '@/utils/common'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
-import { getUserList } from '@/api/user'
+import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
+import {startPause} from '@/api/pause'
 import { mapState } from 'vuex'
 
 export default {
@@ -208,8 +212,14 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
+                },
+                {
+                    value: 2,
+                    label: 'IE',
+                    children: []
                 }
             ],
+            userMap: new Map(),
             curUser: null,
             curGroup: null,
             curIndex: null,
@@ -228,7 +238,7 @@ export default {
             // 延期列表
             delayList: [],
             // 抽屉
-            delayDrawer: false
+            delayDrawer: false,
         }
     },
     async mounted() {
@@ -283,6 +293,8 @@ export default {
                 var presetTime = new Date(this.userInfo[i].startTime)
                 presetTime = presetTime.setDate(presetTime.getDate() + this.userInfo[i].planDays + this.userInfo[i].unforcedDays - 1)
                 this.userInfo[i].presetTime = presetTime
+                // 是否暂停
+                this.userInfo[i].pauseStart = this.userInfo[i].pauseStart ? formatDate(this.userInfo[i].pauseStart) : null
                 //分为已延误和未延误
                 var today = new Date()
                 today.setHours(0, 0, 0, 0)
@@ -297,6 +309,7 @@ export default {
                     var delayDay = timeSub(this.userInfo[i].presetTime, today) - 1
                     //计算延误期限
                     this.userInfo[i].leftDelay = this.userInfo[i].applyDelay - delayDay
+
                     //判断是否在延期期限内
                     if (this.userInfo[i].leftDelay >= 0) {
                         this.userInfo[i].percentage = (delayDay / this.userInfo[i].applyDelay) * 100
@@ -332,6 +345,9 @@ export default {
         },
 
         percentageText(row) {
+            if(row.pausing){
+                return "暂停中"
+            }
             if ('leftDelay' in row) {
                 if (row.leftDelay >= 0) {
                     return `延期剩余${row.leftDelay}天`
@@ -345,27 +361,21 @@ export default {
         //获取所有科员信息
         async getAllUser() {
             //获取所有科员信息
-            var { data: res } = await getUserList()
+            var { data: res } = await getUserListWithAssistants()
             for (var i = 0; i < res.length; i++) {
-                if (res[i].status >= 2)
-                    continue
                 this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
+            }
+            // 哈希表存储索引信息
+            for (var i = 0; i < this.directorOptions.length; i++) {
+                for (var j = 0; j < this.directorOptions[i].children.length; j++) {
+                    this.userMap.set(this.directorOptions[i].children[j].value, [i, j])
+                }
             }
         },
         handleUserChange() {
-            var flag = false
-            for (var i = 0; i < this.directorOptions.length; i++) {
-                for (var j = 0; j < this.directorOptions[i].children.length; j++) {
-                    if (this.directorOptions[i].children[j].value === this.curUser) {
-                        this.curGroup = i
-                        this.curIndex = j
-                        flag = true
-                        break
-                    }
-                }
-                if (flag)
-                    break
-            }
+            const idxArray = this.userMap.get(this.curUser)
+            this.curGroup = idxArray[0]
+            this.curIndex = idxArray[1]
             this.updateView()
         },
         //更新界面
@@ -743,11 +753,17 @@ export default {
         changeUser(value) {
             this.curIndex += value
             if (this.curIndex >= this.directorOptions[this.curGroup].children.length) {
-                this.curGroup = 1 - this.curGroup
+                if (this.curGroup == this.directorOptions.length - 1)
+                    this.curGroup = 0
+                else
+                    this.curGroup++
                 this.curIndex = 0
             }
             if (this.curIndex < 0) {
-                this.curGroup = 1 - this.curGroup
+                if (this.curGroup == 0)
+                    this.curGroup = this.directorOptions.length - 1
+                else
+                    this.curGroup--
                 this.curIndex = this.directorOptions[this.curGroup].children.length - 1
             }
             this.curUser = this.directorOptions[this.curGroup].children[this.curIndex].value
@@ -791,11 +807,12 @@ export default {
             var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
             this.delayList = res.data
             this.delayDrawer = true
-        }
+        },
+        
     }
 }
 </script>
-
+pauseObjpauseObjpauseObj
 <style lang="less" scoped>
 .charts-area {
     width: 100%;
@@ -831,8 +848,7 @@ export default {
     text-decoration: underline;
 }
 
-.el-drawer .ltr{
+.el-drawer .ltr {
     background-color: skyblue;
 }
-
 </style>

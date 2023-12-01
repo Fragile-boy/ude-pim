@@ -449,7 +449,7 @@ import { mapState } from 'vuex'
 import { removeDirector, countUser, setDirector, submitDirectorValue } from '@/api/caseSubUser'
 import { getDelayByStatus, saveApply, updateDelay, deleteDelay } from '@/api/caseDelayApply'
 import { getById, saveCommit } from '@/api/caseSubCommit';
-import { getUserList } from '@/api/user'
+import { getUserListWithAssistants } from '@/api/user'
 import { getPresetDay } from '@/api/sub'
 
 export default {
@@ -508,6 +508,11 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
+                },
+                {
+                    value:2,
+                    label:'IE',
+                    children:[]
                 }
             ],
             //穿梭框显示的科员
@@ -608,6 +613,16 @@ export default {
 
             var res = await getSubList(caseId)
             this.subInfo = res.data
+            
+            // 获取是否含有程序编写，如果含有，则配电阶段积分不乘以2(31是程序编写的subId)
+            var containProgramming = false
+            for (let i = 0; i < this.subInfo.length; i++) {
+                if(this.subInfo[i].subId===31){
+                    containProgramming = true
+                    break
+                }
+            }
+
             for (let i = 0; i < this.subInfo.length; i++) {
                 this.subInfo[i].startTime = formatDate(this.subInfo[i].startTime)
                 if (this.subInfo[i].startTime !== null) {
@@ -647,7 +662,7 @@ export default {
                 if (this.subInfo[i].finishTime !== null && this.subInfo[i].subId !== 7) {
                     this.subInfo[i].value = (this.subInfo[i].planDays * (this.subInfo[i].planDays * 1.0 / this.subInfo[i].executionDays) ** (2 / 3)).toFixed(2)
                     // if(this.subInfo[i].subName==='配電')
-                    if (this.subInfo[i].subId === 9)
+                    if (!containProgramming&&this.subInfo[i].subId === 9)
                         this.subInfo[i].value *= 2
                 }
             }
@@ -819,7 +834,7 @@ export default {
         },
         //获取所有负责人
         async getAllUser() {
-            const res = await getUserList()
+            const res = await getUserListWithAssistants()
             if (res.code === 200) {
                 this.editUser = res.data
                 res.data.forEach((item) => {
