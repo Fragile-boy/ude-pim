@@ -68,6 +68,16 @@
                                 @click="openCaseDetail(scope.row)" v-if="scope.row.caseSubId">
                             </el-button>
                         </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="暂停" placement="top" v-if="user.type === 1">
+                            <el-button icon="el-icon-video-pause" type="info" size="mini" round
+                                @click="openPause(scope.row)" v-if="!scope.row.pausing">
+                            </el-button>
+                        </el-tooltip>
+                        <el-tooltip class="item" effect="dark" content="重启" placement="top" v-if="user.type === 1">
+                            <el-button icon="el-icon-video-play" type="success" size="mini" round
+                                @click="finishPause(scope.row.pauseId)" v-if="scope.row.pausing">
+                            </el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>
@@ -184,6 +194,14 @@
             </el-table>
         </el-drawer>
 
+        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%">
+            <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="pauseVisible = false">取 消</el-button>
+                <el-button type="primary" @click="startPause()">确 定</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
@@ -193,7 +211,7 @@ import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/ap
 import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
-import {startPause} from '@/api/pause'
+import { startPause,finishPause } from '@/api/pause'
 import { mapState } from 'vuex'
 
 export default {
@@ -239,6 +257,15 @@ export default {
             delayList: [],
             // 抽屉
             delayDrawer: false,
+            // 暂停界面
+            pauseVisible: false,
+            // 暂停信息
+            pauseObj: {
+                description: '',
+                taskId: null,
+                caseSubId: null,
+                target: ''
+            }
         }
     },
     async mounted() {
@@ -336,8 +363,9 @@ export default {
                         break
                     }
                 }
+                // 没有专案子阶段，说明全是任务
                 if (caseSubCount === 0) {
-                    this.commitForm.content = ''
+                    this.commitForm.content = []
                     this.commitForm.caseName = '暂无数据'
                     this.commitForm.subName = '暂无数据'
                 }
@@ -345,7 +373,7 @@ export default {
         },
 
         percentageText(row) {
-            if(row.pausing){
+            if (row.pausing) {
                 return "暂停中"
             }
             if ('leftDelay' in row) {
@@ -783,8 +811,14 @@ export default {
         },
         // 监听双击事件
         handleDoubleClick(row, column) {
-            if (column.label === "描述")
-                this.navigateToDetailPage(row)
+            if (column.label === "描述") {
+                // 子流程id不为空，跳转到详情页
+                if (row.caseSubId !== null)
+                    this.navigateToDetailPage(row)
+                // 任务id不为空,显示任务描述
+                if (row.taskId !== null)
+                    this.showTaskDescription(row)
+            }
             else if (column.label === "外因延期")
                 this.showDelay(row, "外界因素延期")
             else if (column.label === "人为延期")
@@ -808,7 +842,48 @@ export default {
             this.delayList = res.data
             this.delayDrawer = true
         },
-        
+        // 双击显示任务说明
+        showTaskDescription(row) {
+            this.commitForm.content = [{ content: row.description }]
+        },
+        // 打开暂停界面
+        openPause(row) {
+            this.pauseObj.taskId = row.taskId
+            this.pauseObj.caseSubId = row.caseSubId
+            this.pauseObj.target = row.description
+            this.pauseVisible = true
+        },
+        // 开始暂停
+        async startPause() {
+            if (this.pauseObj.description === null || this.pauseObj.description === '') {
+                this.$message.error("暂停原因不能为空")
+                return
+            }
+            const res = await startPause(this.pauseObj)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.pauseObj.description = ''
+                this.pauseObj.taskId = null
+                this.pauseObj.caseSubId = null
+                this.pauseObj.target = null
+                this.pauseVisible = false
+            }
+            this.getTaskByUserId()
+        },
+        // 停止暂停
+        finishPause(pauseId) {
+            this.$confirm('确定重启该任务吗?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const res = await finishPause(pauseId)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getTaskByUserId()
+                }
+            })
+        },
     }
 }
 </script>

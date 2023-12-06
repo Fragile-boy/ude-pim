@@ -104,8 +104,7 @@ export default {
         ...mapState('apply', ['delayList', 'subList', 'finishList', 'caseSubList', 'taskList']),
         ...mapState(['user'])
     },
-    created() {
-        console.log(this.user.type)
+    mounted() {
         if (this.user.type === 1) {
             this.getDelay()
             this.exceptionSub()

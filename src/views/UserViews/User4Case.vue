@@ -287,7 +287,7 @@ import { getFinishListByUserId, saveFinishApply } from '@/api/caseFinishApply'
 import { countUser, updateDescription } from '@/api/caseSubUser'
 import { saveApplyCaseSub } from '@/api/applyCaseSub'
 import { saveApplyTask } from '@/api/applyTask'
-import { startPause,finishPause } from '@/api/pause'
+import { startPause, finishPause } from '@/api/pause'
 
 export default {
     name: 'case4me',
@@ -384,7 +384,7 @@ export default {
                 description: '',
                 taskId: null,
                 caseSubId: null,
-                target:''
+                target: ''
             }
         }
     },
@@ -843,7 +843,8 @@ export default {
                 this.delayApplyObject.presetFinishTime = null
                 return
             }
-            this.delayApplyObject.presetFinishTime = formatDate(timeAdd(this.delayApplyObject.startTime, this.delayApplyObject.planDays, this.delayApplyObject.unforcedDays, this.delayApplyObject.applyDays))
+            // 依次是开始时间，计划时间，外界因素延期时间，人为延期时间，本次申请时间
+            this.delayApplyObject.presetFinishTime = formatDate(timeAdd(this.delayApplyObject.startTime, this.delayApplyObject.planDays, this.delayApplyObject.unforcedDays, this.delayApplyObject.applyDelay, this.delayApplyObject.applyDays))
         },
         // 初始化甘特图对象
         initGanttObj(obj, stack, start, color, zlevel, name) {

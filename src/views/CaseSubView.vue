@@ -1011,7 +1011,7 @@ export default {
                 var subDays = this.delayApplyObject.applyDays - this.oldApplyDays
                 this.presetTime = formatDate(timeAdd(this.delayApplyObject.predictTime, subDays, 1))
             } else {
-                this.presetTime = formatDate(timeAdd(this.curCaseSubObj.startTime, this.curCaseSubObj.planDays, this.curCaseSubObj.unforcedDays, this.delayApplyObject.applyDays))
+                this.presetTime = formatDate(timeAdd(this.curCaseSubObj.startTime, this.curCaseSubObj.planDays, +this.curCaseSubObj.unforcedDays, +this.curCaseSubObj.applyDelay, this.delayApplyObject.applyDays))
             }
         },
         // 专案进度颜色显示
