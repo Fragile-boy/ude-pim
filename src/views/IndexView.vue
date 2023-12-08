@@ -302,7 +302,9 @@ export default {
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
+  
     next((vm) => {
+      // 个人界面查询的跳转
       if ('caseName' in to.query) {
         vm.queryText = to.query.caseName
         vm.handleQuery()

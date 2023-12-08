@@ -4,6 +4,9 @@ export const taskList = (id)=>{
     return service.get(`/task/taskList/${id}`)
 }
 
+export const notStartTaskList = (id)=>{
+    return service.get(`/task/notStartTaskList/${id}`)
+}
 
 //获取最近一个月用户的工作近况，为饼状图服务
 export const recentTaskList=(id)=>{

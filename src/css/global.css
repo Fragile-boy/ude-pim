@@ -9,8 +9,12 @@ body,
 }
 
 .el-breadcrumb {
-    margin-bottom: 15px;
+    margin-bottom: 18px;
 }
+
+/* .el-table {
+    font-size: 15px;
+} */
 
 .textarea-placeholder-multiline::placeholder {
     white-space: pre-wrap;

@@ -38,6 +38,7 @@
 import { mapActions, mapState } from 'vuex'
 import { timeAdd, formatDate, timeSub } from '@/utils/common'
 import { getSubList } from '@/api/caseSub'
+import { getCaseList } from '@/api/case'
 export default {
   name: 'caseAnalysis',
   data() {
@@ -50,10 +51,11 @@ export default {
       caseId: null,
       map: new Map(),
       showCaseSubGantt: false,
+      caseList: []
     }
   },
   async created() {
-    await this.getCaseList(true)
+    await this.getFinishedCaseList(true)
     for (let i = 0; i < this.caseList.length; i++) {
       this.map.set(this.caseList[i].name, this.caseList[i])
     }
@@ -62,11 +64,38 @@ export default {
     this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
     this.initGantt()
   },
-  computed: {
-    ...mapState('caseM', ['caseList'])
-  },
   methods: {
-    ...mapActions('caseM', ['getCaseList']),
+    async getFinishedCaseList() {
+      var res = await getCaseList(true)
+      res = res.data
+      for (let i = 0; i < res.length; i++) {
+        if (res[i].startTime === null)
+          continue
+        //后端拿到的是字符串格式的数据，转换为时间格式
+        const startTime = new Date(res[i]['startTime'])
+        res[i].startTime = formatDate(startTime)
+        if (res[i].finishTime !== null)
+          res[i].finishTime = formatDate(new Date(res[i]['finishTime']))
+        //目标完成时间
+        //开始时间+各个阶段的计划时间
+        //必须new一个新的，否则共用一个对象，修改一个，两个都改了
+        var presetTime = new Date(startTime)
+        presetTime.setDate(presetTime.getDate() + res[i].planDay - 1)
+        res[i].presetTime = formatDate(presetTime)
+
+        //设置执行天数(2023.11.3 已经在后端完成计算)
+
+        //显示当前阶段
+        if (res[i].curStage === null)
+          res[i].curStage = "已结案"
+      }
+
+      // 获取的是已完成的专案，则按照完结时间倒序排序
+      res.sort((a, b) => {
+        return new Date(b.finishTime) - new Date(a.finishTime)
+      })
+      this.caseList = res
+    },
     // 获得专案对应子流程执行情况
     async getSubInfo(caseId) {
       var res = await getSubList(caseId)
@@ -103,7 +132,7 @@ export default {
         formatter: function (params) {
           var data = new Date(params.value)
           if (fullTime) {
-            if (zlevel === 4 || zlevel === 1||zlevel===2)
+            if (zlevel === 4 || zlevel === 1 || zlevel === 2)
               return ('' + data.getFullYear()).substring(2, 4) + "-" + (data.getMonth() + 1) + "-" + data.getDate()
             return ''
           } else {
@@ -322,12 +351,15 @@ export default {
     nextPage(value) {
       this.page += value
       if (this.page <= 0) {
+        this.$message.warning("当前已是第一页")
         this.page = 1
         return
       } else if (this.page > this.totalPage) {
+        this.$message.warning("当前已是最后一页")
         this.page = this.totalPage
         return
       } else {
+        this.$message.warning(`当前第${this.page}页,共${this.totalPage}页`)
         this.finishCaseList = this.caseList.slice((this.page - 1) * this.pageSize, this.page * this.pageSize)
         this.updateGantt()
       }

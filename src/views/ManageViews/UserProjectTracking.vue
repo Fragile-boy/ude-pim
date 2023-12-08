@@ -29,17 +29,22 @@
             </el-row>
             <br>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
+            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick" style="font-size: 17px;">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
-                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                        <!-- 未开始进度条 -->
+                        <el-progress v-if="scope.row.startTime===null" :stroke-width="24" :percentage="100" color="#30E0D4" :show-text="false">
+                        </el-progress>
+                        <!-- 正常状态进度条 -->
+                        <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
                             :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
                         </el-progress>
-                        <el-progress v-else :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
+                        <!-- 暂停中进度条 -->
+                        <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
                         </el-progress>
                     </template>
                 </el-table-column>
-                <el-table-column prop="comment" label="备注"></el-table-column>
+                <el-table-column prop="comment" label="备注" width="130"></el-table-column>
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.type === 0">专案类</el-tag>
@@ -47,7 +52,8 @@
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="描述" width="260"></el-table-column>
+                <el-table-column prop="caseName" label="专案/任务" width="250"></el-table-column>
+                <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="presetTime" label="预计完成"></el-table-column>
                 <el-table-column prop="pauseStart" label="暂停时间"></el-table-column>
@@ -86,7 +92,7 @@
         <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
             <h2>中断专案</h2>
             <!-- 未开始的异常专案 -->
-            <el-table :data="exceptionList" stripe border style="width: 100%">
+            <el-table :data="exceptionList" stripe border style="width: 100%;font-size:18px">
                 <el-table-column prop="caseName" label="专案"></el-table-column>
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="level" label="难度"></el-table-column>
@@ -129,7 +135,7 @@
                     </el-row>
                 </el-col>
 
-                <el-col :span="1" :offset="user.status || user.type === 1 === 2 ? 0 : 23">
+                <el-col :span="1" :offset="(user.status===2 || user.type === 1) ? 0 : 23">
                     <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
                         style="margin-bottom: 5px;"></el-button>
                 </el-col>
@@ -171,7 +177,7 @@
             <div id="ganttChart" style="width: 100%; height: 500px;"></div>
         </el-card>
 
-        <div class="charts-area" v-show="!commitVisible">
+        <!-- <div class="charts-area" v-show="!commitVisible">
 
             <el-card class="pie-chart">
                 <h2>任务类别</h2><span>(近半年)</span>
@@ -181,10 +187,10 @@
                 <h2>任务达成</h2><span>(近半年)</span>
                 <div id="taskAchieve" style="width: 100%; height: 300px"></div>
             </el-card>
-        </div>
+        </div> -->
 
         <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
-            <el-table :data="delayList">
+            <el-table :data="delayList" style="font-size:20px">
                 <el-table-column prop="applyReason" label="延期原因" width="550">
                 </el-table-column>
                 <el-table-column prop="applyDays" label="延期天数">
@@ -207,7 +213,7 @@
 
 <script>
 import { timeSub, formatDate, timeAdd } from '@/utils/common'
-import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
+import { taskList, recentTaskList, recentHalfYear, getExceptionList, notStartTaskList } from '@/api/task'
 import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
@@ -276,12 +282,12 @@ export default {
             this.curIndex = 0,
             this.getTaskByUserId()
         //初始化块元素
-        this.typePie = this.$echarts.init(document.getElementById('taskType'))
-        this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
+        // this.typePie = this.$echarts.init(document.getElementById('taskType'))
+        // this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
         this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
         setTimeout(() => {
-            this.initPie()
-            this.initBar()
+            // this.initPie()
+            // this.initBar()
             this.initGantt()
         }, 100)
     },
@@ -310,7 +316,7 @@ export default {
             return month + '/' + day + "："
         },
         async getTaskByUserId() {
-            const res = await taskList(this.curUser)
+            var res = await taskList(this.curUser)
             this.userInfo = res.data
             // console.log(this.userInfo)
 
@@ -348,6 +354,15 @@ export default {
                 if (this.userInfo[i].percentage > 100)
                     this.userInfo[i].percentage = 100
             }
+
+            // 如果当前科员没有正在执行的任务
+            if (this.userInfo.length === 0) {
+                // 获取其还未开始的阶段
+                res = await notStartTaskList(this.curUser)
+                this.userInfo = res.data
+                this.userInfo.forEach(item=>item.comment="未开始")
+            }
+
             if (this.commitVisible) {
                 if (this.userInfo.length === 0) {
                     this.commitForm.content = ''
@@ -410,147 +425,147 @@ export default {
         async updateView() {
             await this.getTaskByUserId()
             this.getExceptionList()
-            this.initPie()
-            this.initBar()
+            // this.initPie()
+            // this.initBar()
             this.initGantt()
         },
 
-        //初始化饼状图
-        async initPie() {
-            const res = await recentTaskList(this.curUser)
-            this.typePie.setOption({
-                legend: {
-                    orient: 'vertical',
-                    right: 0,
-                    top: 'top'
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '<h4>{b}:{c}</h4><br><h4>比例:{d}%<h4>'
-                },
-                series: [
-                    {
-                        type: 'pie',
-                        stillShowZeroSum: false,
-                        data: res.data,
-                        radius: '90%',
-                        itemStyle: {
-                            color: function (params) {
-                                if (params.data.name === "专案类")
-                                    return '#67c23a'
-                                else if (params.data.name === "临时事务")
-                                    return '#e6a23c'
-                                else if (params.data.name === "技术研究")
-                                    return '#409eff'
-                            }
-                        },
-                    },
+        // //初始化饼状图
+        // async initPie() {
+        //     const res = await recentTaskList(this.curUser)
+        //     this.typePie.setOption({
+        //         legend: {
+        //             orient: 'vertical',
+        //             right: 0,
+        //             top: 'top'
+        //         },
+        //         tooltip: {
+        //             trigger: 'item',
+        //             formatter: '<h4>{b}:{c}</h4><br><h4>比例:{d}%<h4>'
+        //         },
+        //         series: [
+        //             {
+        //                 type: 'pie',
+        //                 stillShowZeroSum: false,
+        //                 data: res.data,
+        //                 radius: '90%',
+        //                 itemStyle: {
+        //                     color: function (params) {
+        //                         if (params.data.name === "专案类")
+        //                             return '#67c23a'
+        //                         else if (params.data.name === "临时事务")
+        //                             return '#e6a23c'
+        //                         else if (params.data.name === "技术研究")
+        //                             return '#409eff'
+        //                     }
+        //                 },
+        //             },
 
-                ]
-            })
-        },
-        //初始化柱状图
-        async initBar() {
-            const { data: res } = await recentHalfYear(this.curUser)
-            var names = Object.keys(res)
-            names = names.filter(item => item !== 'months').map((item) => {
-                if (item === 'finishCount')
-                    item = '完成任务（件）'
-                else if (item === 'finishDaysCount')
-                    item = '完成任务时长（天）'
-                else if (item === 'taskAchieveRate')
-                    item = '任务达成率'
-                else if (item === 'timeAchieveRate')
-                    item = '时长达成率'
-                return item
-            })
-            this.barInfo.setOption({
-                legend: {
-                    orient: 'vertical',
-                    data: names,
-                    top: 'top',
-                    right: 0
-                },
-                grid: {
-                    top: '6%',       //柱状图距离父容器div顶端的距离
-                    left: '2%',      //柱状图距离父容器div左端的距离
-                    right: '15%',    //柱状图距离父容器div右端的距离
-                    bottom: '0%',    //柱状图距离父容器div底端的距离
-                    containLabel: true  //grid 区域是否包含坐标轴的刻度标签
-                },
-                xAxis: {
-                    data: res.months
-                },
-                yAxis: [
-                    {
-                        type: "value",
-                        nameTextStyle: {
-                            padding: [0, 50, -50, 200]
-                        },
-                        min: 0,
-                        max: this.calMax(res.finishDaysCount),
-                        splitNumber: 6,
-                        interval: ((this.calMax(res.finishDaysCount) - 0) / 6).toFixed(),
-                    },
-                    {
-                        type: "value",
-                        nameTextStyle: {
-                            padding: [0, 50, -50, 200]
-                        },
-                        min: 0,
-                        max: Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)),
-                        splitNumber: 6,
-                        interval: ((Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)) - 0) / 6).toFixed(),
-                        axisLabel: {
-                            formatter: function (v) {
-                                return v.toFixed(2) + '%'; //0表示小数为0位，1表示1位小数，2表示2位小数
-                            }
-                        }
-                    }],
-                tooltip: {
-                    trigger: 'axis',
-                    formatter: function (params) {
-                        var result = params[0].axisValue + '<br/>';
-                        params.forEach(function (item) {
-                            if (item.seriesName.includes('率'))
-                                result += item.marker + item.seriesName + ': ' + item.value + '%<br/>';
-                            else
-                                result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
-                        });
-                        return result;
-                    }
-                },
-                series: [
-                    {
-                        name: names[0],
-                        type: 'bar',
-                        data: res.finishCount,
-                        label: {
-                            show: true, //开启显示
-                            position: 'top', //在上方显示
-                        },
-                    },
-                    {
-                        name: names[1],
-                        type: 'bar',
-                        data: res.finishDaysCount,
-                    },
-                    {
-                        name: names[2],
-                        type: 'line',
-                        data: res.taskAchieveRate,
-                        yAxisIndex: 1,
-                    },
-                    {
-                        name: names[3],
-                        type: 'line',
-                        data: res.timeAchieveRate,
-                        yAxisIndex: 1,
-                    },
-                ]
-            })
+        //         ]
+        //     })
+        // },
+        // //初始化柱状图
+        // async initBar() {
+        //     const { data: res } = await recentHalfYear(this.curUser)
+        //     var names = Object.keys(res)
+        //     names = names.filter(item => item !== 'months').map((item) => {
+        //         if (item === 'finishCount')
+        //             item = '完成任务（件）'
+        //         else if (item === 'finishDaysCount')
+        //             item = '完成任务时长（天）'
+        //         else if (item === 'taskAchieveRate')
+        //             item = '任务达成率'
+        //         else if (item === 'timeAchieveRate')
+        //             item = '时长达成率'
+        //         return item
+        //     })
+        //     this.barInfo.setOption({
+        //         legend: {
+        //             orient: 'vertical',
+        //             data: names,
+        //             top: 'top',
+        //             right: 0
+        //         },
+        //         grid: {
+        //             top: '6%',       //柱状图距离父容器div顶端的距离
+        //             left: '2%',      //柱状图距离父容器div左端的距离
+        //             right: '15%',    //柱状图距离父容器div右端的距离
+        //             bottom: '0%',    //柱状图距离父容器div底端的距离
+        //             containLabel: true  //grid 区域是否包含坐标轴的刻度标签
+        //         },
+        //         xAxis: {
+        //             data: res.months
+        //         },
+        //         yAxis: [
+        //             {
+        //                 type: "value",
+        //                 nameTextStyle: {
+        //                     padding: [0, 50, -50, 200]
+        //                 },
+        //                 min: 0,
+        //                 max: this.calMax(res.finishDaysCount),
+        //                 splitNumber: 6,
+        //                 interval: ((this.calMax(res.finishDaysCount) - 0) / 6).toFixed(),
+        //             },
+        //             {
+        //                 type: "value",
+        //                 nameTextStyle: {
+        //                     padding: [0, 50, -50, 200]
+        //                 },
+        //                 min: 0,
+        //                 max: Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)),
+        //                 splitNumber: 6,
+        //                 interval: ((Math.max(this.calMax(res.timeAchieveRate), this.calMax(res.taskAchieveRate)) - 0) / 6).toFixed(),
+        //                 axisLabel: {
+        //                     formatter: function (v) {
+        //                         return v.toFixed(2) + '%'; //0表示小数为0位，1表示1位小数，2表示2位小数
+        //                     }
+        //                 }
+        //             }],
+        //         tooltip: {
+        //             trigger: 'axis',
+        //             formatter: function (params) {
+        //                 var result = params[0].axisValue + '<br/>';
+        //                 params.forEach(function (item) {
+        //                     if (item.seriesName.includes('率'))
+        //                         result += item.marker + item.seriesName + ': ' + item.value + '%<br/>';
+        //                     else
+        //                         result += item.marker + item.seriesName + ': ' + item.value + '<br/>';
+        //                 });
+        //                 return result;
+        //             }
+        //         },
+        //         series: [
+        //             {
+        //                 name: names[0],
+        //                 type: 'bar',
+        //                 data: res.finishCount,
+        //                 label: {
+        //                     show: true, //开启显示
+        //                     position: 'top', //在上方显示
+        //                 },
+        //             },
+        //             {
+        //                 name: names[1],
+        //                 type: 'bar',
+        //                 data: res.finishDaysCount,
+        //             },
+        //             {
+        //                 name: names[2],
+        //                 type: 'line',
+        //                 data: res.taskAchieveRate,
+        //                 yAxisIndex: 1,
+        //             },
+        //             {
+        //                 name: names[3],
+        //                 type: 'line',
+        //                 data: res.timeAchieveRate,
+        //                 yAxisIndex: 1,
+        //             },
+        //         ]
+        //     })
 
-        },
+        // },
         // 初始化甘特图对象
         initGanttObj(obj, stack, start, color, zlevel, name) {
             obj.name = name
@@ -707,9 +722,9 @@ export default {
         //显示评论
         async openCommentView(row) {
 
-            var names = row.description.split("→")
-            this.commitForm.caseName = names[0]
-            this.commitForm.subName = names[1]
+            // var names = row.description.split("→")
+            this.commitForm.caseName = row.caseName
+            this.commitForm.subName = row.subName
             this.commitForm.caseSubId = row.caseSubId
             this.getAndShowCommit()
         },
@@ -773,7 +788,7 @@ export default {
                 name: '子流程详情',
                 query: {
                     caseId: row.caseId,
-                    caseName: 'description' in row ? row.description.split("→")[0] : row.caseName
+                    caseName: row.caseName
                 }
             })
         },
@@ -811,7 +826,7 @@ export default {
         },
         // 监听双击事件
         handleDoubleClick(row, column) {
-            if (column.label === "描述") {
+            if (column.label === "专案/任务"||column.label === "阶段") {
                 // 子流程id不为空，跳转到详情页
                 if (row.caseSubId !== null)
                     this.navigateToDetailPage(row)
@@ -831,7 +846,7 @@ export default {
                     name: '子流程详情',
                     query: {
                         caseId: row.caseId,
-                        caseName: row.description.split("→")[0]
+                        caseName: row.caseName
                     }
                 })
             }
