@@ -6,6 +6,7 @@
                 <i class="el-icon-s-platform"></i>
                 <span>专案管理</span>
             </template>
+            <el-menu-item index="/admin/index"><i class="el-icon-s-tools"></i>专案主页</el-menu-item>
             <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
             <el-menu-item index="/admin/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
             <el-menu-item index="/admin/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>

@@ -80,3 +80,7 @@ export const getChargeCaseSub = (id)=>{
 export const getExecuting=()=>{
     return service.get("/caseSub/getExecuting")
 }
+
+export const getHalfYearFinishCaseSubAmount=()=>{
+    return service.get("/caseSub/getHalfYearFinishCaseSubAmount")
+}

@@ -95,8 +95,10 @@ export default {
                         type: 'success',
                         duration: 900
                     })
-
-                    setTimeout(() => this.$router.push('/common/index'), 1000)
+                    if(res.data.type===1)
+                        setTimeout(() => this.$router.push('/admin/index'), 1000)
+                    else
+                    setTimeout(() => this.$router.push('/user/index'), 1000)
                 } else {
                     this.$message.error(res.msg)
                 }

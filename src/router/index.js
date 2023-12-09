@@ -16,10 +16,10 @@ import NoAccess from '@/views/NoAccess.vue'
 
 
 // 专案管理界面
-
-import IndexView from '../views/IndexView.vue'
+import CaseIndex from '@/views/CaseViews/CaseIndex'
+import IndexView from '../views/CaseViews/IndexView.vue'
 import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
-import CaseSubView from '@/views/CaseSubView.vue'
+import CaseSubView from '@/views/CaseViews/CaseSubView.vue'
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
 //子流程管理界面
@@ -137,6 +137,12 @@ const routes = [
     path: '/admin',
     component: HomeView,
     children: [
+      // 专案主页
+      {
+        path:'index',
+        name:'管理员主页',
+        component:CaseIndex
+      },
       // 专案列表
       {
         path: 'caseList',

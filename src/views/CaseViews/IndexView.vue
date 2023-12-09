@@ -117,29 +117,6 @@
           @current-change="handleCurrentChange" :current-page.sync="page" :page-sizes="[5, 9, 10, 15, 20, 30]"
           :page-size="size" layout="total, sizes, prev, pager, next" :total="total">
         </el-pagination>
-
-        <!-- 日历显示 -->
-        <el-calendar>
-          <template slot="dateCell" slot-scope="{data}">
-
-            <div style="width: 100%;height: 100%;font-size: 25px; text-align: center;line-height: 70px;"
-              :style="{ 'background-color': isFinishDay(data.day) ? 'skyblue' : isSunDay(data.day) ? '#5BEE58' : 'white' }">
-              <el-tooltip v-if="isFinishDay(data.day)" placement="top">
-                <template #content>
-                  <div v-html="tooltipContent(data.day)" style="font-size: 15px;"></div>
-                </template>
-                <p style="color:#F13E32">{{ formatData(data.day) + '★' }}</p>
-              </el-tooltip>
-              <el-tooltip v-else-if="isToday(data.day)" content="就在今天!" placement="top">
-                <p>{{ formatData(data.day) + '✔️' }}</p>
-              </el-tooltip>
-
-              <p v-else>
-                {{ formatData(data.day) }}
-              </p>
-            </div>
-          </template>
-        </el-calendar>
       </div>
     </el-card>
 
@@ -491,36 +468,6 @@ export default {
         newWindow.document.write('<img src="' + img.src + '" />');
       });
 
-    },
-    isSunDay(date) {
-      date = new Date(date)
-      return date.getDay() === 0
-    },
-    formatData(date) {
-      var array = date.split("-")
-      if (+array[2] === 1)
-        return array[1] + "月"
-      else
-        return +array[2]
-    },
-    isToday(date) {
-      const today = new Date().toISOString().slice(0, 10);
-      return date === today
-    },
-    isFinishDay(date) {
-      var str = ''
-      for (let i = 0; i < this.executingList.length; i++) {
-        if (this.executingList[i].presetTime === date) {
-          str += this.executingList[i].description
-          str += '\n'
-        }
-      }
-      return str
-    },
-    tooltipContent(day) {
-      const content = this.isFinishDay(day);
-      // 把换行符转换成 <br> 标签
-      return content.replace(/\n/g, '<br>');
     },
   }
 }

@@ -65,11 +65,22 @@
                 <el-tag effect="dark" v-if="scope.row.type === 2">技术研究</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="description"></el-table-column>
+            <el-table-column prop="caseName"></el-table-column>
+            <el-table-column prop="subName"></el-table-column>
+            <el-table-column prop="comment"></el-table-column>
             <el-table-column>
               <template slot-scope="scope">
-                <el-progress :text-inside="true" :stroke-width="26" :percentage="+scope.row.percentage"
-                  :status="scope.row.percentage >= 60 ? scope.row.percentage == 100 ? scope.row.finishedOwnWork?'primary':'exception' : 'warning' : 'success'"></el-progress>
+                <!-- 未开始进度条 -->
+                <el-progress v-if="scope.row.startTime === null" :stroke-width="24" :percentage="100" color="#30E0D4"
+                  :show-text="false">
+                </el-progress>
+                <!-- 正常状态进度条 -->
+                <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                  :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
+                </el-progress>
+                <!-- 暂停中进度条 -->
+                <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" color="#909399" :show-text="false">
+                </el-progress>
               </template>
             </el-table-column>
           </el-table>
@@ -89,6 +100,9 @@
             <div style="width: 100%;height: 100%;font-size: 25px; text-align: center;line-height: 70px;"
               :style="{ 'background-color': isFinishDay(data.day) ? 'skyblue' : isSunDay(data.day) ? '#5BEE58' : 'white' }">
               <el-tooltip v-if="isFinishDay(data.day)" :content="isFinishDay(data.day)" placement="top">
+                <template #content>
+                  <div style="white-space: pre-wrap;">{{ isFinishDay(data.day) }}</div>
+                </template>
                 <p style="color:#F13E32">{{ formatData(data.day) + '★' }}</p>
               </el-tooltip>
               <el-tooltip v-else-if="isToday(data.day)" content="就在今天!" placement="top">
@@ -101,22 +115,6 @@
             </div>
           </template>
         </el-calendar>
-
-        <!-- 图表 -->
-        <!-- <el-card class="taskCharts">
-          <div v-if="this.taskList.length !== 0">
-            <div style="display: inline-block;">
-              <h1>任务类型</h1>
-              <div id="typePie" style="width: 350px; height: 300px;"></div>
-            </div>
-
-            <div style="display: inline-block;">
-              <h1>执行情况</h1>
-              <div id="statusPie" style="width: 350px; height: 300px; "></div>
-            </div>
-          </div>
-          <el-empty v-else description="欢迎新人，今后这里会是你的任务展示区域哦！"></el-empty>
-        </el-card> -->
       </div>
 
 
@@ -188,8 +186,8 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
-import { taskList } from '@/api/task'
-import { timeSub, timeAdd } from '@/utils/common'
+import { taskList, notStartTaskList } from '@/api/task'
+import { timeSub, timeAdd, formatDate } from '@/utils/common'
 import { updatePassword } from '@/api/user'
 export default {
   data() {
@@ -221,6 +219,7 @@ export default {
     }
 
     return {
+      // 包括还未开始的任务列表
       taskList: [],
       pieChart: null,
       statusPie: null,
@@ -254,6 +253,7 @@ export default {
       },
       caseName: '',
       today: new Date(),
+
     }
   },
   computed: {
@@ -264,7 +264,9 @@ export default {
 
   },
   async mounted() {
+    // 因为会插入到同一个列表，所以要串行执行
     await this.initTaskList()
+    await this.getNotStartTaskList()
     // this.typePie = this.$echarts.init(document.getElementById('typePie'));
     // this.statusPie = this.$echarts.init(document.getElementById('statusPie'));
 
@@ -272,19 +274,50 @@ export default {
   },
   methods: {
     ...mapActions(['editUserInfo']),
+    async getNotStartTaskList() {
+      const res = await notStartTaskList(this.user.id)
+      res.data.forEach(item=>item.comment='即将开始')
+      this.taskList.push(...res.data)
+    },
     async initTaskList() {
       const res = await taskList(this.user.id)
       if (res.code === 200) {
         this.taskList = res.data
         var delayCount = 0
         for (var i = 0; i < this.taskList.length; i++) {
-          this.taskList[i].presetTime = timeAdd(this.taskList[i].startTime, this.taskList[i].planDays, this.taskList[i].unforcedDays, this.taskList[i].applyDelay)
-          this.taskList[i].percentage = (timeSub(this.taskList[i].startTime, new Date()) * 100.0 / (this.taskList[i].planDays + +this.taskList[i].unforcedDays + +this.taskList[i].applyDelay)).toFixed()
-          if (this.taskList[i].percentage >= 100) {
-            if (this.taskList[i].finishedOwnWork === 0)
-              delayCount++
-            this.taskList[i].percentage = 100
+          this.taskList[i].executionDays = timeSub(this.taskList[i].startTime, new Date())
+          var presetTime = new Date(this.taskList[i].startTime)
+          presetTime = presetTime.setDate(presetTime.getDate()+this.taskList[i].planDays+this.taskList[i].unforcedDays)
+          this.taskList[i].presetTime = presetTime
+          //分为已延误和未延误
+          var today = new Date()
+          today.setHours(0, 0, 0, 0)
+          // 是否暂停
+          this.taskList[i].pauseStart = this.taskList[i].pauseStart ? formatDate(this.taskList[i].pauseStart) : null
+          //还未截止
+          if (today <= this.taskList[i].presetTime) {
+            //已经执行了多少天
+            var costDay = timeSub(this.taskList[i].startTime, today)
+            // 已经执行了多少天/总共多少天
+            this.taskList[i].percentage = costDay * 1.0 / (this.taskList[i].planDays + +this.taskList[i].unforcedDays) * 100
+          } else {
+            //已经延期了多少天(这里不能算预计时间当天，所以必须要-1)
+            var delayDay = timeSub(this.taskList[i].presetTime, today) - 1
+            //计算延误期限
+            this.taskList[i].leftDelay = this.taskList[i].applyDelay - delayDay
+            //判断是否在延期期限内
+            if (this.taskList[i].leftDelay >= 0) {
+              this.taskList[i].percentage = (delayDay / this.taskList[i].applyDelay) * 100
+            } else {
+              this.taskList[i].percentage = timeSub(this.taskList[i].startTime, today)*100.0 / this.taskList[i].planDays
+              if(!this.taskList[i].finishedOwnWork)
+                delayCount++
+            }
           }
+          this.taskList[i].presetTime = formatDate(this.taskList[i].presetTime)
+          this.taskList[i].comment = this.percentageText(this.taskList[i])
+          if (this.taskList[i].percentage > 100)
+            this.taskList[i].percentage = 100
         }
         if (delayCount) {
           this.$notify({
@@ -297,6 +330,19 @@ export default {
       } else {
         this.$message.error(res.msg)
       }
+    },
+    // 进度条备注显示
+    percentageText(row) {
+      if (row.pausing)
+        return "暂停中"
+      if ('leftDelay' in row) {
+        if (row.leftDelay >= 0) {
+          return `延期剩余${row.leftDelay}天`
+        }
+        return `已延误${row.applyDelay - row.leftDelay}天`
+      }
+      //算上今天，剩余天数+1
+      return `执行剩余${row.planDays + +row.unforcedDays + 1 - row.executionDays}天`
     },
     //初始化显示图表
     renderPieChart() {
@@ -498,12 +544,13 @@ export default {
       return date === today
     },
     isFinishDay(date) {
+      var str = ''
       for (let i = 0; i < this.taskList.length; i++) {
-        if (this.taskList[i].presetTime === date) {
-          return this.taskList[i].description
+        if (timeAdd(this.taskList[i].presetTime, +this.taskList[i].applyDelay) === date) {
+          str += this.taskList[i].description+"\n"
         }
       }
-      return false
+      return str===''?false:str
     }
   },
 
