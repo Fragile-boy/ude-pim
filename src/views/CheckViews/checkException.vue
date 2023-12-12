@@ -10,9 +10,18 @@
         </div>
         <el-card>
             <div>
-                <h1 style="text-align: center;">异常专案处理</h1>
+                <el-row>
+                    <el-col :span="1" :offset="8">
+                        <h1><i class="el-icon-error" style="color:red"></i></h1>
+                    </el-col>
+                    <el-col :span="4" :offset="0">
+                        <h1 style="text-align: center;">异常专案处理</h1>
+                    </el-col>
+                </el-row>
+
+
             </div>
-            <el-table :data="subInfo" stripe border>
+            <el-table :data="subInfo" style="font-size: 15px;" :highlight-current-row="true">
                 <el-table-column prop="caseName" label="专案">
                 </el-table-column>
                 <el-table-column prop="subName" label="子流程">
@@ -27,7 +36,7 @@
                 <el-table-column label="操作">
                     <template slot-scope="scope">
                         <el-tooltip effect="dark" content="开始阶段" placement="top" :enterable="false"
-                            v-if="user.type===1 && scope.row.startTime === null">
+                            v-if="user.type === 1 && scope.row.startTime === null">
                             <el-button type="success" size="mini" icon="el-icon-video-play" round
                                 @click="launch(scope.row)"></el-button>
                         </el-tooltip>
@@ -66,7 +75,7 @@ import { formatDate } from '@/utils/common'
 import { setDirector } from '@/api/caseSubUser'
 import { mapState } from 'vuex'
 export default {
-    name:'checkException',
+    name: 'checkException',
     data() {
         return {
             subInfo: [],
@@ -97,7 +106,7 @@ export default {
         this.exceptionSub()
         this.getAllUser()
     },
-    computed:{
+    computed: {
         ...mapState(['user'])
     },
     methods: {
@@ -152,12 +161,12 @@ export default {
                 this.$message.error(res.msg)
         },
         //打开专案详情
-        openCaseDetail(row){
+        openCaseDetail(row) {
             this.$router.push({
-                name:'子流程详情',
-                query:{
-                    caseId:row.caseId,
-                    caseName:row.caseName
+                name: '子流程详情',
+                query: {
+                    caseId: row.caseId,
+                    caseName: row.caseName
                 }
             })
         }

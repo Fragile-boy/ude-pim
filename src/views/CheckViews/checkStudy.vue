@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="taskList" border>
+            <el-table :data="taskList">
                 <el-table-column label="类别">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>

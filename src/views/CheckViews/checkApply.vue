@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="caseSubList" border>
+            <el-table :data="caseSubList">
                 <el-table-column prop="caseName" label="专案"></el-table-column>
                 <el-table-column prop="subName" label="子流程"></el-table-column>
                 <el-table-column prop="description" label="工作描述"></el-table-column>

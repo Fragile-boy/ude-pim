@@ -441,6 +441,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
+              fontSize:20,
             },
           },
           {
@@ -450,6 +451,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
+              fontSize:20,
             },
           },
           {
@@ -460,7 +462,8 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
-              formatter: '{c}%'
+              formatter: '{c}%',
+              fontSize:20,
             },
           },
           {
@@ -471,6 +474,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
+              fontSize:20,
               formatter: '{c}%'
             },
           },
@@ -533,8 +537,8 @@ export default {
         this.barInfo.months.push(s_month)
         this.barInfo.finishCount.push(finishCount)
         this.barInfo.finishDaysCount.push(finishDaysCount)
-        this.barInfo.taskAchieveRate.push(finishCount === 0 ? 0 : (onTimeFinishCount * 100.0 / finishCount).toFixed(2))
-        this.barInfo.timeAchieveRate.push(finishDaysCount === 0 ? 0 : (planDaysCount * 100.0 / finishDaysCount).toFixed(2))
+        this.barInfo.taskAchieveRate.push(finishCount === 0 ? 0 : (onTimeFinishCount * 100.0 / finishCount).toFixed())
+        this.barInfo.timeAchieveRate.push(finishDaysCount === 0 ? 0 : (planDaysCount * 100.0 / finishDaysCount).toFixed())
       }
     },
     // 获取最大值方法

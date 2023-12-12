@@ -19,7 +19,7 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="finishList" style="width: 100%" border @cell-dblclick="handleDoubleClick">
+            <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>

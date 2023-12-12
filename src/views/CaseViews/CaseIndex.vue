@@ -39,10 +39,11 @@
             <el-card class="executing-container">
                 <h4><i class='el-icon-s-flag'></i>执行清单</h4>
                 <el-table :data="executingList" style="font-size: 15px;">
+                    <el-table-column type="index"></el-table-column>
                     <el-table-column prop="caseName" label="专案" align="center" width="260"></el-table-column>
                     <el-table-column prop="subName" label="阶段" align="center"></el-table-column>
-                    <el-table-column prop="userNames" label="负责人" width="230" align="center"></el-table-column>
-                    <el-table-column prop="startTime" label="开始时间" align="center"></el-table-column>
+                    <el-table-column prop="userNames" label="负责人" width="220" align="center"></el-table-column>
+                    <el-table-column prop="startTime" label="开始时间" align="center" width="100"></el-table-column>
                     <el-table-column>
                         <template slot-scope="scope">
                             <el-button icon="el-icon-position" type="primary" @click="redirectToDetailPage(scope.row)" round
@@ -55,14 +56,14 @@
                 <el-card class="delay-container">
                     <h4><i class='el-icon-error'></i>延误清单</h4>
                     <el-table :data="delayList">
-
+                        <el-table-column type="index" width="20"></el-table-column>
                         <el-table-column prop="caseName" label="专案" width="250"></el-table-column>
                         <el-table-column prop="subName" label="阶段"></el-table-column>
                         <el-table-column prop="userNames" label="负责人"></el-table-column>
                         <el-table-column prop="delayDays" label="已延期(天)"></el-table-column>
                         <el-table-column>
                             <template slot-scope="scope">
-                                <el-button icon="el-icon-position" type="primary" @click="redirectToDetailPage(scope.row)"
+                                <el-button icon="el-icon-position" type="danger" @click="redirectToDetailPage(scope.row)"
                                     round size="mini"></el-button>
                             </template>
                         </el-table-column>
@@ -71,16 +72,22 @@
                 <el-card class="pause-container">
                     <h4><i class='el-icon-video-pause'></i>暂停清单</h4>
                     <el-table :data="pausingList">
-
+                        <el-table-column type="index" width="20"></el-table-column>
                         <el-table-column prop="caseName" label="专案" width="250"></el-table-column>
                         <el-table-column prop="subName" label="阶段"></el-table-column>
                         <el-table-column prop="userNames" label="负责人" width="150"></el-table-column>
-                        <el-table-column prop="pauseStart" label="暂停于"></el-table-column>
-                        <el-table-column prop="pauseDays" label="已暂停(天)"></el-table-column>
+                        <el-table-column prop="pauseStart" label="暂停于" width="100"></el-table-column>
+                        <el-table-column label="已暂停">
+                            <template slot-scope="scope">
+                                {{ `${scope.row.pauseDays} 天` }}
+                            </template>
+                        </el-table-column>
                         <el-table-column>
                             <template slot-scope="scope">
-                                <el-button icon="el-icon-position" type="primary" @click="redirectToDetailPage(scope.row)"
-                                    round size="mini"></el-button>
+                                <el-tooltip class="item" effect="dark" :content="scope.row.pauseDesc" placement="top">
+                                    <el-button icon="el-icon-position" type="info" @click="redirectToDetailPage(scope.row)"
+                                        round size="mini"></el-button>
+                                </el-tooltip>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -199,7 +206,7 @@ export default {
         initBar() {
             var option = {
                 title: {
-                    text: '近半年完成专案子项统计'
+                    text: '近半年完成子流程统计'
                 },
                 xAxis: {
                     axisLabel: {
@@ -295,10 +302,10 @@ export default {
             for (var i = 0; i < this.caseExecutingInfo.length; i++) {
                 if (this.caseExecutingInfo[i].startTime === null) {
                     this.casePieObj.notStart++
-                } else if (this.caseExecutingInfo[i].executionDays > this.caseExecutingInfo[i].planDay) {
-                    this.casePieObj.delay++
                 } else if (this.isInterrupt(this.caseExecutingInfo[i])) {
                     this.casePieObj.interrupt++
+                } else if (this.caseExecutingInfo[i].executionDays > this.caseExecutingInfo[i].planDay) {
+                    this.casePieObj.delay++
                 } else {
                     this.casePieObj.executing++
                 }
@@ -386,6 +393,14 @@ export default {
             // 对执行专案进行排序，按照开始时间倒序
             this.executingList.sort((a, b) => {
                 return new Date(b.startTime) - new Date(a.startTime)
+            })
+            // 对暂停专案按照暂停时间倒序
+            this.pausingList.sort((a, b) => {
+                return b.pauseDays - a.pauseDays
+            })
+            // 对延期专案按照延期时间倒序
+            this.delayList.sort((a, b) => {
+                return b.delayDays - a.delayDays
             })
         },
         // 跳转到详情页
