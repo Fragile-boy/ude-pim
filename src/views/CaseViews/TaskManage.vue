@@ -7,49 +7,121 @@
             </el-breadcrumb>
         </div>
         <el-card>
-            <!-- 筛选区域 -->
             <el-row>
-
                 <el-col :span="2">
                     <el-button type="primary" icon="el-icon-circle-plus" @click="openAddTask()">新建任务</el-button>
                 </el-col>
-
-                <el-col :span="3" :offset="19">
-                    <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
-                        <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
-                            <el-option v-for="item in group.children" :key="item.value" :label="item.label"
-                                :value="item.value">
-                            </el-option>
-                        </el-option-group>
-                    </el-select>
+                <el-col :span="4" :offset="18">
+                    <el-radio-group v-model="showMode" style="margin-left:50px;">
+                        <el-radio-button label="总览视图"><i class="el-icon-picture">总览视图</i></el-radio-button>
+                        <el-radio-button label="个人视图"><i class="el-icon-s-custom">个人视图</i></el-radio-button>
+                    </el-radio-group>
                 </el-col>
             </el-row>
             <br>
-            <el-table :data="taskList">
-                <el-table-column label="类型">
-                    <template slot-scope="scope">
-                        <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
-                        <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="description" label="描述"></el-table-column>
-                <el-table-column prop="startTime" label="开始时间"></el-table-column>
-                <el-table-column prop="predictTime" label="预计时间"></el-table-column>
-                <el-table-column prop="finishTime" label="完成时间"></el-table-column>
-                <el-table-column prop="planDays" label="计划时间"></el-table-column>
-                <el-table-column prop="executionDays" label="执行时间"></el-table-column>
-                <el-table-column prop="unforcedDays" label="外界因素延期"></el-table-column>
-                <el-table-column prop="applyDelay" label="人为因素延期"></el-table-column>
-                <el-table-column label="操作">
-                    <template slot-scope="scope">
-                        <el-tooltip class="item" effect="dark" content="任务详情" placement="right-start">
-                            <el-button icon="el-icon-edit" type="primary" size="mini" round
-                                @click="openTaskDetail(scope.row)">
-                            </el-button>
-                        </el-tooltip>
-                    </template>
-                </el-table-column>
-            </el-table>
+            <!-- 总览视图 -->
+            <div class="overview" v-if="showMode === '总览视图'">
+
+                <el-card class="executing-container">
+                    <h4><i class='el-icon-s-flag'></i>执行清单</h4>
+                    <el-table :data="executingList" style="font-size: 15px;">
+                        <el-table-column type="index"></el-table-column>
+                        <el-table-column prop="description" label="描述" align="center" width="320"></el-table-column>
+                        <el-table-column prop="userNames" label="负责人" width="220" align="center"></el-table-column>
+                        <el-table-column prop="startTime" label="开始时间" align="center" width="100"></el-table-column>
+                        <el-table-column>
+                            <template slot-scope="scope">
+                                <el-button type="primary" icon="el-icon-position" round size="mini"
+                                    @click="redirectToDetailPage(scope.row)"></el-button>
+                            </template>
+                        </el-table-column>
+
+                    </el-table>
+                </el-card>
+                <div class="exception-container">
+                    <el-card class="delay-container">
+                        <h4><i class='el-icon-error'></i>延误清单</h4>
+                        <el-table :data="delayList">
+                            <el-table-column type="index" width="20"></el-table-column>
+                            <el-table-column prop="description" label="描述" align="center" width="320"></el-table-column>
+                            <el-table-column prop="userNames" label="负责人"></el-table-column>
+                            <el-table-column prop="delayDays" label="已延期(天)"></el-table-column>
+                            <el-table-column>
+                                <template slot-scope="scope">
+                                    <el-button type="danger" icon="el-icon-position" round size="mini"
+                                        @click="redirectToDetailPage(scope.row)"></el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-card>
+                    <el-card class="pause-container">
+                        <h4><i class='el-icon-video-pause'></i>暂停清单</h4>
+                        <el-table :data="pausingList">
+                            <el-table-column type="index" width="20"></el-table-column>
+                            <el-table-column prop="description" label="描述" align="center" width="320"></el-table-column>
+                            <el-table-column prop="userNames" label="负责人" width="150"></el-table-column>
+                            <el-table-column prop="pauseStart" label="暂停于" width="100"></el-table-column>
+                            <el-table-column label="已暂停">
+                                <template slot-scope="scope">
+                                    {{ `${scope.row.pauseDays} 天` }}
+                                </template>
+                            </el-table-column>
+                            <el-table-column>
+                                <template slot-scope="scope">
+                                    <el-tooltip class="item" effect="dark" :content="scope.row.pauseDesc" placement="top">
+                                        <el-button type="info" icon="el-icon-position" round size="mini"
+                                            @click="redirectToDetailPage(scope.row)"></el-button>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-card>
+                </div>
+            </div>
+            <!-- 个人视图 -->
+            <div class="person" v-if="showMode === '个人视图'">
+                <!-- 筛选区域 -->
+                <el-row>
+
+
+
+                    <el-col :span="3" :offset="21">
+                        <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
+                            <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                                <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                    :value="item.value">
+                                </el-option>
+                            </el-option-group>
+                        </el-select>
+                    </el-col>
+                </el-row>
+                <br>
+                <el-table :data="taskList">
+                    <el-table-column label="类型">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
+                            <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="description" label="描述"></el-table-column>
+                    <el-table-column prop="startTime" label="开始时间"></el-table-column>
+                    <el-table-column prop="predictTime" label="预计时间"></el-table-column>
+                    <el-table-column prop="finishTime" label="完成时间"></el-table-column>
+                    <el-table-column prop="planDays" label="计划时间"></el-table-column>
+                    <el-table-column prop="executionDays" label="执行时间"></el-table-column>
+                    <el-table-column prop="unforcedDays" label="外界因素延期"></el-table-column>
+                    <el-table-column prop="applyDelay" label="人为因素延期"></el-table-column>
+                    <el-table-column label="操作">
+                        <template slot-scope="scope">
+                            <el-tooltip class="item" effect="dark" content="任务详情" placement="right-start">
+                                <el-button icon="el-icon-edit" type="primary" size="mini" round
+                                    @click="openTaskDetail(scope.row)">
+                                </el-button>
+                            </el-tooltip>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
         </el-card>
 
         <!-- 修改图层 -->
@@ -149,9 +221,9 @@
 </template>
 
 <script>
-import { allTaskList, updateTask, addTask } from '@/api/task';
+import { allTaskList, updateTask, addTask, getExecutingTask } from '@/api/task';
 import { getUserListWithAssistants } from '@/api/user';
-import { format4back, timeAdd, timeSub } from '@/utils/common';
+import { format4back, formatDate, timeAdd, timeSub } from '@/utils/common';
 import { mapState } from 'vuex';
 
 export default {
@@ -176,10 +248,10 @@ export default {
                     value: 1,
                     label: '电控',
                     children: []
-                },{
-                    value:2,
-                    label:'IE',
-                    children:[]
+                }, {
+                    value: 2,
+                    label: 'IE',
+                    children: []
                 }
             ],
             curUser: null,
@@ -204,30 +276,33 @@ export default {
             },
             addTaskObj: {
                 director: null,
-            }
+            },
+            showMode: '总览视图',
+            executingList: [],
+            delayList: [],
+            pausingList: [],
         }
     },
     async created() {
         await this.getAllUser()
         this.curUser = this.directorOptions[0].children[0].value
         this.getAllTaskList()
-
+        this.getExecutingTask()
     },
     computed: {
         ...mapState(['user'])
-    }
-    ,
+    },
     methods: {
         async getAllTaskList() {
             const res = await allTaskList(this.curUser)
             if (res.code === 200) {
                 this.taskList = res.data
-                this.taskList.forEach(item=>{
+                this.taskList.forEach(item => {
                     item.predictTime = timeAdd(item.startTime, item.planDays)
-                    if(item.finishTime!==null){
+                    if (item.finishTime !== null) {
                         item.executionDays = timeSub(item.startTime, item.finishTime)
                         item.executionDays -= item.unforcedDays
-                    }else{
+                    } else {
                         item.executionDays = timeSub(item.startTime, new Date())
                         item.executionDays -= item.unforcedDays
                     }
@@ -293,15 +368,66 @@ export default {
                         this.addTaskVisible = false
                         this.$message.success(res.data)
                         this.getAllTaskList()
+                        this.getExecutingTask()
                     } else {
                         this.$message.error(res.msg)
                     }
                 }
             })
 
+        },
+        // 获取所有任务列表
+        async getExecutingTask() {
+            const res = await getExecutingTask()
+            this.executingList = res.data
+            this.executingList.forEach(item => {
+                if (item.pausing) {
+                    item.pauseDays = timeSub(item.pauseStart, new Date())
+                    this.pausingList.push(item)
+                }
+                item.delayDays = timeSub(item.startTime, new Date()) - item.planDays - +item.unforcedDays
+                if (item.delayDays > 0) {
+                    item.pauseStart = formatDate(item.pauseStart)
+                    this.delayList.push(item)
+                    item.is_delay = true
+                } else
+                    item.is_delay = false
+            })
+            this.executingList = this.executingList.filter(item => !item.pausing)
+            this.executingList = this.executingList.filter(item => !item.is_delay)
+        },
+        // 跳转界面
+        redirectToDetailPage(row) {
+            this.$router.push({
+                name: '部员专案追踪',
+                query: {
+                    userName: row.userNames
+                }
+            })
         }
     }
 }
 </script>
 
-<style></style>
+<style scoped>
+.overview {
+    display: flex;
+    flex-direction: row;
+}
+
+.executing-container {
+    width: 50%;
+    margin-right: 1%;
+}
+
+.exception-container {
+    width: 49%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.delay-container {
+    margin-bottom: 10px;
+}
+</style>

@@ -3,7 +3,6 @@
         <!-- 面包屑导航区域 -->
         <div>
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
                 <el-breadcrumb-item>部员管理</el-breadcrumb-item>
                 <el-breadcrumb-item>部员信息管理</el-breadcrumb-item>
             </el-breadcrumb>

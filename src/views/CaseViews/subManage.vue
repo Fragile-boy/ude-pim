@@ -33,7 +33,7 @@
                 </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-button type="primary" icon="el-icon-edit" @click="openEditSub(scope.row)"></el-button>
+                        <el-button type="primary" icon="el-icon-edit" @click="openEditSub(scope.row)" round size="small"></el-button>
                         <el-button v-if="false" type="danger" icon="el-icon-delete" @click="removeSub(scope.row)"></el-button>
                     </template>
                 </el-table-column>

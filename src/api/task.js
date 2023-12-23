@@ -39,3 +39,8 @@ export const addTask = (obj)=>{
 export const getExceptionList = (id)=>{
     return service.get(`/task/exception/${id}`)
 }
+
+// 获取所有正在执行的“任务”
+export const getExecutingTask = ()=>{
+    return service.get('/task/getExecutingTask')
+}

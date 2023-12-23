@@ -37,8 +37,8 @@
                 </el-col>
             </el-row>
             <div class="tableInfo">
-                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" stripe
-                    border @cell-dblclick="handleDoubleClick">
+                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" border
+                    @cell-dblclick="handleDoubleClick" :row-class-name="tableRowClassName">
 
                     <el-table-column type="expand">
                         <template slot-scope="scope">
@@ -50,11 +50,11 @@
 
                                 </el-col>
 
-                                <el-col :span="6">
+                                <el-col :span="10">
                                     <el-tag
                                         v-if="scope.row.desc.length !== 0 && scope.row.desc[index] !== null && scope.row.desc[index] !== ''"
                                         type="warning" class="chargeNameTag">
-                                        工作描述:{{ (scope.row.desc[index]) }}
+                                        工作描述:{{ scope.row.desc[index] }}
                                     </el-tag>
 
                                 </el-col>
@@ -510,9 +510,9 @@ export default {
                     children: []
                 },
                 {
-                    value:2,
-                    label:'IE',
-                    children:[]
+                    value: 2,
+                    label: 'IE',
+                    children: []
                 }
             ],
             //穿梭框显示的科员
@@ -613,11 +613,11 @@ export default {
 
             var res = await getSubList(caseId)
             this.subInfo = res.data
-            
+
             // 获取是否含有程序编写，如果含有，则配电阶段积分不乘以2(31是程序编写的subId)
             var containProgramming = false
             for (let i = 0; i < this.subInfo.length; i++) {
-                if(this.subInfo[i].subId===31){
+                if (this.subInfo[i].subId === 31) {
                     containProgramming = true
                     break
                 }
@@ -662,7 +662,7 @@ export default {
                 if (this.subInfo[i].finishTime !== null && this.subInfo[i].subId !== 7) {
                     this.subInfo[i].value = (this.subInfo[i].planDays * (this.subInfo[i].planDays * 1.0 / this.subInfo[i].executionDays) ** (2 / 3)).toFixed(2)
                     // if(this.subInfo[i].subName==='配電')
-                    if (!containProgramming&&this.subInfo[i].subId === 9)
+                    if (!containProgramming && this.subInfo[i].subId === 9)
                         this.subInfo[i].value *= 2
                 }
             }
@@ -1168,7 +1168,7 @@ export default {
                         res += params[0].axisValue + '<br/>';
                         var set = new Set()
                         for (var i = 0; i < params.length; i++) {
-                            if(set.has(params[i].seriesName))
+                            if (set.has(params[i].seriesName))
                                 continue
                             set.add(params[i].seriesName)
                             res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
@@ -1210,6 +1210,7 @@ export default {
                 obj.itemStyle =
                 {
                     normal: {
+                        borderRadius: 5,
                         color: color,
                         borderColor: "#fff",
                         borderWidth: 2,
@@ -1231,6 +1232,13 @@ export default {
             this.caseName = this.caseList[this.caseIndex].name
             await this.getSubInfo(this.caseId)
             this.showExecutionGantt()
+        },
+        // 控制表格行的颜色
+        tableRowClassName({ row, rowIndex }) {
+            // console.log(row.finishTime===null)
+            if (row.startTime !== null && row.finishTime === null) {
+                return 'executing';
+            }
         }
     }
 }
@@ -1255,6 +1263,29 @@ export default {
 .table {
     width: 100%;
 }
+
+.el-table>>>.executing {
+    background: #A8EEEB;
+    animation: blink 0.6s linear 2;
+}
+
+
+/* 闪动效果 */
+@keyframes blink {
+    0% {
+        background: initial;
+    }
+
+    50% {
+        background: #8AE970;
+    }
+
+    /* 闪动的颜色 */
+    100% {
+        background: #A8EEEB;
+    }
+}
+
 
 .page_change {
     display: flex;

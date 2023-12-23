@@ -49,7 +49,6 @@ export default {
   data() {
     return {
       isCollapse: false,
-
     }
   },
   created() {
@@ -72,7 +71,6 @@ export default {
         duration: 1000
       })
       // this.$router.push('/login')
-
     },
   }
 }

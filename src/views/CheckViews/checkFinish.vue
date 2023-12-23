@@ -3,7 +3,6 @@
         <!-- 面包屑导航区域 -->
         <div>
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
                 <el-breadcrumb-item>审批流程</el-breadcrumb-item>
                 <el-breadcrumb-item>完结申请</el-breadcrumb-item>
             </el-breadcrumb>
@@ -19,7 +18,8 @@
                     </el-col>
                 </el-row>
             </div>
-            <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick">
+            <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick"
+            :cell-class-name="cellClassName">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -382,9 +382,28 @@ export default {
                     }
                 })
             }
+        },
+        cellClassName({row,column,rowindex,columnIndex}){
+            if(column.label==='申请完结时间'||column.label==='预计积分'){
+                return 'heightLight'
+            }
         }
     }
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.el-table >>> .heightLight{
+    background: #60E5E5;
+    animation:blink 0.6s linear 2;
+}
+@keyframes blink{
+    0%{ background: #fff;}
+    50%{
+        background: #96E8E8;
+    }
+    100%{
+        background: #60E5E5;
+    }
+}
+</style>

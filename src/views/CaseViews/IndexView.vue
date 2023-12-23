@@ -58,7 +58,8 @@
           </el-row>
         </div>
         <div ref="caseTableRef">
-          <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px">
+          <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px;" 
+          :default-sort="{prop:'executionDays',order:'descending'}" @sort-change="handlesortChange">
             <el-table-column label="操作" width="120">
               <template slot-scope="scope">
                 <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
@@ -71,27 +72,27 @@
               </template>
 
             </el-table-column>
-            <el-table-column prop="name" label="任务名" width="260">
+            <el-table-column prop="name" label="任务名" width="260" align="center">
             </el-table-column>
-            <el-table-column prop="curStage" label="当前阶段">
+            <el-table-column prop="curStage" label="当前阶段" align="center">
             </el-table-column>
-            <el-table-column prop="level" label="难度">
+            <el-table-column prop="level" label="难度" align="center">
             </el-table-column>
-            <el-table-column prop="directorName" label="负责人">
+            <el-table-column prop="directorName" label="负责人" align="center">
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间">
+            <el-table-column prop="startTime" label="开始时间" align="center">
             </el-table-column>
-            <el-table-column prop="presetTime" label="预计完成时间">
+            <el-table-column prop="presetTime" label="预计完成时间" align="center">
             </el-table-column>
-            <el-table-column prop="finishTime" label="实际完成时间">
+            <el-table-column prop="finishTime" label="实际完成时间" align="center">
             </el-table-column>
-            <el-table-column prop="planDay" label="计划天数">
+            <el-table-column prop="planDay" label="计划天数" sortable width="105" align="center">
             </el-table-column>
-            <el-table-column prop="executionDays" label="执行天数">
+            <el-table-column prop="executionDays" label="执行天数" sortable width="105" align="center">
             </el-table-column>
-            <el-table-column prop="unforcedDay" label="外界因素延期">
+            <el-table-column prop="unforcedDay" label="外界因素延期" sortable width="135" align="center">
             </el-table-column>
-            <el-table-column prop="status" label="执行状态">
+            <el-table-column prop="status" label="执行状态" align="center">
               <template slot-scope="scope">
                 <el-tag effect="dark" type="info" v-if="scope.row.startTime === null" style="font-size:15px"
                   size="small">未开始</el-tag>
@@ -468,6 +469,23 @@ export default {
         newWindow.document.write('<img src="' + img.src + '" />');
       });
 
+    },
+    handlesortChange(column) {
+      if (column.order === 'ascending')
+        column.order = 1
+      else if (column.order === 'descending')
+        column.order = -1
+      else {
+        column.order = -1
+        column.prop = 'executionDays'
+      }
+      this.caseInfo.sort((a, b) => {
+        if (a[column.prop] < b[column.prop])
+          return -1 * column.order
+        else if (a[column.prop] > b[column.prop])
+          return 1 * column.order
+        else return 0
+      })
     },
   }
 }

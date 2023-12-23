@@ -3,7 +3,6 @@
     <!-- 面包屑导航区域 -->
     <div>
       <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/index' }">主页</el-breadcrumb-item>
         <el-breadcrumb-item>数据统计</el-breadcrumb-item>
         <el-breadcrumb-item>专案数据分析</el-breadcrumb-item>
       </el-breadcrumb>
@@ -25,11 +24,19 @@
           </el-select>
         </el-col>
 
-        <el-col :span="2">
-          <el-button type="primary" @click="getFinishSubList" round>查询</el-button>
+        <el-col :span="1">
+          <el-button type="primary" icon="el-icon-top" round @click="changeMonth(-1)"></el-button>
         </el-col>
 
-        <el-col :span="4" :offset="14">
+        <el-col :span="1">
+          <el-button type="primary" icon="el-icon-bottom" round @click="changeMonth(1)"></el-button>
+        </el-col>
+
+        <el-col :span="2">
+          <el-button type="primary" @click="updateView()" round>查询</el-button>
+        </el-col>
+
+        <el-col :span="4" :offset="12">
           <el-button type="warning" round v-if="showSubList.length !== finishSubList.length"
             @click="showSubList = finishSubList">显示所有</el-button>
           <el-button type="warning" round v-else @click="showPart()">部分显示</el-button>
@@ -46,6 +53,7 @@
 
       <!-- 显示统计信息 -->
       <div>
+
         <el-row :gutter="20">
           <el-col :span="6">
             <el-statistic :value="statisticsObj.planFinishCount" title="本月计划完成"></el-statistic>
@@ -60,20 +68,31 @@
             <el-statistic :precision="2" suffix="%" :value="statisticsObj.highAchievingRate" title="优达率"></el-statistic>
           </el-col>
         </el-row>
+        <!-- 显示图表信息 -->
+        <div id="charts-area" style="width:100%;height: 300px;"></div>
       </div>
 
       <br>
 
-      <el-table :data="showSubList" style="width: 100%" :cell-style="setCellColor">
-        <el-table-column prop="caseName" label="专案">
+      <el-table :data="showSubList" style="width: 100%;font-size:15px;" :cell-style="setCellColor"
+        @cell-dblclick="showDelayReason">
+        <el-table-column prop="caseName" width="260" label="专案">
         </el-table-column>
         <el-table-column prop="subName" label="阶段">
+        </el-table-column>
+        <el-table-column prop="chargeName" label="负责人" width="213">
         </el-table-column>
         <el-table-column prop="startTime" label="开始时间">
         </el-table-column>
         <el-table-column prop="finishTime" label="结束时间">
         </el-table-column>
         <el-table-column prop="planDays" label="计划天数">
+        </el-table-column>
+        <el-table-column prop="executionDays" label="执行天数">
+        </el-table-column>
+        <el-table-column prop="unforcedDays" label="外界延期">
+        </el-table-column>
+        <el-table-column prop="applyDelay" label="人为延期">
         </el-table-column>
         <el-table-column prop="executionDays" label="执行天数">
         </el-table-column>
@@ -115,14 +134,33 @@
         <el-button @click="commentVisible = false">确 定</el-button>
       </span>
     </el-dialog>
+
+    <!-- 显示外界因素延期 -->
+    <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
+      <el-table :data="delayList" style="width: 100%" border>
+        <el-table-column prop="caseName" label="专案" width="240">
+        </el-table-column>
+        <el-table-column prop="subName" label="阶段" width="100">
+        </el-table-column>
+        <el-table-column prop="type" label="延期类型" width="120">
+        </el-table-column>
+        <el-table-column prop="applyReason" label="延期原因">
+        </el-table-column>
+        <el-table-column prop="applyDays" label="申请天数" width="80">
+        </el-table-column>
+        <el-table-column prop="predictTime" label="预计完成时间" width="120">
+        </el-table-column>
+      </el-table>
+    </el-drawer>
   </div>
 </template>
   
 <script>
 import { mapState } from 'vuex';
 import { analysis, planFinishCount } from '@/api/caseSub'
-import { timeSub } from '@/utils/common';
+import { formatDate, timeSub } from '@/utils/common';
 import { getById } from '@/api/caseSubCommit';
+import { getDelayByStatus } from '@/api/caseDelayApply';
 
 export default {
   data() {
@@ -150,17 +188,31 @@ export default {
         finishCount: 0,
         highAchievingCount: 0,
         highAchievingRate: 0
-      }
+      },
+      // 图表
+      barOption: {},
+      // 延期列表
+      delayList: [],
+      delayDrawer:false
     }
   },
-  created() {
+  async created() {
+    var query = this.$route.query
+    console.log(query)
+    if('year' in query){
+      this.year = query.year
+      this.month = query.month
+    }
+    // 初始化图表,表格数据
+    await this.getFinishSubList()
     const topRate = +localStorage.getItem("pim_statistic_topRate")
     if (topRate !== 0)
       this.showTopRate = topRate
     const bottomRate = +localStorage.getItem("pim_statistic_bottomRate")
     if (bottomRate !== 0)
       this.showBottomRate = bottomRate
-    this.getFinishSubList()
+    this.barOption = this.$echarts.init(document.getElementById('charts-area'))
+    this.initBar()
   },
   methods: {
     async getFinishSubList() {
@@ -177,8 +229,11 @@ export default {
         this.finishSubList = res.data
         this.showSubList = []
         this.finishSubList.forEach(item => {
+          item.startTime = formatDate(item.startTime)
+          item.finishTime = formatDate(item.finishTime)
           item.executionDays = timeSub(item.startTime, item.finishTime)
           item.executionDays -= +item.unforcedDays
+          item.chargeName = item.chargeName.join(",")
           if (item.achievingRate < this.showTopRate)
             this.showSubList.push(item)
         })
@@ -278,7 +333,103 @@ export default {
           message: '取消输入'
         });
       });
-    }
+    },
+    initBar() {
+      let result = Array.from({ length: 12 }, (_, i) => 0)
+      for (var i = 0; i < this.finishSubList.length; i++) {
+        result[Math.min(Math.floor(Math.round(this.finishSubList[i].achievingRate * 100) / 10), 11)]++
+      }
+      var baroption = {
+        title: {
+          text: '达成率分布',
+        },
+        xAxis: {
+          data: Array.from({ length: 12 }, (_, i) => i <= 10 ? i * 10 : '100+'),
+          name: '达成率(%)',
+          axisLabel: {
+            fontSize: 15
+          }
+        },
+        yAxis: {
+
+        },
+        series: [
+          {
+            type: 'bar',
+            data: result,
+            label: {
+              show: true,
+              position: 'top',
+              fontSize: 18,
+            },
+            itemStyle: {
+              color: function (params) {
+                if (params.dataIndex < 4)
+                  return '#DA3BA8'
+                else if (params.dataIndex < 7)
+                  return '#D4E72E'
+                else
+                  return '#32E828'
+              }
+            }
+          }]
+      }
+      this.barOption.setOption(baroption)
+    },
+    async updateView() {
+      await this.getFinishSubList()
+      this.initBar()
+    },
+    changeMonth(value) {
+      this.month += value
+      if (this.month === 0) {
+        this.month = 12
+        this.year -= 1
+      } else if (this.month === 13) {
+        this.month = 1
+        this.year += 1
+      }
+      this.updateView()
+    },
+    // 双击表格显示延期原因
+    showDelayReason(row, column) {
+      if (column.label === "外界延期") {
+        this.getUnforcedDays(row)
+      } else if(column.label === '人为延期'){
+        this.getApplyDelay(row)
+      } else if(column.label === '专案'||column.label==='阶段'){
+        this.$router.push({
+          name:'子流程详情',
+          query:{
+            caseId:row.caseId,
+            caseName:row.caseName
+          }
+        })
+      }
+    },
+    async getUnforcedDays(row) {
+      var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '外界因素延期' })
+      this.delayList = res.data
+      this.delayList.map(item => {
+        item.predictTime = formatDate(item.predictTime)
+        item.type = "外界因素延期"
+        item.caseName = row.caseName
+        item.subName = row.subName
+      })
+      this.delayDrawer = true
+    },
+    async getApplyDelay(row) {
+      var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '人为因素延期' })
+      this.delayList = res.data
+      this.delayList.map(item => {
+        item.predictTime = formatDate(item.predictTime)
+        item.type = "人为因素延期"
+        item.caseName = row.caseName
+        item.subName = row.subName
+      })
+      this.delayDrawer = true
+    },
+
   }
 };
 </script>

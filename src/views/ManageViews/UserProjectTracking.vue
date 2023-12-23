@@ -33,14 +33,16 @@
                 <el-table-column label="进度">
                     <template slot-scope="scope">
                         <!-- 未开始进度条 -->
-                        <el-progress v-if="scope.row.startTime===null" :stroke-width="24" :percentage="100" color="#30E0D4" :show-text="false">
+                        <el-progress v-if="scope.row.startTime === null" :stroke-width="24" :percentage="100"
+                            color="#30E0D4" :show-text="false">
                         </el-progress>
                         <!-- 正常状态进度条 -->
                         <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
                             :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
                         </el-progress>
                         <!-- 暂停中进度条 -->
-                        <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
+                        <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="100" color="#909399"
+                            :show-text="false">
                         </el-progress>
                     </template>
                 </el-table-column>
@@ -135,7 +137,7 @@
                     </el-row>
                 </el-col>
 
-                <el-col :span="1" :offset="(user.status===2 || user.type === 1) ? 0 : 23">
+                <el-col :span="1" :offset="(user.status === 2 || user.type === 1) ? 0 : 23">
                     <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
                         style="margin-bottom: 5px;"></el-button>
                 </el-col>
@@ -191,7 +193,12 @@
 
         <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
             <el-table :data="delayList" style="font-size:20px">
-                <el-table-column prop="applyReason" label="延期原因" width="550">
+                <el-table-column label="延期原因" width="550">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-line;">
+                            {{ scope.row.applyReason }}
+                        </div>
+                    </template>
                 </el-table-column>
                 <el-table-column prop="applyDays" label="延期天数">
                 </el-table-column>
@@ -217,7 +224,7 @@ import { taskList, recentTaskList, recentHalfYear, getExceptionList, notStartTas
 import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
-import { startPause,finishPause } from '@/api/pause'
+import { startPause, finishPause } from '@/api/pause'
 import { mapState } from 'vuex'
 
 export default {
@@ -244,6 +251,7 @@ export default {
                 }
             ],
             userMap: new Map(),
+            userName2IdMap: new Map(),
             curUser: null,
             curGroup: null,
             curIndex: null,
@@ -278,9 +286,9 @@ export default {
         await this.getAllUser()
         this.curUser = this.directorOptions[0].children[0].value
         await this.getExceptionList()
-        this.curGroup = 0,
-            this.curIndex = 0,
-            this.getTaskByUserId()
+        this.curGroup = 0
+        this.curIndex = 0
+        this.getTaskByUserId()
         //初始化块元素
         // this.typePie = this.$echarts.init(document.getElementById('taskType'))
         // this.barInfo = this.$echarts.init(document.getElementById('taskAchieve'))
@@ -293,6 +301,20 @@ export default {
     },
     computed: {
         ...mapState(['user'])
+    },
+    //缓存界面路由导航进入之前
+    beforeRouteEnter(to, from, next) {
+        next((vm) => {
+            // 个人界面查询的跳转
+            if ('userName' in to.query) {
+                var userName = to.query.userName
+                vm.curUser = vm.userName2IdMap.get(userName)
+                if (vm.curUser !== undefined) {
+                    vm.getExceptionList()
+                    vm.getTaskByUserId()
+                }
+            }
+        })
     },
     methods: {
         // 获取当前用户的所有未开始的任务
@@ -360,7 +382,7 @@ export default {
                 // 获取其还未开始的阶段
                 res = await notStartTaskList(this.curUser)
                 this.userInfo = res.data
-                this.userInfo.forEach(item=>item.comment="未开始")
+                this.userInfo.forEach(item => item.comment = "未开始")
             }
 
             if (this.commitVisible) {
@@ -412,6 +434,7 @@ export default {
             for (var i = 0; i < this.directorOptions.length; i++) {
                 for (var j = 0; j < this.directorOptions[i].children.length; j++) {
                     this.userMap.set(this.directorOptions[i].children[j].value, [i, j])
+                    this.userName2IdMap.set(this.directorOptions[i].children[j].label, this.directorOptions[i].children[j].value)
                 }
             }
         },
@@ -594,6 +617,7 @@ export default {
                 obj.itemStyle =
                 {
                     normal: {
+                        borderRadius: 5,
                         color: color,
                         borderColor: "#fff",
                         borderWidth: 2,
@@ -826,7 +850,7 @@ export default {
         },
         // 监听双击事件
         handleDoubleClick(row, column) {
-            if (column.label === "专案/任务"||column.label === "阶段") {
+            if (column.label === "专案/任务" || column.label === "阶段") {
                 // 子流程id不为空，跳转到详情页
                 if (row.caseSubId !== null)
                     this.navigateToDetailPage(row)
@@ -902,26 +926,25 @@ export default {
     }
 }
 </script>
-pauseObjpauseObjpauseObj
-<style lang="less" scoped>
+<style scoped>
 .charts-area {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
+}
 
-    .gantt-chart {
-        width: 100%;
-        margin-bottom: 5px;
-    }
+.gantt-chart {
+    width: 100%;
+    margin-bottom: 5px;
+}
 
-    .pie-chart {
-        width: 29.5%;
-        margin-right: 0.5%;
-    }
+.pie-chart {
+    width: 29.5%;
+    margin-right: 0.5%;
+}
 
-    .bar-chart {
-        width: 70%;
-    }
+.bar-chart {
+    width: 70%;
 }
 
 .commit_area {

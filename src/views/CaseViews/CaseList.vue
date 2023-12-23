@@ -363,7 +363,7 @@ export default {
             pageInfo: [],
             queryInfo: {
                 page: 1,
-                pageSize: 7,
+                pageSize: 10,
                 query: '',
                 director: '',
                 // 显示中断专案

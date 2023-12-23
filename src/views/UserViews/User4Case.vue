@@ -874,7 +874,7 @@ export default {
             } else {
                 obj.itemStyle =
                 {
-
+                    borderRadius:5,
                     color: color,
                     borderColor: "#fff",
                     borderWidth: 2,

@@ -246,6 +246,16 @@ export default {
                 ]
             }
             this.barCharts.setOption(option)
+            this.barCharts.on('click', async (params)=>{
+                let [year,month] = params.name.split('-')
+                this.$router.push({
+                    name:'月报分析',
+                    query:{
+                        year:+year,
+                        month:+month
+                    }
+                })
+            })
         },
         initSubPie() {
             var option = {
@@ -446,6 +456,7 @@ export default {
             // 把换行符转换成 <br> 标签
             return content.replace(/\n/g, '<br>');
         },
+        
     }
 }
 </script>

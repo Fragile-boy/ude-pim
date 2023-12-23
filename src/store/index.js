@@ -12,7 +12,7 @@ export default new Vuex.Store({
   // // //开启严格模式
   // strict: true,
   state: {
-    user:getInfo()
+    user:getInfo(),
   },
   getters: {
     getType(state){
