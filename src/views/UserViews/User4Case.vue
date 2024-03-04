@@ -19,11 +19,11 @@
             </el-row>
             <h2>执行专案</h2>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick">
+            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick" style="font-size:17px;">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
-                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
+                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" :show-text="false"
+                            :color="scope.row.finishedOwnWork ? '#409eff' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? '#e6a23c' : '#f56c6c' : '#67c23a'">
                         </el-progress>
                         <el-progress v-else :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
                         </el-progress>
@@ -37,10 +37,27 @@
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="描述"></el-table-column>
+                <!-- <el-table-column prop="description" label="描述"></el-table-column> -->
+                <el-table-column prop="caseName" label="专案/任务" width="250"></el-table-column>
+                <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
-                <el-table-column prop="pauseStart" label="暂停时间"></el-table-column>
+                <el-table-column label="暂停时间">
+                    <template slot-scope="scope">
+                        <!-- 鼠标悬浮显示具体暂停人 -->
+                        <el-tooltip class="item" effect="dark" placement="top">
+                            <template v-slot:content>
+                                <div style="font-size: 20px;">
+                                    暂停人:{{ scope.row.pauseCreateUser }}<br>
+                                    暂停原因：{{ scope.row.pauseDesc }}
+                                </div>
+                            </template>
+                            <span>
+                                {{ scope.row.pauseStart }}
+                            </span>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
                 <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
@@ -874,7 +891,7 @@ export default {
             } else {
                 obj.itemStyle =
                 {
-                    borderRadius:5,
+                    borderRadius: 5,
                     color: color,
                     borderColor: "#fff",
                     borderWidth: 2,

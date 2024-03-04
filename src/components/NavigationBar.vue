@@ -66,11 +66,13 @@ export default {
     height: 30px;
     line-height: 30px;
     border-radius: 16px;
-    color: #555;
+    // color: #555;
+    color: #fff;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     margin-right: 8px;
     transition: all 0.3s ease;
     cursor: pointer;
+    background-color: #288dda !important;
 
     &:hover {
         background-color: #76d4e7 !important;

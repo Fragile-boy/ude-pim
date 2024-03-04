@@ -134,6 +134,7 @@
                 <el-form-item label="负责人" prop="directors">
                     <el-cascader v-model="addCaseForm.directors" :options="directorOptions" :show-all-levels="false"
                         placeholder="请选择负责人"></el-cascader>
+                    <el-button type="warning" size="mini" round style="margin-left:5px" @click="modifyDirector">批量修改</el-button>
                 </el-form-item>
 
                 <el-form-item label="专案描述" prop="description">
@@ -345,7 +346,7 @@
 <script>
 import { mapActions, mapState } from 'vuex'
 import { getUserListWithAssistants, getUserStatus } from '@/api/user'
-import { addCase, getList, editCase, deleteCase, terminateCase } from '@/api/case'
+import { addCase, getList, editCase, deleteCase, terminateCase, modifyDirector } from '@/api/case'
 import { checkResult } from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
@@ -496,6 +497,8 @@ export default {
         async editCase(caseObj) {
             // 先赋值给表单元素
             this.addCaseForm = { ...caseObj }
+            // 记录负责人修改前的id
+            this.oldDirector = caseObj.director
             const res = await getUserStatus(caseObj.director);
             if (res.code !== 200) {
                 this.$message.error("获取用户职务失败")
@@ -869,6 +872,19 @@ export default {
                     this.subInfo = res.data
                 }
             }
+        },
+        // 批量修改负责人
+        async modifyDirector(){
+            console.log(this.addCaseForm)            
+            console.log(this.addCaseForm.id)            
+            console.log(this.addCaseForm.directors[1])
+            console.log(this.oldDirector)
+            if(this.addCaseForm.directors[1]==this.oldDirector){
+                this.$message.error('负责人未改变')
+                return
+            }
+            var res = await modifyDirector({caseId:this.addCaseForm.id,oldDirector:this.oldDirector,newDirector:this.addCaseForm.directors[1]})
+            this.$message.success(res.data)
         }
     }
 }

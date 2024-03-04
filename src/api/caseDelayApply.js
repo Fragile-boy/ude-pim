@@ -41,3 +41,7 @@ export const removeDelayApply = (id)=>{
 export const getDelayById = (obj)=>{
     return service.get(`/caseSubDelayApply/getDelayById`,{params:obj})
 }
+
+export const addHolidayDelay = (obj)=>{
+    return service.post(`/caseSubDelayApply/addHolidayDelay`,obj)
+}

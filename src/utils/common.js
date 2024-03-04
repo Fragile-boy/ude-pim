@@ -28,7 +28,10 @@ export function formatDate(date) {
 }
 
 //获得流程状态
-export function getStatus(startTime, planTime, finishTime) {
+export function getStatus(startTime, planTime, finishTime, pausing) {
+    // 暂停中
+    if(pausing)
+        return 5
     var status = 0
     //未开始
     if (startTime === null)

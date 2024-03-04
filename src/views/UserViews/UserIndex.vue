@@ -310,7 +310,8 @@ export default {
               this.taskList[i].percentage = (delayDay / this.taskList[i].applyDelay) * 100
             } else {
               this.taskList[i].percentage = timeSub(this.taskList[i].startTime, today)*100.0 / this.taskList[i].planDays
-              if(!this.taskList[i].finishedOwnWork)
+              // 当且仅当 该任务不处于暂停阶段且当且用户没有完成自己的任务，延期+1
+              if(!this.taskList[i].finishedOwnWork&&!this.taskList[i].pausing)
                 delayCount++
             }
           }
@@ -323,7 +324,7 @@ export default {
           this.$notify({
             title: '错误',
             message: '你当前有' + delayCount + '个任务进度已滞后，请及时申请延期确定下一个交期',
-            duration: 0,
+            duration: 2500,
             type: 'error'
           });
         }

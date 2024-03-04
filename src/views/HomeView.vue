@@ -7,7 +7,7 @@
       <img src="@/assets/logo_mini.png" alt="">
 
       <!-- <span style="color:red">(开发测试中...请稍后访问)</span> -->
-      <span>新技研进度管理系统<span style="font-size: 10px;">(测试版)</span></span>
+      <span>新技研进度管理系统</span>
       
       <el-button round size="medium" @click="handleLogout()">
         {{ user === null ? '' : user.name }}
@@ -34,7 +34,6 @@
         <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage']">
           <router-view></router-view>
         </keep-alive>
-
       </el-main>
     </el-container>
   </el-container>
@@ -100,6 +99,8 @@ export default {
 
 .el-main {
   background-color: #eaedf1;
+  // background-color: #D6513F;
+  // background-image: url(../assets/720.png);
 }
 
 .toggle-button {

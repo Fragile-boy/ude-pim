@@ -37,9 +37,16 @@
         </div>
         <div class="table-container">
             <el-card class="executing-container">
-                <h4><i class='el-icon-s-flag'></i>执行清单</h4>
+                <el-row>
+                    <el-col :span="4">
+                        <h4><i class='el-icon-s-flag'></i>执行清单</h4>
+                    </el-col>
+                    <el-col :span="4" :offset="16">
+                        <el-button type="danger" icon="el-icon-s-marketing" @click="openAddHolidayView">节假日延期</el-button>
+                    </el-col>
+                </el-row>
                 <el-table :data="executingList" style="font-size: 15px;">
-                    <el-table-column type="index"></el-table-column>
+                    <el-table-column type="index" width="40"></el-table-column>
                     <el-table-column prop="caseName" label="专案" align="center" width="260"></el-table-column>
                     <el-table-column prop="subName" label="阶段" align="center"></el-table-column>
                     <el-table-column prop="userNames" label="负责人" width="220" align="center"></el-table-column>
@@ -56,7 +63,7 @@
                 <el-card class="delay-container">
                     <h4><i class='el-icon-error'></i>延误清单</h4>
                     <el-table :data="delayList">
-                        <el-table-column type="index" width="20"></el-table-column>
+                        <el-table-column type="index" width="40"></el-table-column>
                         <el-table-column prop="caseName" label="专案" width="250"></el-table-column>
                         <el-table-column prop="subName" label="阶段"></el-table-column>
                         <el-table-column prop="userNames" label="负责人"></el-table-column>
@@ -72,7 +79,7 @@
                 <el-card class="pause-container">
                     <h4><i class='el-icon-video-pause'></i>暂停清单</h4>
                     <el-table :data="pausingList">
-                        <el-table-column type="index" width="20"></el-table-column>
+                        <el-table-column type="index" width="40"></el-table-column>
                         <el-table-column prop="caseName" label="专案" width="250"></el-table-column>
                         <el-table-column prop="subName" label="阶段"></el-table-column>
                         <el-table-column prop="userNames" label="负责人" width="150"></el-table-column>
@@ -94,6 +101,20 @@
                 </el-card>
             </div>
         </div>
+        <el-dialog title="填写假期信息" :visible.sync="holidayDelayVisible" width="30%">
+            <el-form :model="holidayDelayForm" label-width="100px">
+                <el-form-item label="放假时间(天)">
+                    <el-input type="number" v-model="holidayDelayForm.holiday" placeholder="请输入放假天数"></el-input>
+                </el-form-item>
+                <el-form-item label="假期描述">
+                    <el-input placeholder="请说明放假类型" v-model="holidayDelayForm.holidayDesc"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="holidayDelayVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addHolidayDelay">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -160,6 +181,7 @@
 <script>
 import { formatDate, timeAdd, timeSub } from '@/utils/common';
 import { getExecuting, getHalfYearFinishCaseSubAmount } from '@/api/caseSub';
+import {addHolidayDelay} from '@/api/caseDelayApply';
 import { getCaseList } from '@/api/case';
 import { mapState } from 'vuex';
 
@@ -170,6 +192,8 @@ export default {
             executingList: [],
             delayList: [],
             pausingList: [],
+            caseSubCount: 0,
+            caseCount: 0,
             barCharts: null,
             caseSubFinishInfo: [],
             caseCharts: null,
@@ -181,6 +205,13 @@ export default {
                 notStart: 0,
                 interrupt: 0,
                 delay: 0
+            },
+            holidayDelayVisible: false,
+            holidayDelayForm: {
+                holiday: 0,
+                holidayDesc: '',
+                // 用于假期申请检查计数
+                checkCount: 0
             }
         }
     },
@@ -202,6 +233,7 @@ export default {
         async getHalfYearFinishCaseSubAmount() {
             const res = await getHalfYearFinishCaseSubAmount()
             this.caseSubFinishInfo = res.data
+            console.log(this.caseSubFinishInfo)
         },
         initBar() {
             var option = {
@@ -246,13 +278,13 @@ export default {
                 ]
             }
             this.barCharts.setOption(option)
-            this.barCharts.on('click', async (params)=>{
-                let [year,month] = params.name.split('-')
+            this.barCharts.on('click', async (params) => {
+                let [year, month] = params.name.split('-')
                 this.$router.push({
-                    name:'月报分析',
-                    query:{
-                        year:+year,
-                        month:+month
+                    name: '月报分析',
+                    query: {
+                        year: +year,
+                        month: +month
                     }
                 })
             })
@@ -260,7 +292,7 @@ export default {
         initSubPie() {
             var option = {
                 title: {
-                    text: '阶段执行状况总览',
+                    text: `阶段执行状况总览(${this.caseSubCount}项)`,
                 },
                 grid: {
                     containLabel: true,
@@ -309,6 +341,7 @@ export default {
         async getCaseList() {
             var res = await getCaseList(false)
             this.caseExecutingInfo = res.data
+            this.caseCount = this.caseExecutingInfo.length
             for (var i = 0; i < this.caseExecutingInfo.length; i++) {
                 if (this.caseExecutingInfo[i].startTime === null) {
                     this.casePieObj.notStart++
@@ -331,7 +364,7 @@ export default {
         initCasePie() {
             var option = {
                 title: {
-                    text: '专案执行状况总览',
+                    text: `专案执行状况总览(${this.caseCount}项)`,
                 },
                 grid: {
                     containLabel: true,
@@ -381,8 +414,16 @@ export default {
         },
 
         async getExecutingList() {
+
+            // 初始化另外两个数组
+            this.pausingList = []
+            this.delayList = []
+
             const res = await getExecuting()
+            
+
             this.executingList = res.data
+            this.caseSubCount = this.executingList.length
             this.executingList.forEach(item => {
                 item.presetTime = timeAdd(item.startTime, item.planDays, +item.unforcedDays, +item.applyDelay)
                 if (item.pausing) {
@@ -456,7 +497,37 @@ export default {
             // 把换行符转换成 <br> 标签
             return content.replace(/\n/g, '<br>');
         },
-        
+        openAddHolidayView() {
+            // 初始化假期对象
+            this.holidayDelayForm = {
+                holiday: 0,
+                holidayDesc: '',
+                // 用于假期申请检查计数
+                checkCount: 0
+            }
+            this.holidayDelayVisible = true
+        },
+        async addHolidayDelay() {
+            if(this.holidayDelayForm.holiday <= 0||this.holidayDelayForm.holidayDesc.trim()===''){
+                this.$message.error("放假时间非法或放假描述为空，请检查输入")
+                return;
+            }
+            if (this.holidayDelayForm.checkCount < 1) {
+                this.$message({
+                    type:'warning',
+                    message:"请再次确认信息是否正确!",
+                    duration:5000,
+                })
+                this.holidayDelayForm.checkCount++
+                return;
+            }
+            const res = await addHolidayDelay({holiday:this.holidayDelayForm.holiday, holidayDesc:this.holidayDelayForm.holidayDesc.trim()})
+            this.$message.success(res.data)
+            this.holidayDelayVisible = false
+            await this.getExecutingList()
+            await this.getHalfYearFinishCaseSubAmount()
+            await this.getCaseList()
+        }
     }
 }
 </script>

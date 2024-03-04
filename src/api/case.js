@@ -38,3 +38,8 @@ export const unFinishedCaseList = () => {
 export const terminateCase = (obj) => {
     return service.put("/case/terminateCase", obj)
 }
+
+// 修改专案负责人,并同步给所有还未完成的子阶段
+export const modifyDirector = (obj)=>{
+    return service.put("/case/updateDirector", obj)
+}

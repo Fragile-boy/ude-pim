@@ -125,7 +125,7 @@
                     </el-table-column>
 
                     <!-- 目标完成时间：实际开始时间+预设时间+外界因素延期 -->
-                    <el-table-column prop="standardTime" label="目标完成时间">
+                    <el-table-column prop="comprehensiveTime" label="目标完成时间">
                     </el-table-column>
 
                     <!-- 理想完成时间：所有流程都正常结束的时间 -->
@@ -154,6 +154,7 @@
                             <el-tag effect="dark" type="danger" v-if="scope.row.status === 2">已延误</el-tag>
                             <el-tag effect="dark" type="warning" v-if="scope.row.status === 3">延误完成</el-tag>
                             <el-tag effect="dark" type="info" v-if="scope.row.status === 4">未开始</el-tag>
+                            <el-tag effect="dark" style="background-color: #213B56;" v-if="scope.row.status === 5">暂停中</el-tag>
                         </template>
 
                     </el-table-column>
@@ -625,12 +626,21 @@ export default {
 
             for (let i = 0; i < this.subInfo.length; i++) {
                 this.subInfo[i].startTime = formatDate(this.subInfo[i].startTime)
+                // 开始时间不为空
                 if (this.subInfo[i].startTime !== null) {
                     //阶段目标时间
                     this.subInfo[i].targetTime = timeAdd(this.subInfo[i].startTime, this.subInfo[i].planDays)
-                    // 目标完成时间（计划天数+外界因素延期）
+                    // 目标完成时间（计划天数+外界因素延期）（24.1.3修改后，这个变量就仅在显示阶段状态的时候起作用了）
                     this.subInfo[i].standardTime = timeAdd(this.subInfo[i].startTime, this.subInfo[i].planDays, this.subInfo[i].unforcedDays)
+                    // 综合目标时间（计划天数+外界因素延期+人为因素延期）（该变量显示当前阶段的实际预计完成时间）
+                    this.subInfo[i].comprehensiveTime = timeAdd(this.subInfo[i].startTime, this.subInfo[i].planDays, this.subInfo[i].unforcedDays, this.subInfo[i].applyDelay)
+                } else if(i!==0&&typeof (this.subInfo[i - 1].comprehensiveTime) !== 'undefined'){
+                    // 开始时间为空,且不是第一个阶段,且上个阶段有目标完成时间
+                    // 目标完成时间（上个阶段的目标完成时间+本阶段的计划时间+1（因为一个阶段结束后，第二天下个阶段才开始)）
+                    this.subInfo[i].comprehensiveTime = timeAdd(this.subInfo[i-1].comprehensiveTime, this.subInfo[i].planDays, 1)
                 }
+
+
                 // 预计完成时间
                 if (i === 0)
                     this.subInfo[i].ideaTime = this.subInfo[i].targetTime
@@ -639,7 +649,7 @@ export default {
                 }
                 //实际完成时间
                 this.subInfo[i].finishTime = formatDate(this.subInfo[i].finishTime)
-                this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime)
+                this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime,  this.subInfo[i].pausing)
 
                 // 计算执行时间
                 this.casePlanDays += this.subInfo[i].planDays

@@ -37,8 +37,8 @@
                             color="#30E0D4" :show-text="false">
                         </el-progress>
                         <!-- 正常状态进度条 -->
-                        <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
-                            :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
+                        <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" :show-text="false"
+                            :color="scope.row.finishedOwnWork ? '#409eff' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? '#e6a23c' : '#f56c6c' : '#67c23a'">
                         </el-progress>
                         <!-- 暂停中进度条 -->
                         <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="100" color="#909399"
@@ -58,7 +58,23 @@
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="presetTime" label="预计完成"></el-table-column>
-                <el-table-column prop="pauseStart" label="暂停时间"></el-table-column>
+                <el-table-column label="暂停时间">
+                    <template slot-scope="scope">
+                        <!-- 鼠标悬浮显示具体暂停人 -->
+                        <el-tooltip class="item" effect="dark" placement="top">
+                            <template v-slot:content>
+                                <div style="font-size: 20px;">
+                                    暂停人:{{ scope.row.pauseCreateUser }}<br>
+                                    暂停原因：{{ scope.row.pauseDesc }}
+                                </div>
+                            </template>
+                            <span>
+                                {{ scope.row.pauseStart }}
+                            </span>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+                <!-- <el-table-column prop="pauseStart" label="暂停时间"></el-table-column> -->
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
@@ -224,7 +240,7 @@ import { taskList, recentTaskList, recentHalfYear, getExceptionList, notStartTas
 import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
-import { startPause, finishPause } from '@/api/pause'
+import { startPause, finishPause, getPauseInfo } from '@/api/pause'
 import { mapState } from 'vuex'
 
 export default {
@@ -340,7 +356,7 @@ export default {
         async getTaskByUserId() {
             var res = await taskList(this.curUser)
             this.userInfo = res.data
-            // console.log(this.userInfo)
+            console.log(this.userInfo)
 
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
@@ -923,6 +939,14 @@ export default {
                 }
             })
         },
+        // 2024.2.28 鼠标悬浮暂停时间显示暂停人和暂停原因
+        showPauseInfo(obj) {
+            var res = ""
+            res += "暂停人：" + obj.pauseCreateUser
+            res += '<br>'
+            res += "暂停原因：" + obj.pauseDesc
+            return res
+        }
     }
 }
 </script>

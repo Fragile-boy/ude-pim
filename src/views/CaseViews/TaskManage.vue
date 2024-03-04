@@ -384,14 +384,15 @@ export default {
                 if (item.pausing) {
                     item.pauseDays = timeSub(item.pauseStart, new Date())
                     this.pausingList.push(item)
+                } else {
+                    item.delayDays = timeSub(item.startTime, new Date()) - item.planDays - +item.unforcedDays
+                    if (item.delayDays > 0) {
+                        item.pauseStart = formatDate(item.pauseStart)
+                        this.delayList.push(item)
+                        item.is_delay = true
+                    } else
+                        item.is_delay = false
                 }
-                item.delayDays = timeSub(item.startTime, new Date()) - item.planDays - +item.unforcedDays
-                if (item.delayDays > 0) {
-                    item.pauseStart = formatDate(item.pauseStart)
-                    this.delayList.push(item)
-                    item.is_delay = true
-                } else
-                    item.is_delay = false
             })
             this.executingList = this.executingList.filter(item => !item.pausing)
             this.executingList = this.executingList.filter(item => !item.is_delay)

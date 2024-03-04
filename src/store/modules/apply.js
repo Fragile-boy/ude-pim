@@ -30,7 +30,7 @@ export default {
                     title: '延期申请',
                     message: `系统收到了新的延期申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
-                    duration: 0
+                    duration: 3500
                 });
             }
             state.delayList = payLoad
@@ -42,7 +42,7 @@ export default {
                     title: '完结申请',
                     message: `系统收到了新的完结申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
-                    duration: 0
+                    duration: 3500
                 });
             }
             state.finishList = payLoad
@@ -53,7 +53,7 @@ export default {
                     title: '专案类申请',
                     message: `系统收到了新的专案类申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
-                    duration: 0
+                    duration: 3500
                 });
             }
             state.caseSubList = payLoad
@@ -64,7 +64,7 @@ export default {
                     title: '任务申请',
                     message: `系统收到了新的任务申请，目前有${payLoad.length}条申请待审核`,
                     type:'warning',
-                    duration: 0
+                    duration: 3500
                 });
             }
             state.taskList = payLoad
