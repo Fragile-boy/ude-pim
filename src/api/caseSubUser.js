@@ -10,6 +10,11 @@ export const removeDirector = (obj) => {
     return service.delete(`/caseSubUser`, { params: obj })
 }
 
+//移除负责人
+export const removeDirectorById = (id) => {
+    return service.delete(`/caseSubUser/${id}`)
+}
+
 //添加负责人
 export const setDirector = (obj) => {
     return service.post('/caseSubUser/setDirector', obj)
@@ -24,6 +29,12 @@ export const submitDirectorValue = (obj) => {
 export const updateDescription=(obj)=>{
     return service.put('/caseSubUser/updateDescription',obj)
 }
+
+//修改或者添加任务描述
+export const updateDescriptionById=(obj)=>{
+    return service.put('/caseSubUser/updateDescriptionById',obj)
+}
+
 
 export const updateChargeCaseSub=(obj)=>{
     return service.put('/caseSubUser/updateChargeCaseSub',obj)

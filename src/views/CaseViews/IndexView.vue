@@ -80,11 +80,11 @@
             </el-table-column>
             <el-table-column prop="directorName" label="负责人" align="center">
             </el-table-column>
-            <el-table-column prop="startTime" label="开始时间" align="center">
+            <el-table-column prop="startTime" label="开始时间" sortable align="center">
             </el-table-column>
-            <el-table-column prop="presetTime" label="预计完成时间" align="center">
+            <el-table-column prop="presetTime" label="预计完成时间" width="135" sortable align="center">
             </el-table-column>
-            <el-table-column prop="finishTime" label="实际完成时间" align="center">
+            <el-table-column prop="finishTime" label="实际完成时间" width="135" sortable align="center">
             </el-table-column>
             <el-table-column prop="planDay" label="计划天数" sortable width="105" align="center">
             </el-table-column>

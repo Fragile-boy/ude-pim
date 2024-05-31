@@ -25,7 +25,11 @@
                         <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="描述"></el-table-column>
+                <el-table-column label="描述">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.description }}</div>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="planDays" label="计划天数"></el-table-column>
                 <el-table-column prop="predictTime" label="预计完成时间"></el-table-column>
                 <el-table-column prop="applyName" label="申请人"></el-table-column>
@@ -66,9 +70,9 @@
                 <el-table-column prop="checkTime" label="审核时间">
                 </el-table-column>
             </el-table>
-            <el-pagination style="margin-top: 10px;" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                :current-page="queryInfo.page" :page-sizes="[5, 8, 10, 15]" :page-size="queryInfo.pageSize"
-                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            <el-pagination style="margin-top: 10px;" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" :current-page="queryInfo.page" :page-sizes="[5, 8, 10, 15]"
+                :page-size="queryInfo.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </el-card>
     </div>
@@ -98,10 +102,10 @@ export default {
     },
     computed: {
         ...mapState(['user']),
-        ...mapState('apply',['taskList'])
+        ...mapState('apply', ['taskList'])
     },
     methods: {
-        ...mapActions('apply',['getTaskList']),
+        ...mapActions('apply', ['getTaskList']),
         judgeApply(row, status) {
             row.status = status
             row.checkUser = this.user.id
@@ -155,7 +159,8 @@ export default {
             if (res.code === 200) {
                 this.applyHistoryList = res.data.records
                 this.total = res.data.total
-                this.applyHistoryList.forEach(item=>item.predictTime = timeAdd(item.createTime,item.planDays))
+                this.applyHistoryList.forEach(item => item.predictTime = timeAdd(item.createTime, item.planDays))
+                console.log(this.applyHistoryList)
             } else {
                 this.$message.error(res.msg)
             }

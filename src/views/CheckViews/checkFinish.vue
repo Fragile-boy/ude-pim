@@ -199,6 +199,9 @@ export default {
         async handleCheck(row, status) {
             row.status = status
             row.checkUser = this.user.id
+            // 避免预计积分错误的时候，无法拒绝或者通过
+            if(row.estimateValue==="错误！")
+                row.estimateValue=null
             this.curObj = { ...row }
             //通过
             if (status === 1) {

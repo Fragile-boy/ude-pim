@@ -65,9 +65,15 @@
                 <el-tag effect="dark" v-if="scope.row.type === 2">技术研究</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="caseName"></el-table-column>
+            <el-table-column prop="caseName" width="250">
+              <template slot-scope="scope">
+                <div style="white-space: pre-wrap;">{{ scope.row.caseName }}</div>
+              </template>
+            </el-table-column>
             <el-table-column prop="subName"></el-table-column>
-            <el-table-column prop="comment"></el-table-column>
+
+            <el-table-column prop="comment">
+            </el-table-column>
             <el-table-column>
               <template slot-scope="scope">
                 <!-- 未开始进度条 -->
@@ -79,7 +85,8 @@
                   :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
                 </el-progress>
                 <!-- 暂停中进度条 -->
-                <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" color="#909399" :show-text="false">
+                <el-progress v-else-if="scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                  color="#909399" :show-text="false">
                 </el-progress>
               </template>
             </el-table-column>
@@ -276,7 +283,7 @@ export default {
     ...mapActions(['editUserInfo']),
     async getNotStartTaskList() {
       const res = await notStartTaskList(this.user.id)
-      res.data.forEach(item=>item.comment='即将开始')
+      res.data.forEach(item => item.comment = '即将开始')
       this.taskList.push(...res.data)
     },
     async initTaskList() {
@@ -287,7 +294,7 @@ export default {
         for (var i = 0; i < this.taskList.length; i++) {
           this.taskList[i].executionDays = timeSub(this.taskList[i].startTime, new Date())
           var presetTime = new Date(this.taskList[i].startTime)
-          presetTime = presetTime.setDate(presetTime.getDate()+this.taskList[i].planDays+this.taskList[i].unforcedDays)
+          presetTime = presetTime.setDate(presetTime.getDate() + this.taskList[i].planDays + this.taskList[i].unforcedDays-1)
           this.taskList[i].presetTime = presetTime
           //分为已延误和未延误
           var today = new Date()
@@ -309,9 +316,9 @@ export default {
             if (this.taskList[i].leftDelay >= 0) {
               this.taskList[i].percentage = (delayDay / this.taskList[i].applyDelay) * 100
             } else {
-              this.taskList[i].percentage = timeSub(this.taskList[i].startTime, today)*100.0 / this.taskList[i].planDays
+              this.taskList[i].percentage = timeSub(this.taskList[i].startTime, today) * 100.0 / this.taskList[i].planDays
               // 当且仅当 该任务不处于暂停阶段且当且用户没有完成自己的任务，延期+1
-              if(!this.taskList[i].finishedOwnWork&&!this.taskList[i].pausing)
+              if (!this.taskList[i].finishedOwnWork && !this.taskList[i].pausing)
                 delayCount++
             }
           }
@@ -547,11 +554,14 @@ export default {
     isFinishDay(date) {
       var str = ''
       for (let i = 0; i < this.taskList.length; i++) {
-        if (timeAdd(this.taskList[i].presetTime, +this.taskList[i].applyDelay) === date) {
-          str += this.taskList[i].description+"\n"
+        if (timeAdd(this.taskList[i].presetTime, +this.taskList[i].applyDelay, 1) === date) {
+          str += this.taskList[i].caseName
+          if (this.taskList[i].subName !== null) {
+            str += "->" + this.taskList[i].subName + "\n"
+          }
         }
       }
-      return str===''?false:str
+      return str === '' ? false : str
     }
   },
 

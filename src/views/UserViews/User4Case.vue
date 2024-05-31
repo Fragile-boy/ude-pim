@@ -22,7 +22,8 @@
             <el-table :data="userInfo" @cell-dblclick="handleDoubleClick" style="font-size:17px;">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
-                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" :show-text="false"
+                        <el-progress v-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
+                            :show-text="false"
                             :color="scope.row.finishedOwnWork ? '#409eff' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? '#e6a23c' : '#f56c6c' : '#67c23a'">
                         </el-progress>
                         <el-progress v-else :stroke-width="24" :percentage="100" color="#909399" :show-text="false">
@@ -38,7 +39,11 @@
                     </template>
                 </el-table-column>
                 <!-- <el-table-column prop="description" label="描述"></el-table-column> -->
-                <el-table-column prop="caseName" label="专案/任务" width="250"></el-table-column>
+                <el-table-column prop="caseName" label="专案/任务" width="230">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.caseName }}</div>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
@@ -143,9 +148,11 @@
 
 
         <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%" @close="closeApplyDelay">
-            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="110px" class="form">
+            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="110px"
+                class="form">
                 <el-form-item label="申请类型">
-                    <el-input :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : '技术研究'"
+                    <el-input
+                        :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : '技术研究'"
                         disabled></el-input>
                 </el-form-item>
 
@@ -186,8 +193,24 @@
             <br>
             <el-form label-width="90px" ref="descriptionFormRef" class="form">
                 <el-form-item v-for="item in directors" :label="item.name" :key="item.id">
-                    <el-input v-model="item.description" placeholder="例：CCD调试，累计执行15个工作日"
-                        :disabled="item.userId !== user.id"></el-input>
+                    <el-row v-if="item.userId === user.id">
+                        <el-col :span=9>
+                            <el-input v-model="item.description" placeholder="工作内容描述"
+                                :disabled="item.userId !== user.id"></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>累计</label>
+                        </el-col>
+                        <el-col :span=8 :offset="1">
+                            <el-input v-model="item.duration" placeholder="工作时长(天)" type="number" step="0.1"
+                                :disabled="item.userId !== user.id"></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>天</label>
+                        </el-col>
+                    </el-row>
+                    <el-input :placeholder="item.description === null ? '' : item.description + ',累计' + item.duration + '天'"
+                        :disabled="item.userId !== user.id" v-else></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -202,7 +225,8 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="专案名称" prop="caseId">
-                            <el-select v-model="applyCaseSubUser.caseId" placeholder="请选择" @change="getUnfinishedSubList()">
+                            <el-select v-model="applyCaseSubUser.caseId" placeholder="请选择"
+                                @change="getUnfinishedSubList()">
                                 <el-option v-for="item in unFinishedCaseList" :key="item.id" :label="item.name"
                                     :value="item.id">
                                 </el-option>
@@ -230,7 +254,8 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="申请任务" :visible.sync="applyTaskVisible" width="30%" @close="$refs.applyTaskFormRef.resetFields()">
+        <el-dialog title="申请任务" :visible.sync="applyTaskVisible" width="30%"
+            @close="$refs.applyTaskFormRef.resetFields()">
             <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="80px">
                 <el-form-item label="任务类型" prop="type">
                     <el-select v-model="applyTask.type" placeholder="请选择任务类型">
@@ -253,8 +278,8 @@
         </el-dialog>
 
         <el-dialog title="选择完结日期" :visible.sync="selectFinishTimeVisible" width="30%">
-            <el-date-picker v-model="curTask.applyTime" type="date" placeholder="选择完结日期" value-format="yyyy-MM-dd HH:mm:ss"
-                @input="changeTime">
+            <el-date-picker v-model="curTask.applyTime" type="date" placeholder="选择完结日期"
+                value-format="yyyy-MM-dd HH:mm:ss" @input="changeTime">
             </el-date-picker>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="selectFinishTimeVisible = false">取 消</el-button>
@@ -561,8 +586,9 @@ export default {
         },
         //打开更新工作描述窗口
         openUpdateDescription(info) {
-            this.updateDescriptionVisible = true
             this.directors = info
+            this.updateDescriptionVisible = true
+
         },
         //打开填写完结日期的窗口
         openSelectFinishTime(row) {
@@ -591,12 +617,18 @@ export default {
         },
         //提交各负责人的工作描述
         async submitDirectorJobDescription() {
+            // console.log(this.directors)
             for (var i = 0; i < this.directors.length; i++) {
-                if (this.directors[i].userId === this.user.id && (this.directors[i].description === null || this.directors[i].description === '')) {
-                    this.$message.error("你对自己的工作描述为空，请检查后重新提交")
-                    return
+                if (this.directors[i].userId === this.user.id) {
+                    if (this.directors[i].description === '' || this.directors[i].description === null || this.directors[i].duration === '' || this.directors[i].duration === null) {
+                        this.$message.error("对工作描述不够完善，请检查工作描述和累计工作日信息")
+                        return;
+                    }
+                    break;
                 }
-                if (!('description' in this.directors[i]) || this.directors[i].description === null || this.directors[i].description === '') {
+            }
+            for (var i = 0; i < this.directors.length; i++) {
+                if (this.directors[i].description === null || this.directors[i].description === '') {
                     // 有负责人的描述为空，说明还未填写，仅更新描述，不提交完结
                     const res = await updateDescription(this.directors)
                     if (res.code === 200) {
@@ -907,7 +939,7 @@ export default {
             // 初始化y轴坐标
             var yAxis = [];
             for (let i = this.userInfo.length - 1; i >= 0; i--) {
-                yAxis.push(this.userInfo[i].description)
+                yAxis.push(this.userInfo[i].caseName + (this.userInfo[i].subName !== null ? ("->" + this.userInfo[i].subName) : ""))
             }
             var dataSeries = []
             // 计划时间
@@ -1006,7 +1038,7 @@ export default {
         },
         // 监听双击事件
         handleDoubleClick(row, column) {
-            if (column.label === "描述")
+            if (column.label === "专案/任务")
                 this.navigateToDetailPage(row)
             else if (column.label === "外因延期")
                 this.showDelay(row, "外界因素延期")
@@ -1020,7 +1052,7 @@ export default {
                     name: '子流程详情',
                     query: {
                         caseId: row.caseId,
-                        caseName: row.description.split("→")[0]
+                        caseName: row.caseName
                     }
                 })
             }
@@ -1035,7 +1067,7 @@ export default {
         openPause(row) {
             this.pauseObj.taskId = row.taskId
             this.pauseObj.caseSubId = row.caseSubId
-            this.pauseObj.target = row.description
+            this.pauseObj.target = row.caseName + "->" + row.subName
             this.pauseVisible = true
         },
         // 开始暂停

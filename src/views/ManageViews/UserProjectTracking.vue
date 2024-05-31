@@ -37,7 +37,8 @@
                             color="#30E0D4" :show-text="false">
                         </el-progress>
                         <!-- 正常状态进度条 -->
-                        <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage" :show-text="false"
+                        <el-progress v-else-if="!scope.row.pausing" :stroke-width="24"
+                            :percentage="scope.row.percentage" :show-text="false"
                             :color="scope.row.finishedOwnWork ? '#409eff' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? '#e6a23c' : '#f56c6c' : '#67c23a'">
                         </el-progress>
                         <!-- 暂停中进度条 -->
@@ -54,7 +55,11 @@
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="caseName" label="专案/任务" width="250"></el-table-column>
+                <el-table-column prop="caseName" label="专案/任务" width="230">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.caseName }}</div>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="subName" label="阶段"></el-table-column>
                 <el-table-column prop="startTime" label="开始时间"></el-table-column>
                 <el-table-column prop="presetTime" label="预计完成"></el-table-column>
@@ -87,9 +92,9 @@
                                 @click="openCommentView(scope.row)" v-if="scope.row.caseSubId">
                             </el-button>
                         </el-tooltip>
-                        <el-tooltip class="item" effect="dark" content="专案详情" placement="top">
-                            <el-button icon="el-icon-s-promotion" type="primary" size="mini" round
-                                @click="openCaseDetail(scope.row)" v-if="scope.row.caseSubId">
+                        <el-tooltip class="item" effect="dark" content="更新信息" placement="top" v-if="user.type === 1">
+                            <el-button icon="el-icon-success" type="success" size="mini" round
+                                @click="updateUserInfo(scope.row)" v-if="scope.row.caseSubId">
                             </el-button>
                         </el-tooltip>
                         <el-tooltip class="item" effect="dark" content="暂停" placement="top" v-if="user.type === 1">
@@ -231,6 +236,34 @@
             </span>
         </el-dialog>
 
+        <el-dialog title="多负责人确认" width="30%" :visible.sync="updateDescriptionVisible"
+            @close="updateDescriptionVisible = false">
+            <h2>请确认各负责人的工作及累计时间</h2>
+            <br>
+            <el-form label-width="90px" ref="descriptionFormRef" class="form">
+                <el-form-item v-for="item in directors" :label="item.name" :key="item.id">
+                    <el-row>
+                        <el-col :span=9>
+                            <el-input v-model="item.description" placeholder="工作内容描述"></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>累计</label>
+                        </el-col>
+                        <el-col :span=8 :offset="1">
+                            <el-input v-model="item.duration" placeholder="工作时长(天)" type="number" step="0.1"></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>天</label>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="updateDescriptionVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitDirectorJobDescription()">确 定</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
@@ -241,6 +274,7 @@ import { getUserListWithAssistants } from '@/api/user'
 import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
 import { startPause, finishPause, getPauseInfo } from '@/api/pause'
+import { countUser, updateDescription } from '@/api/caseSubUser'
 import { mapState } from 'vuex'
 
 export default {
@@ -295,7 +329,10 @@ export default {
                 taskId: null,
                 caseSubId: null,
                 target: ''
-            }
+            },
+            // 用户工作描述信息
+            updateDescriptionVisible: false,
+            directors: []
         }
     },
     async mounted() {
@@ -648,7 +685,7 @@ export default {
             // 初始化y轴坐标
             var yAxis = [];
             for (let i = this.userInfo.length - 1; i >= 0; i--) {
-                yAxis.push(this.userInfo[i].description)
+                yAxis.push(this.userInfo[i].caseName + (this.userInfo[i].subName !== null ? ("->" + this.userInfo[i].subName) : ""))
             }
             var dataSeries = []
             // 计划时间
@@ -899,13 +936,13 @@ export default {
         },
         // 双击显示任务说明
         showTaskDescription(row) {
-            this.commitForm.content = [{ content: row.description }]
+            this.commitForm.content = [{ content: row.caseName }]
         },
         // 打开暂停界面
         openPause(row) {
             this.pauseObj.taskId = row.taskId
             this.pauseObj.caseSubId = row.caseSubId
-            this.pauseObj.target = row.description
+            this.pauseObj.target = row.caseName + "->" + row.subName
             this.pauseVisible = true
         },
         // 开始暂停
@@ -946,10 +983,67 @@ export default {
             res += '<br>'
             res += "暂停原因：" + obj.pauseDesc
             return res
+        },
+        // 2024.5.29 管理员点击更新用户完结信息
+        async updateUserInfo(row) {
+            console.log(row)
+            this.updateDescriptionVisible = true;
+            const res = await countUser(row.caseSubId)
+            this.directors = res.data
+        },
+        // 2024.5.29 管理确认更新用户信息
+        async submitDirectorJobDescription() {
+            var incompleteInfoFound = false
+            // 修正管理员直接删除持续时间，导致后端无法正确修改的问题
+            for (var i = 0; i < this.directors.length; i++) {
+                if (this.directors[i].duration === "") {
+                    this.directors[i].duration = null
+                }
+                if(this.directors[i].description === "")
+                    this.directors[i].description = null
+            }
+            for (var i = 0; i < this.directors.length; i++) {
+                if ((this.directors[i].description === null && this.directors[i].duration !== null)
+                    || (this.directors[i].description !== null && this.directors[i].duration === null)) {
+                    incompleteInfoFound = true
+                    break;
+                }
+            }
+
+
+
+            if (incompleteInfoFound) {
+                this.$confirm('有负责人的完结信息不完整, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    // 点击确定，说明默认直接提交完结信息
+                    const res = await updateDescription(this.directors)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.updateDescriptionVisible = false
+                    }
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });
+                    return;
+                });
+            } else {
+                const res = await updateDescription(this.directors)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.updateDescriptionVisible = false
+                }
+            }
+            this.updateView()
         }
     }
 }
 </script>
+
 <style scoped>
 .charts-area {
     width: 100%;

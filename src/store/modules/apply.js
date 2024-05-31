@@ -91,7 +91,6 @@ export default {
             var res = await getFinishApplyList()
             res.data.forEach(item => {
                 try {
-
                     item.estimateValue = item.estimateValue===null?null:item.estimateValue.toFixed(2)
                 } catch (error) {
                     item.estimateValue = "错误！"

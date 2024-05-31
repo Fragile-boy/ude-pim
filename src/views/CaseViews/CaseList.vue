@@ -134,7 +134,7 @@
                 <el-form-item label="负责人" prop="directors">
                     <el-cascader v-model="addCaseForm.directors" :options="directorOptions" :show-all-levels="false"
                         placeholder="请选择负责人"></el-cascader>
-                    <el-button type="warning" size="mini" round style="margin-left:5px" @click="modifyDirector">批量修改</el-button>
+                    <el-button v-if="dialogTitle=='修改专案'" type="warning" size="mini" round style="margin-left:5px" @click="modifyDirector">批量修改</el-button>
                 </el-form-item>
 
                 <el-form-item label="专案描述" prop="description">

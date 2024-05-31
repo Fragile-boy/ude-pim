@@ -12,8 +12,10 @@
         <!-- 子流程详情演示区域 -->
         <el-card class="table">
             <el-row class="align-items-center">
-                <el-col :span="6">
-                    <el-page-header @back="$router.back()" :content="caseName"></el-page-header>
+                <el-col :span="6" style="display: flex; align-items: center;">
+                    <el-page-header @back="$router.back()" :content="caseName">
+                    </el-page-header>
+                    <el-button icon="el-icon-info" type="primary" size="mini" circle style="margin-left: 10px; margin-bottom: 9px;" @click="showCaseDescription()"></el-button>
                 </el-col>
                 <el-col :span="2">
                     <span style="font-size:25px;padding-left: 17px;">专案进度</span>
@@ -37,14 +39,15 @@
                 </el-col>
             </el-row>
             <div class="tableInfo">
-                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo" border
-                    @cell-dblclick="handleDoubleClick" :row-class-name="tableRowClassName">
+                <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo"
+                    border @cell-dblclick="handleDoubleClick" :row-class-name="tableRowClassName">
 
                     <el-table-column type="expand">
                         <template slot-scope="scope">
                             <el-row v-for="(item, index) in scope.row.chargeName" :key="item">
                                 <el-col :span="2">
-                                    <el-tag class="chargeNameTag" @click="getCaseByUserId(scope.row.chargeId[index], item)">
+                                    <el-tag class="chargeNameTag"
+                                        @click="getCaseByUserId(scope.row.chargeId[index], item)">
                                         {{ item }}
                                     </el-tag>
 
@@ -68,9 +71,10 @@
                                 </el-col>
 
                                 <el-col :span="3">
-                                    <el-tag v-if="scope.row.directorRate.length !== 0" type="warning" class="chargeNameTag">
+                                    <el-tag v-if="scope.row.directorRate.length !== 0" type="warning"
+                                        class="chargeNameTag">
                                         积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) /
-                                            100).toFixed(2)
+                    100).toFixed(2)
                                         }}
                                     </el-tag>
                                 </el-col>
@@ -154,7 +158,8 @@
                             <el-tag effect="dark" type="danger" v-if="scope.row.status === 2">已延误</el-tag>
                             <el-tag effect="dark" type="warning" v-if="scope.row.status === 3">延误完成</el-tag>
                             <el-tag effect="dark" type="info" v-if="scope.row.status === 4">未开始</el-tag>
-                            <el-tag effect="dark" style="background-color: #213B56;" v-if="scope.row.status === 5">暂停中</el-tag>
+                            <el-tag effect="dark" style="background-color: #213B56;"
+                                v-if="scope.row.status === 5">暂停中</el-tag>
                         </template>
 
                     </el-table-column>
@@ -233,8 +238,10 @@
                 <!-- 备注显示区域 -->
                 <el-form-item label="备注信息">
                     <el-card class="box-card">
-                        <div v-for="o in commitForm.content" :key="o" class="text item">
-                            {{ o }}
+                        <div v-for="o in commitForm.content" :key="o.id" class="text item">
+                            {{ o.content }}
+                            <el-button icon="el-icon-edit" size="mini" round type="primary"
+                                @click="editCommit(o)" v-if="user.type===1||user.status===2"></el-button>
                         </div>
                         <label v-if="commitForm.content.length === 0">暂无备注</label>
                     </el-card>
@@ -286,7 +293,8 @@
                     <el-col :span="12">
                         <el-form-item label="修改难度">
                             <el-select v-model="curCaseSubObj.level"
-                                :placeholder="curCaseSubObj ? curCaseSubObj.level + '' : '请选择难度'" @change="getPlanDays()">
+                                :placeholder="curCaseSubObj ? curCaseSubObj.level + '' : '请选择难度'"
+                                @change="getPlanDays()">
                                 <el-option v-for="item in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="item" :label="item"
                                     :value="item">
                                 </el-option>
@@ -367,7 +375,8 @@
                         <el-tag class="chargeNameTag">专案子阶段结束状态下，不可修改负责人</el-tag>
                         <div>
                             <el-tag class="chargeNameTag" type="warning" v-for="item in curCaseSubObj.chargeName"
-                                :key="item">{{ item }}</el-tag>
+                                :key="item">{{
+                    item }}</el-tag>
                         </div>
                     </div>
                 </el-form-item>
@@ -382,7 +391,8 @@
 
         <!-- 管理员添加外界因素延期 -->
         <el-dialog title="申请延期" :visible.sync="applyDelayVisible" width="30%" @close="closeApplyDelay">
-            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="90px" class="form">
+            <el-form ref="applyDelayFormRef" :rules="delayRules" :model="delayApplyObject" label-width="90px"
+                class="form">
                 <el-form-item label="专案">
                     <el-input :value="curCaseSubObj.caseName" disabled></el-input>
                 </el-form-item>
@@ -440,6 +450,28 @@
                 <el-button type="primary" @click="launchSub()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="专案信息" :visible.sync="caseInfoVisible" width="40%" @close="caseInfoVisible=false">
+            <el-form label-width="100px">
+                <!-- 子流程名称显示 -->
+                <el-form-item label="专案名称">
+                    <el-input v-model="caseObj.name" disabled></el-input>
+                </el-form-item>
+                <!-- 备注显示区域 -->
+                <el-form-item label="专案描述">
+                    <el-card class="box-card">
+                        <div class="text item">
+                            {{ caseObj.description }}
+                        </div>
+                        <label v-if="caseObj.description === null||caseObj.description===''">暂无描述</label>
+                    </el-card>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button type="primary" @click="caseInfoVisible=false">确定</el-button>
+                <el-button @click="caseInfoVisible = false">取 消</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -449,9 +481,10 @@ import { getSubList, getSubByUserId, updateCaseSub, startOrFinish } from '@/api/
 import { mapState } from 'vuex'
 import { removeDirector, countUser, setDirector, submitDirectorValue } from '@/api/caseSubUser'
 import { getDelayByStatus, saveApply, updateDelay, deleteDelay } from '@/api/caseDelayApply'
-import { getById, saveCommit } from '@/api/caseSubCommit';
+import { getById, saveCommit, updateCommit } from '@/api/caseSubCommit';
 import { getUserListWithAssistants } from '@/api/user'
 import { getPresetDay } from '@/api/sub'
+import { getCaseById } from '@/api/case'
 
 export default {
     data() {
@@ -578,6 +611,12 @@ export default {
             casePercentage: 0,
             // 时间进度
             caseSchedulePercentage: 0,
+            // 专案信息
+            caseObj:{
+                name:null,
+                description:null
+            },
+            caseInfoVisible:false
         }
     },
     computed: {
@@ -634,10 +673,10 @@ export default {
                     this.subInfo[i].standardTime = timeAdd(this.subInfo[i].startTime, this.subInfo[i].planDays, this.subInfo[i].unforcedDays)
                     // 综合目标时间（计划天数+外界因素延期+人为因素延期）（该变量显示当前阶段的实际预计完成时间）
                     this.subInfo[i].comprehensiveTime = timeAdd(this.subInfo[i].startTime, this.subInfo[i].planDays, this.subInfo[i].unforcedDays, this.subInfo[i].applyDelay)
-                } else if(i!==0&&typeof (this.subInfo[i - 1].comprehensiveTime) !== 'undefined'){
+                } else if (i !== 0 && typeof (this.subInfo[i - 1].comprehensiveTime) !== 'undefined') {
                     // 开始时间为空,且不是第一个阶段,且上个阶段有目标完成时间
                     // 目标完成时间（上个阶段的目标完成时间+本阶段的计划时间+1（因为一个阶段结束后，第二天下个阶段才开始)）
-                    this.subInfo[i].comprehensiveTime = timeAdd(this.subInfo[i-1].comprehensiveTime, this.subInfo[i].planDays, 1)
+                    this.subInfo[i].comprehensiveTime = timeAdd(this.subInfo[i - 1].comprehensiveTime, this.subInfo[i].planDays, 1)
                 }
 
 
@@ -649,7 +688,7 @@ export default {
                 }
                 //实际完成时间
                 this.subInfo[i].finishTime = formatDate(this.subInfo[i].finishTime)
-                this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime,  this.subInfo[i].pausing)
+                this.subInfo[i].status = getStatus(this.subInfo[i].startTime, this.subInfo[i].standardTime, this.subInfo[i].finishTime, this.subInfo[i].pausing)
 
                 // 计算执行时间
                 this.casePlanDays += this.subInfo[i].planDays
@@ -741,8 +780,9 @@ export default {
             //备注数组必须清空，否则会叠加
             this.commitForm.content = []
             for (var i = 0; i < res.length; i++) {
-                this.commitForm.content.push(res[i].content)
+                this.commitForm.content.push(res[i])
             }
+
         },
         async submitCommitForm() {
             //判断备注信息是否为空或者内容太少
@@ -1249,7 +1289,38 @@ export default {
             if (row.startTime !== null && row.finishTime === null) {
                 return 'executing';
             }
-        }
+        },
+        // 修改评论
+        editCommit(commit) {
+            this.$prompt('修改评论', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                inputValue: commit.content,
+                inputPattern: /.+/,
+                inputErrorMessage: '评论内容不能为空'
+            }).then(async ({ value }) => {
+                commit.content = value
+                var res = await updateCommit(commit)
+                if (res.code == 200) {
+                    this.$message.success(res.data)
+                    // 获取专案子流程对应的所有备注
+                    var res = await getById(commit.caseSubId)
+                    res = res.data
+                    //备注数组必须清空，否则会叠加
+                    this.commitForm.content = []
+                    for (var i = 0; i < res.length; i++) {
+                        this.commitForm.content.push(res[i])
+                    }
+                }
+            })
+        },
+        // 显示专案描述
+        async showCaseDescription(){
+            // 获取专案信息
+            var res = await getCaseById(this.caseId)
+            this.caseObj = res.data
+            this.caseInfoVisible = true
+        },
     }
 }
 </script>

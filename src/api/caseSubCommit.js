@@ -31,3 +31,8 @@ export const getCommitByStatus = (params)=>{
 export const deleteCommit = (id)=>{
     return service.delete(`/caseSubComment/${id}`)
 }
+
+// 更新备注
+export const updateCommit = (obj)=>{
+    return service.put('/caseSubComment',obj)
+}

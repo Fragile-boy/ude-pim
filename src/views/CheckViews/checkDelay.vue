@@ -62,7 +62,10 @@
                         <el-tag effect="dark" type="danger" v-else-if="scope.row.status === 2">拒绝</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="rejectReason" label="拒绝原因">
+                <el-table-column label="拒绝原因">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.rejectReason }}</div>
+                    </template>
                 </el-table-column>
                 <el-table-column prop="description" label="描述">
                 </el-table-column>
@@ -70,7 +73,10 @@
                 </el-table-column>
                 <el-table-column prop="delayType" label="延期类型">
                 </el-table-column>
-                <el-table-column prop="applyReason" label="申请原因">
+                <el-table-column label="申请原因">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-wrap;">{{ scope.row.applyReason }}</div>
+                    </template>
                 </el-table-column>
                 <el-table-column prop="applyDays" label="申请天数">
                 </el-table-column>

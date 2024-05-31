@@ -152,8 +152,8 @@
 
                 <el-form-item label="职务" prop="status">
                     <el-select v-model="editingUser.status" placeholder="请选择职务">
-                        <el-option v-for="item in [{ label: '机构', value: 0 }, { label: '电控', value: 1 }]" :key="item.value"
-                            :label="item.label" :value="item.value">
+                        <el-option v-for="item in [{ label: '机构', value: 0 }, { label: '电控', value: 1 }]"
+                            :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
                 </el-form-item>
@@ -190,26 +190,30 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="更换负责人" :visible.sync="chargeCaseSubVisible" width="40%">
+        <!-- 删除用户的工作交接界面 -->
+        <el-dialog title="工作交接" :visible.sync="chargeCaseSubVisible" width="40%">
             <el-table :data="chargingTask">
                 <el-table-column prop="desc" label="描述"></el-table-column>
                 <el-table-column label="开始时间">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="info" v-if="scope.row.startTime === null">未开始</el-tag>
-                        <el-tag effect="dark" type="primary" v-else>{{scope.row.startTime}}</el-tag>
+                        <el-tag effect="dark" type="primary" v-else>{{ scope.row.startTime }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="负责人">
+                
+                <el-table-column label="更换负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.userId" placeholder="请选择负责人">
+                        <el-select v-model="scope.row.userId" placeholder="请选择负责人" :disabled="scope.row.startTime!==null&&(scope.row.description===null||scope.row.description==='')">
                             <el-option v-for="item in allUser" :key="item.id" :label="item.name" :value="item.id">
                             </el-option>
                         </el-select>
                     </template>
                 </el-table-column>
+
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-button type="danger" icon="el-icon-delete" @click=deleteByChargeId(scope.row.caseSubId,scope.row.userId)></el-button>
+                        <el-button type="danger" icon="el-icon-delete" @click=deleteByChargeId(scope.row.id) v-if="scope.row.startTime===null"></el-button>
+                        <el-button type="success" icon="el-icon-success" @click="updateUserInfo(scope.row)" v-if="scope.row.startTime!==null"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -218,15 +222,43 @@
                 <el-button @click="chargeCaseSubVisible = false">取 消</el-button>
             </span>
         </el-dialog>
+
+        <el-dialog title="工作描述" width="30%" :visible.sync="updateDescriptionVisible" @close="updateDescriptionVisible=false">
+            <el-form label-width="90px" ref="descriptionFormRef" class="form">
+                <el-form-item :label="curCaseSubUser.userName">
+                    <el-row>
+                        <el-col :span=9>
+                            <el-input v-model="curCaseSubUser.description" placeholder="工作内容描述"
+                                ></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>累计</label>
+                        </el-col>
+                        <el-col :span=8 :offset="1">
+                            <el-input v-model="curCaseSubUser.duration" placeholder="工作时长(天)" type="number" step="0.1"
+                                ></el-input>
+                        </el-col>
+                        <el-col :span="2" :offset="1">
+                            <label>天</label>
+                        </el-col>
+                    </el-row>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="updateDescriptionVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitDirectorJobDescription()">确 定</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
 <script>
 import { getUserPage, saveUser, getUserById, updateUser, removeUser } from '@/api/user'
 import { mapActions, mapState } from 'vuex'
-import { updatePassword,getUserListWithAssistants } from '@/api/user'
+import { updatePassword, getUserListWithAssistants } from '@/api/user'
 import { getChargeCaseSub } from '@/api/caseSub'
-import {removeDirector,updateChargeCaseSub} from '@/api/caseSubUser'
+import { removeDirector, removeDirectorById, updateChargeCaseSub, updateDescriptionById } from '@/api/caseSubUser'
 export default {
     data() {
         var checkNumber = (rule, value, callback) => {
@@ -329,7 +361,15 @@ export default {
             // 正在负责的任务
             chargingTask: [],
             chargeCaseSubVisible: false,
-            allUser: []
+            allUser: [],
+            // 当前专案负责人信息
+            curCaseSubUser:{
+                id:null,
+                description:null,
+                duration:null
+            },
+            // 更新窗口的显示
+            updateDescriptionVisible:false
         }
     },
     created() {
@@ -341,9 +381,9 @@ export default {
     },
     methods: {
         ...mapActions(['editUserInfo']),
-        async getAllUser(){
+        async getAllUser() {
             var res = await getUserListWithAssistants()
-            if(res.code===200){
+            if (res.code === 200) {
                 this.allUser = res.data
             }
         },
@@ -460,23 +500,50 @@ export default {
             })
         },
         // 删除负责人
-        async deleteByChargeId(caseSubId,userId){
-            var res = await removeDirector({caseSubId:caseSubId,userId:userId})
-            if(res.code===200){
+        async deleteByChargeId(caseSubUserId) {
+            var res = await removeDirectorById(caseSubUserId)
+            if (res.code === 200) {
                 this.$message.success(res.data)
-                this.chargingTask = this.chargingTask.filter(item=>item.caseSubId!==caseSubId||item.userId!==userId)
-            }else{
+                this.chargingTask = this.chargingTask.filter(item => item.id !== caseSubUserId)
+            } else {
                 this.$message.error(res.msg)
             }
         },
         // 更新负责人
-        async updateChargeTask(){
+        async updateChargeTask() {
             var res = await updateChargeCaseSub(this.chargingTask)
-            if(res.code===200){
+            if (res.code === 200) {
                 this.$message.success(res.data)
                 this.chargingTask = []
                 this.chargeCaseSubVisible = false
             }
+        },
+        // 更新负责人的工作信息
+        updateUserInfo(row){
+            this.curCaseSubUser.id = row.id
+            this.curCaseSubUser.description = row.description
+            this.curCaseSubUser.duration = row.duration
+            this.curCaseSubUser.userId = row.userId
+            for(var i =0;i<this.allUser.length;i++){
+                if(this.allUser[i].id === row.userId){
+                    this.curCaseSubUser.userName = this.allUser[i].name
+                    break
+                }
+            }
+            console.log(this.curCaseSubUser)
+            this.updateDescriptionVisible = true
+        },
+        async submitDirectorJobDescription(){
+            if (this.curCaseSubUser.description === '' || this.curCaseSubUser.description === null || this.curCaseSubUser.duration==='' || this.curCaseSubUser.duration===null) {
+                this.$message.error("对工作描述不够完善，请检查工作描述和累计工作日信息")
+                return;
+            }
+            const res = await updateDescriptionById(this.curCaseSubUser)
+            this.$message.success(res.data)
+            // 更新表格信息
+            var r = await getChargeCaseSub(this.curCaseSubUser.userId)
+            this.chargingTask = r.data
+            this.updateDescriptionVisible = false
         }
     }
 }

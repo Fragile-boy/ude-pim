@@ -21,7 +21,7 @@ export const editCase = (caseObj) => {
 }
 
 //返回专案朴素信息
-export const getById = (id) => {
+export const getCaseById = (id) => {
     return service.get(`/case/${id}`)
 }
 
