@@ -38,6 +38,8 @@
                     </span>
                 </el-col>
             </el-row>
+
+            <!-- 子阶段详情表格 -->
             <div class="tableInfo">
                 <el-table row-key="id" :expand-row-keys="expandRowKeys" :cell-style="setCellColor" :data="subInfo"
                     border @cell-dblclick="handleDoubleClick" :row-class-name="tableRowClassName">
@@ -273,6 +275,13 @@
                         <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
                     </template>
                 </el-table-column>
+
+                <el-table-column label="累计时长">
+                    <template slot-scope="scope">
+                        <el-input v-model="scope.row.duration" type="number" placeholder="累计时长"></el-input>
+                    </template>
+                </el-table-column>
+
                 <el-table-column label="获得积分">
                     <template slot-scope="scope">
                         <el-input :value="scope.row.value * 1.0 / 100 * curCaseSubObj.value" placeholder="工作内容"

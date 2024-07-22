@@ -12,7 +12,7 @@
                     <el-button type="primary" icon="el-icon-circle-plus" @click="openAddTask()">新建任务</el-button>
                 </el-col>
                 <el-col :span="4" :offset="18">
-                    <el-radio-group v-model="showMode" style="margin-left:50px;">
+                    <el-radio-group v-model="showMode" size="medium" style="margin-left:35px;">
                         <el-radio-button label="总览视图"><i class="el-icon-picture">总览视图</i></el-radio-button>
                         <el-radio-button label="个人视图"><i class="el-icon-s-custom">个人视图</i></el-radio-button>
                     </el-radio-group>
@@ -96,7 +96,7 @@
                     </el-col>
                 </el-row>
                 <br>
-                <el-table :data="taskList">
+                <el-table :data="taskList" @cell-dblclick="handleDoubleClick">
                     <el-table-column label="类型">
                         <template slot-scope="scope">
                             <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
@@ -217,6 +217,22 @@
                 <el-button type="primary" @click="addTask()">确 定</el-button>
             </span>
         </el-dialog>
+
+        <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+            <el-table :data="delayList" style="font-size:20px">
+                <el-table-column label="延期原因" width="550">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-line;">
+                            {{ scope.row.applyReason }}
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="applyDays" label="延期天数">
+                </el-table-column>
+                <el-table-column prop="delayType" label="延期类型">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
     </div>
 </template>
 
@@ -224,6 +240,7 @@
 import { allTaskList, updateTask, addTask, getExecutingTask } from '@/api/task';
 import { getUserListWithAssistants } from '@/api/user';
 import { format4back, formatDate, timeAdd, timeSub } from '@/utils/common';
+import { getDelayById } from '@/api/caseDelayApply'
 import { mapState } from 'vuex';
 
 export default {
@@ -281,6 +298,10 @@ export default {
             executingList: [],
             delayList: [],
             pausingList: [],
+            // 延期列表
+            delayList: [],
+            // 抽屉
+            delayDrawer: false,
         }
     },
     async created() {
@@ -405,7 +426,20 @@ export default {
                     userName: row.userNames
                 }
             })
-        }
+        },
+        // 表格双击事件
+        handleDoubleClick(row, column){
+            if(column.label==="外界因素延期"){
+                this.showDelay(row, "外界因素延期")
+            }else if (column.label === "人为因素延期")
+                this.showDelay(row, "人为因素延期")
+        },
+        // 显示不可抗力延期
+        async showDelay(row, delayType) {
+            var res = await getDelayById({ caseSubId: null, taskId: row.id, delayType: delayType })
+            this.delayList = res.data
+            this.delayDrawer = true
+        },
     }
 }
 </script>

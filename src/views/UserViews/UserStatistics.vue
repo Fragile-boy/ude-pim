@@ -12,15 +12,15 @@
         <el-col :span="3">
           <el-select v-model="curType" placeholder="请选择任务类型" clearable>
             <el-option v-for="item in [{
-              value: 0,
-              label: '专案类'
-            }, {
-              value: 1,
-              label: '临时事务'
-            }, {
-              value: 2,
-              label: '技术研究'
-            }]" :key="item.value" :label="item.label" :value="item.value">
+        value: 0,
+        label: '专案类'
+      }, {
+        value: 1,
+        label: '临时事务'
+      }, {
+        value: 2,
+        label: '技术研究'
+      }]" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-col>
@@ -28,12 +28,12 @@
         <el-col :span="3">
           <el-select v-model="finishType" placeholder="完成情况" clearable>
             <el-option v-for="item in [{
-              value: 0,
-              label: '正常'
-            }, {
-              value: 1,
-              label: '延误'
-            }]" :key="item.value" :label="item.label" :value="item.value">
+        value: 0,
+        label: '正常'
+      }, {
+        value: 1,
+        label: '延误'
+      }]" :key="item.value" :label="item.label" :value="item.value">
             </el-option>
           </el-select>
         </el-col>
@@ -50,7 +50,7 @@
 
 
       </el-row>
-      <el-table :data="showList" :default-sort="{ prop: 'finishTime', order: 'descending' }"
+      <el-table :data="showList" :default-sort="{ prop: 'finishTime', order: 'descending' }" @cell-dblclick="handleDoubleClick"
         @sort-change="handlesortChange" style="font-size: 18px;">
         <el-table-column label="类型">
           <template slot-scope="scope">
@@ -117,6 +117,23 @@
         <div id="taskAchieve" style="width: 100%; height: 400px"></div>
       </el-card>
     </div>
+
+    <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+      <el-table :data="delayList" style="font-size:20px">
+        <el-table-column label="延期原因" width="550">
+          <template slot-scope="scope">
+            <div style="white-space: pre-line;">
+              {{ scope.row.applyReason }}
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="applyDays" label="延期天数">
+        </el-table-column>
+        <el-table-column prop="delayType" label="延期类型">
+        </el-table-column>
+      </el-table>
+    </el-drawer>
+
   </div>
 </template>
 
@@ -124,6 +141,7 @@
 import { mapState } from 'vuex';
 import { allFinishTask } from '@/api/task'
 import { timeSub } from '@/utils/common';
+import { getDelayById } from '@/api/caseDelayApply'
 export default {
   name: 'userStatistics',
   data() {
@@ -196,6 +214,10 @@ export default {
       },
       pieChart: null,
       barChart: null,
+      // 延期列表
+      delayList: [],
+      // 抽屉
+      delayDrawer: false,
     }
   },
   async created() {
@@ -441,7 +463,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
-              fontSize:20,
+              fontSize: 20,
             },
           },
           {
@@ -451,7 +473,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
-              fontSize:20,
+              fontSize: 20,
             },
           },
           {
@@ -463,7 +485,7 @@ export default {
               show: true, //开启显示
               position: 'top', //在上方显示
               formatter: '{c}%',
-              fontSize:20,
+              fontSize: 20,
             },
           },
           {
@@ -474,7 +496,7 @@ export default {
             label: {
               show: true, //开启显示
               position: 'top', //在上方显示
-              fontSize:20,
+              fontSize: 20,
               formatter: '{c}%'
             },
           },
@@ -554,7 +576,37 @@ export default {
       var minint = Math.floor(min / 1); // 向下以1的倍数取整
       var minval = minint * 1 - 5; // 最终设置的最小值
       return minval; // 输出最小值
-    }
+    },
+    // 监听双击事件
+    handleDoubleClick(row, column) {
+      if (column.label === "描述") {
+        // 子流程id不为空，跳转到详情页
+        if (row.caseSubId !== null)
+          this.navigateToDetailPage(row)
+      }
+      else if (column.label === "外因延期")
+        this.showDelay(row, "外界因素延期")
+      else if (column.label === "人为延期")
+        this.showDelay(row, "人为因素延期")
+    },
+    // 双击跳转到详情页()
+    navigateToDetailPage(row) {
+      if (row.caseId !== null) {
+        this.$router.push({
+          name: '子流程详情',
+          query: {
+            caseId: row.caseId,
+            caseName: row.description.split("->")[0]
+          }
+        })
+      }
+    },
+    // 显示不可抗力延期
+    async showDelay(row, delayType) {
+      var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
+      this.delayList = res.data
+      this.delayDrawer = true
+    },
   }
 }
 </script>

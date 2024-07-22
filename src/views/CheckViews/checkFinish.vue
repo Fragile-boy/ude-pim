@@ -19,7 +19,7 @@
                 </el-row>
             </div>
             <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick"
-            :cell-class-name="cellClassName">
+                :cell-class-name="cellClassName">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -75,9 +75,14 @@
                         <el-input v-model="scope.row.description" placeholder="工作内容"></el-input>
                     </template>
                 </el-table-column>
+                <el-table-column label="累计时长">
+                    <template slot-scope="scope">
+                        <el-input v-model="scope.row.duration" type="number" placeholder="累计时长"></el-input>
+                    </template>
+                </el-table-column>
                 <el-table-column label="获得积分">
                     <template slot-scope="scope">
-                        <el-input :value="scope.row.value*1.0/100*curObj.estimateValue" disabled></el-input>
+                        <el-input :value="scope.row.value * 1.0 / 100 * curObj.estimateValue" disabled></el-input>
                     </template>
                 </el-table-column>
             </el-table>
@@ -106,7 +111,7 @@
                 </el-table-column>
                 <el-table-column prop="description" label="描述">
                 </el-table-column>
-                
+
                 <el-table-column prop="rejectReason" label="拒绝原因">
                 </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
@@ -115,15 +120,15 @@
                 </el-table-column>
                 <el-table-column prop="createTime" label="申请创建时间">
                 </el-table-column>
-                
+
                 <el-table-column prop="checkName" label="审核人">
                 </el-table-column>
                 <el-table-column prop="checkTime" label="审核时间">
                 </el-table-column>
             </el-table>
-            <el-pagination style="margin-top: 10px;" @size-change="handleSizeChange" @current-change="handleCurrentChange"
-                :current-page="queryInfo.page" :page-sizes="[5, 8, 10, 15]" :page-size="queryInfo.pageSize"
-                layout="total, sizes, prev, pager, next, jumper" :total="total">
+            <el-pagination style="margin-top: 10px;" @size-change="handleSizeChange"
+                @current-change="handleCurrentChange" :current-page="queryInfo.page" :page-sizes="[5, 8, 10, 15]"
+                :page-size="queryInfo.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </el-card>
 
@@ -151,11 +156,29 @@
                 <el-button @click="commitVisible = false">返 回</el-button>
             </span>
         </el-dialog>
+
+        
+        <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+            <el-table :data="delayList" style="font-size:20px">
+                <el-table-column label="延期原因" width="550">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-line;">
+                            {{ scope.row.applyReason }}
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="applyDays" label="延期天数">
+                </el-table-column>
+                <el-table-column prop="delayType" label="延期类型">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
     </div>
 </template>
 
 <script>
 import { getFinishApplyList, judgeFinishApply, endHistory } from '@/api/caseFinishApply'
+import { getDelayById } from '@/api/caseDelayApply'
 import { mapActions, mapState } from 'vuex'
 import { formatDate } from '@/utils/common'
 import { countUser, submitDirectorValue } from '@/api/caseSubUser'
@@ -182,7 +205,10 @@ export default {
                 caseName: '',
                 subName: '',
                 content: []
-            }
+            },
+            // 外界因素延期时间
+            delayList:null,
+            delayDrawer:false,
         }
     },
     computed: {
@@ -200,8 +226,8 @@ export default {
             row.status = status
             row.checkUser = this.user.id
             // 避免预计积分错误的时候，无法拒绝或者通过
-            if(row.estimateValue==="错误！")
-                row.estimateValue=null
+            if (row.estimateValue === "错误！")
+                row.estimateValue = null
             this.curObj = { ...row }
             //通过
             if (status === 1) {
@@ -238,7 +264,7 @@ export default {
                 if (this.directorList.length === 1) {
                     this.directorList[0].value = 100
                     const res = await submitDirectorValue(this.directorList)
-                    if(res.code!==200){
+                    if (res.code !== 200) {
                         this.$message.error(res.msg)
                         return
                     }
@@ -369,25 +395,36 @@ export default {
                 this.$message.error(res.msg)
         },
         async handleDoubleClick(row, column) {
-            if (row.caseSubId) {
-                var res = await getCaseId(row.caseSubId)
-                if (res.code == 200) {
-                    res = res.data
-                } else {
-                    this.$message.error(res.msg)
-                    return
-                }
-                this.$router.push({
-                    name: '子流程详情',
-                    query: {
-                        caseName: row.description.split("->")[0],
-                        caseId: res
+            // 跳转子流程详情界面
+            if (column.label === '描述') {
+                if (row.caseSubId) {
+                    var res = await getCaseId(row.caseSubId)
+                    if (res.code == 200) {
+                        res = res.data
+                    } else {
+                        this.$message.error(res.msg)
+                        return
                     }
-                })
+                    this.$router.push({
+                        name: '子流程详情',
+                        query: {
+                            caseName: row.description.split("->")[0],
+                            caseId: res
+                        }
+                    })
+                }
+            }else if(column.label==="外界因素延期"){
+                this.showDelay(row, "外界因素延期")
             }
         },
-        cellClassName({row,column,rowindex,columnIndex}){
-            if(column.label==='申请完结时间'||column.label==='预计积分'){
+        // 2024-6-17 显示不可抗力延期
+        async showDelay(row, delayType) {
+            var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
+            this.delayList = res.data
+            this.delayDrawer = true
+        },
+        cellClassName({ row, column, rowindex, columnIndex }) {
+            if (column.label === '申请完结时间' || column.label === '预计积分') {
                 return 'heightLight'
             }
         }
@@ -396,16 +433,21 @@ export default {
 </script>
 
 <style scoped>
-.el-table >>> .heightLight{
+.el-table>>>.heightLight {
     background: #60E5E5;
-    animation:blink 0.6s linear 2;
+    animation: blink 0.6s linear 2;
 }
-@keyframes blink{
-    0%{ background: #fff;}
-    50%{
+
+@keyframes blink {
+    0% {
+        background: #fff;
+    }
+
+    50% {
         background: #96E8E8;
     }
-    100%{
+
+    100% {
         background: #60E5E5;
     }
 }

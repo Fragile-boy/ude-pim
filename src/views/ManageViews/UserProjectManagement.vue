@@ -68,7 +68,7 @@
                 </el-col>
             </el-row>
 
-            <el-table :data="showList" :default-sort="{ prop: 'finishTime', order: 'descending' }"
+            <el-table :data="showList" :default-sort="{ prop: 'finishTime', order: 'descending' }" @cell-dblclick="handleDoubleClick"
                 @sort-change="handlesortChange" style="font-size: 18px;">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
@@ -135,6 +135,24 @@
                 <div id="taskAchieve" style="width: 100%; height: 400px"></div>
             </el-card>
         </div>
+
+
+        <el-drawer direction="ltr" :visible.sync="delayDrawer" :with-header="false" size="50%">
+            <el-table :data="delayList" style="font-size:20px">
+                <el-table-column label="延期原因" width="550">
+                    <template slot-scope="scope">
+                        <div style="white-space: pre-line;">
+                            {{ scope.row.applyReason }}
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="applyDays" label="延期天数">
+                </el-table-column>
+                <el-table-column prop="delayType" label="延期类型">
+                </el-table-column>
+            </el-table>
+        </el-drawer>
+
     </div>
 </template>
 
@@ -143,6 +161,7 @@ import { mapState } from 'vuex';
 import { allFinishTask } from '@/api/task'
 import { timeSub } from '@/utils/common';
 import { getUserListWithAssistants } from '@/api/user'
+import { getDelayById } from '@/api/caseDelayApply'
 export default {
     name: 'userStatistics',
     data() {
@@ -240,6 +259,10 @@ export default {
             },
             pieChart: null,
             barChart: null,
+            // 延期列表
+            delayList: [],
+            // 抽屉
+            delayDrawer: false,
         }
     },
     created() {
@@ -647,7 +670,36 @@ export default {
             var minint = Math.floor(min / 1); // 向下以1的倍数取整
             var minval = minint * 1 - 5; // 最终设置的最小值
             return minval; // 输出最小值
-        }
+        },
+        // 表格双击事件
+        handleDoubleClick(row, column){
+            if (column.label === "外因延期")
+                this.showDelay(row, "外界因素延期")
+            else if (column.label === "人为延期")
+                this.showDelay(row, "人为因素延期")
+            else if(column.label==="描述"){
+                this.navigateToDetailPage(row)
+            }
+        },
+        // 双击跳转到详情页()
+        navigateToDetailPage(row) {
+            if (row.caseId !== null) {
+                this.$router.push({
+                    name: '子流程详情',
+                    query: {
+                        caseId: row.caseId,
+                        caseName: row.description.split("->")[0]
+                    }
+                })
+            }
+        },
+        // 显示不可抗力延期
+        async showDelay(row, delayType) {
+            var res = await getDelayById({ caseSubId: row.caseSubId, taskId: row.taskId, delayType: delayType })
+            this.delayList = res.data
+            this.delayDrawer = true
+        },
+
     }
 }
 </script>
