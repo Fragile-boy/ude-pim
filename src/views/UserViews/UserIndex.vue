@@ -48,7 +48,7 @@
             <el-button type="primary" @click="jump2Case">申请子流程<i class="el-icon-plus"></i></el-button>
             <el-button type="primary" @click="jump2Task">申请技术研究<i class="el-icon-plus"></i></el-button>
             <el-button type="primary" @click="jump2CaseIndex">专案主页<i class="el-icon-view"></i></el-button>
-            <el-button type="info">待定</el-button>
+            <el-button type="primary" @click="jump2CaseDiscussion">专案讨论</el-button>
           </div>
         </el-card>
       </div>
@@ -77,9 +77,8 @@
             <el-table-column>
               <template slot-scope="scope">
                 <!-- 未开始进度条 -->
-                <el-progress v-if="scope.row.startTime === null" :stroke-width="24" :percentage="100" color="#30E0D4"
-                  :show-text="false">
-                </el-progress>
+                <el-button v-if="scope.row.startTime === null" type="success" icon="el-icon-video-play" size="mini"
+                  round @click="startCaseSub(scope.row)">开始</el-button>
                 <!-- 正常状态进度条 -->
                 <el-progress v-else-if="!scope.row.pausing" :stroke-width="24" :percentage="scope.row.percentage"
                   :status="scope.row.finishedOwnWork ? 'primary' : 'leftDelay' in scope.row ? scope.row.leftDelay >= 0 ? 'warning' : 'exception' : 'success'">
@@ -92,12 +91,10 @@
             </el-table-column>
           </el-table>
 
-
-          <!-- <el-row>
-            <el-col :span="3" :offset="10">
-              <el-button type="primary">显示所有任务</el-button>
-            </el-col>
-          </el-row> -->
+          <div style="width:100%;display: flex;">
+            <div id="typePie" style="width:45%;height:300px;"></div>
+            <div id="statusPie" style="width:45%;height:300px;"></div>
+          </div>
         </el-card>
 
         <!-- 日历显示 -->
@@ -124,12 +121,6 @@
         </el-calendar>
       </div>
 
-
-
-      <!-- 卡片区域 -->
-      <div class="applyArea">
-        <caseStatus></caseStatus>
-      </div>
     </div>
 
     <!-- 修改资料区域 -->
@@ -196,6 +187,7 @@ import { mapActions, mapState } from 'vuex'
 import { taskList, notStartTaskList } from '@/api/task'
 import { timeSub, timeAdd, formatDate } from '@/utils/common'
 import { updatePassword } from '@/api/user'
+import { startOrFinish } from '@/api/caseSub'
 export default {
   data() {
     var checkNumber = (rule, value, callback) => {
@@ -274,10 +266,10 @@ export default {
     // 因为会插入到同一个列表，所以要串行执行
     await this.initTaskList()
     await this.getNotStartTaskList()
-    // this.typePie = this.$echarts.init(document.getElementById('typePie'));
-    // this.statusPie = this.$echarts.init(document.getElementById('statusPie'));
+    this.typePie = this.$echarts.init(document.getElementById('typePie'));
+    this.statusPie = this.$echarts.init(document.getElementById('statusPie'));
 
-    // this.renderPieChart()
+    this.renderPieChart()
   },
   methods: {
     ...mapActions(['editUserInfo']),
@@ -294,7 +286,7 @@ export default {
         for (var i = 0; i < this.taskList.length; i++) {
           this.taskList[i].executionDays = timeSub(this.taskList[i].startTime, new Date())
           var presetTime = new Date(this.taskList[i].startTime)
-          presetTime = presetTime.setDate(presetTime.getDate() + this.taskList[i].planDays + this.taskList[i].unforcedDays-1)
+          presetTime = presetTime.setDate(presetTime.getDate() + this.taskList[i].planDays + this.taskList[i].unforcedDays - 1)
           this.taskList[i].presetTime = presetTime
           //分为已延误和未延误
           var today = new Date()
@@ -536,6 +528,11 @@ export default {
         }
       })
     },
+    jump2CaseDiscussion() {
+      this.$router.push({
+        path: '/common/discussion',
+      })
+    },
     isSunDay(date) {
       date = new Date(date)
       return date.getDay() === 0
@@ -562,6 +559,21 @@ export default {
         }
       }
       return str === '' ? false : str
+    },
+    startCaseSub(obj) {
+      this.$confirm('操作将从此刻开始阶段的执行, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        obj.id = obj.caseSubId
+        obj.startTime = formatDate(new Date()) + " 00:00:00"
+        var res = await startOrFinish(obj)
+        if (res.code === 200)
+          this.$message.success(res.data)
+        window.location.reload()
+      })
+
     }
   },
 

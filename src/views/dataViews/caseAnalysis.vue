@@ -169,6 +169,8 @@ export default {
         this.subInfo[i].executionDays = timeSub(this.subInfo[i].startTime, this.subInfo[i].finishTime)
         this.subInfo[i].executionDays -= +this.subInfo[i].unforcedDays
       }
+      // 不要档案整理阶段的信息
+      this.subInfo = this.subInfo.filter(item=>item.subId!=12&&item.subId!=13)
     },
     // 初始化数据显示格式
     initGanttObj(obj, stack, start, color, zlevel, name, fullTime) {

@@ -8,10 +8,11 @@
         </div>
         <el-card v-if="!showApply">
             <el-row>
-                <el-col :span="4" :offset="20" v-if="user.type === 0">
+                <el-col :span="6" :offset="18" v-if="user.type === 0">
                     <el-button icon="el-icon-s-claim" type="warning" @click="showApply = true">我的申请</el-button>
                     <el-button icon="el-icon-s-comment" type="info" @click="showHistory = true"
                         v-if="!showHistory">历史消息</el-button>
+                    <el-button icon="el-icon-s-view" type="primary" @click="batchCheckMessage">一键已阅</el-button>
                 </el-col>
                 <el-col :span="2" :offset="22" v-else>
                     <el-button icon="el-icon-s-comment" type="info" @click="showHistory = true"
@@ -139,7 +140,7 @@
 </template>
 
 <script>
-import { getHistoryLogByUserId } from '@/api/log'
+import { getHistoryLogByUserId, batchCheckLog } from '@/api/log'
 import { mapActions, mapState } from 'vuex'
 import { checkingApplyCaseSub, removeCaseSubApply } from '@/api/applyCaseSub'
 import { checkingApplyTask, removeTaskApply } from '@/api/applyTask'
@@ -298,6 +299,13 @@ export default {
                     this.$message.error(res.msg)
                 }
             })
+        },
+        async batchCheckMessage(){
+            var res = await batchCheckLog()
+            if(res.code===200)
+                this.$message.success(res.data)
+            await this.getLogList()
+            await this.getLogWithMe()
         }
     }
 }

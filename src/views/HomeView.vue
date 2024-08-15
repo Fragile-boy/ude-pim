@@ -31,7 +31,7 @@
         <div style="margin-bottom: 10px; margin-top: -10px;">
           <NavigationBar></NavigationBar>
         </div>
-        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage']">
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage','caseDiscussion']">
           <router-view></router-view>
         </keep-alive>
       </el-main>
@@ -47,18 +47,19 @@ export default {
   components: { NavigationBar },
   data() {
     return {
-      isCollapse: false,
+
     }
   },
   created() {
     
   },
   computed: {
-    ...mapState(['user'])
+    ...mapState(['user', 'isCollapse'])
   },
   methods: {
+    ...mapMutations(['setIsCollapse']),
     toggleCollapse() {
-      this.isCollapse = !this.isCollapse
+      this.setIsCollapse(!this.isCollapse)
     },
     ...mapMutations(['setUser']),
     async handleLogout() {

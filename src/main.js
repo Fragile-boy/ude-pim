@@ -14,6 +14,35 @@ import router from './router'
 import * as echarts from 'echarts';
 import store from './store'
 import '@/css/global.css'
+// markdown编辑组件导入
+import VueMarkdownEditor from '@kangc/v-md-editor';
+import '@kangc/v-md-editor/lib/style/base-editor.css';
+import vuepressTheme from '@kangc/v-md-editor/lib/theme/vuepress.js';
+import '@kangc/v-md-editor/lib/theme/style/vuepress.css';
+
+import Prism from 'prismjs';
+
+VueMarkdownEditor.use(vuepressTheme, {
+  Prism,
+});
+
+Vue.use(VueMarkdownEditor);
+
+// markdown预览组件引入
+import VMdPreview from '@kangc/v-md-editor/lib/preview';
+import '@kangc/v-md-editor/lib/style/preview.css';
+import githubTheme from '@kangc/v-md-editor/lib/theme/github.js';
+import '@kangc/v-md-editor/lib/theme/style/github.css';
+
+// highlightjs
+import hljs from 'highlight.js';
+
+VMdPreview.use(githubTheme, {
+  Hljs: hljs,
+});
+
+Vue.use(VMdPreview);
+
 
 Vue.component("PIMHeader",PIMHeader)
 Vue.component("PIMAside",PIMAside)

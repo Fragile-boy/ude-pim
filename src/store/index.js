@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import caseM from '@/store/modules/caseM'
 import log from './modules/log'
 import apply from './modules/apply'
+import issuesReply from './modules/issuesReply'
 import { getInfo, setInfo } from '@/utils/storage'
 import { updateUser } from '@/api/user'
 
@@ -13,6 +14,7 @@ export default new Vuex.Store({
   // strict: true,
   state: {
     user:getInfo(),
+    isCollapse:false,
   },
   getters: {
     getType(state){
@@ -23,6 +25,9 @@ export default new Vuex.Store({
     setUser(state,newObj){
       state.user = newObj
       setInfo(newObj)
+    },
+    setIsCollapse(state, flag){
+      state.isCollapse = flag
     }
   },
   actions: {
@@ -42,5 +47,6 @@ export default new Vuex.Store({
     caseM,
     log,
     apply,
+    issuesReply,
   }
 })

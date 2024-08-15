@@ -8,6 +8,7 @@
             </template>
             <el-menu-item index="/admin/index"><i class="el-icon-s-tools"></i>专案主页</el-menu-item>
             <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
+            <el-menu-item index="/common/discussion"><i class="el-icon-s-tools"></i>专案讨论</el-menu-item>
             <el-menu-item index="/admin/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
             <el-menu-item index="/admin/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
             <el-menu-item index="/admin/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
@@ -46,11 +47,13 @@
         <el-submenu index="4" v-if="user.type === 1">
             <template slot="title">
                 <i class="el-icon-s-custom"></i>
-                <span>部员管理</span>
+                <span>部员管理<el-badge is-dot v-if="relativeObject.length"></el-badge></span>
             </template>
             <el-menu-item index="/admin/userList"><i class="el-icon-s-tools"></i>部员信息管理</el-menu-item>
             <el-menu-item index="/common/userProject"><i class="el-icon-s-tools"></i>部员专案统计</el-menu-item>
             <el-menu-item index="/common/userProjectTracking"><i class="el-icon-s-tools"></i>部员专案追踪</el-menu-item>
+            <el-menu-item index="/common/discussion"><i class="el-icon-s-tools"></i>问题讨论<el-badge :value="relativeObject.length"
+                    v-if="relativeObject.length" /></el-menu-item>
         </el-submenu>
 
         <el-submenu index="5" v-if="user.type === 0">
@@ -68,11 +71,13 @@
         <el-submenu index="6" v-if="user.type === 0">
             <template slot="title">
                 <i class="el-icon-s-opportunity"></i>
-                <span>部门数据</span>
+                <span>部门数据<el-badge is-dot v-if="relativeObject.length"></el-badge></span>
             </template>
             <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
             <el-menu-item index="/common/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
             <el-menu-item index="/common/userProjectTracking"><i class="el-icon-s-tools"></i>周会模式</el-menu-item>
+            <el-menu-item index="/common/discussion"><i class="el-icon-s-tools"></i>问题讨论<el-badge :value="relativeObject.length"
+                    v-if="relativeObject.length" /></el-menu-item>
         </el-submenu>
 
         <el-menu-item><router-link to="/common/schedule" :style="{ color: isCollapse ? '#333744' : '#fff' }"><i
@@ -103,7 +108,8 @@ export default {
     computed: {
         ...mapState('log', ['logList']),
         ...mapState('apply', ['delayList', 'subList', 'finishList', 'caseSubList', 'taskList']),
-        ...mapState(['user'])
+        ...mapState(['user']),
+        ...mapState('issuesReply', ['relativeObject'])
     },
     mounted() {
         if (this.user.type === 1) {
@@ -113,6 +119,7 @@ export default {
             this.getCaseSubApplyList()
             this.getTaskList()
             this.getLogList()
+            this.getReplyCount()
             // 设置定时器，每隔1分钟执行一次getDelay，exceptionSub，getFinish，getCaseSubApplyList，getTaskList函数
             setInterval(() => {
                 this.getDelay()
@@ -121,19 +128,23 @@ export default {
                 this.getCaseSubApplyList()
                 this.getTaskList()
                 this.getLogList()
+                this.getReplyCount()
             }, 60000)
         } else if (this.user.type === 0) {
             this.getLogList()
             this.exceptionSub()
+            this.getReplyCount()
             setInterval(() => {
                 this.getLogList()
                 this.exceptionSub()
+                this.getReplyCount()
             }, 60000)
         }
     },
     methods: {
         ...mapActions('log', ['getLogList']),
         ...mapActions('apply', ['getDelay', 'exceptionSub', 'getFinish', 'getCaseSubApplyList', 'getTaskList']),
+        ...mapActions('issuesReply', ['getReplyCount']),
     }
 }
 </script>

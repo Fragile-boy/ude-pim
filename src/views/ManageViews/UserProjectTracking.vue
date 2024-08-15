@@ -275,7 +275,7 @@ import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
 import { startPause, finishPause, getPauseInfo } from '@/api/pause'
 import { countUser, updateDescription } from '@/api/caseSubUser'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 
 export default {
     name: 'caseTracking',
@@ -358,6 +358,8 @@ export default {
     //缓存界面路由导航进入之前
     beforeRouteEnter(to, from, next) {
         next((vm) => {
+            if(vm.user.type===0)
+                vm.setIsCollapse(true)
             // 个人界面查询的跳转
             if ('userName' in to.query) {
                 var userName = to.query.userName
@@ -370,6 +372,7 @@ export default {
         })
     },
     methods: {
+        ...mapMutations(['setIsCollapse']),
         // 获取当前用户的所有未开始的任务
         async getExceptionList() {
             const res = await getExceptionList(this.curUser)

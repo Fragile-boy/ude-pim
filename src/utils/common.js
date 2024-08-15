@@ -4,6 +4,17 @@ import { Message } from 'element-ui';
 // 公共方法，提高代码复用率
 
 
+export function formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
 //格式化为后端时间
 export function format4back(date){
     var res = formatDate(date)

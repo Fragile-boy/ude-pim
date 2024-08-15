@@ -15,7 +15,8 @@
                 <el-col :span="6" style="display: flex; align-items: center;">
                     <el-page-header @back="$router.back()" :content="caseName">
                     </el-page-header>
-                    <el-button icon="el-icon-info" type="primary" size="mini" circle style="margin-left: 10px; margin-bottom: 9px;" @click="showCaseDescription()"></el-button>
+                    <el-button icon="el-icon-info" type="primary" size="mini" circle
+                        style="margin-left: 10px; margin-bottom: 9px;" @click="showCaseDescription()"></el-button>
                 </el-col>
                 <el-col :span="2">
                     <span style="font-size:25px;padding-left: 17px;">专案进度</span>
@@ -176,12 +177,11 @@
                 </el-row>
             </div>
 
-
         </el-card>
 
         <!-- 甘特图显示区域 -->
         <el-card>
-            <div id="ganttChart" style="width: 100%; height: 1000px;"></div>
+            <div id="barChart" style="width: 100%; height: 500px;"></div>
         </el-card>
 
         <!-- 显示负责人手头的子流程 -->
@@ -242,8 +242,8 @@
                     <el-card class="box-card">
                         <div v-for="o in commitForm.content" :key="o.id" class="text item">
                             {{ o.content }}
-                            <el-button icon="el-icon-edit" size="mini" round type="primary"
-                                @click="editCommit(o)" v-if="user.type===1||user.status===2"></el-button>
+                            <el-button icon="el-icon-edit" size="mini" round type="primary" @click="editCommit(o)"
+                                v-if="user.type === 1 || user.status === 2"></el-button>
                         </div>
                         <label v-if="commitForm.content.length === 0">暂无备注</label>
                     </el-card>
@@ -460,7 +460,7 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="专案信息" :visible.sync="caseInfoVisible" width="40%" @close="caseInfoVisible=false">
+        <el-dialog title="专案信息" :visible.sync="caseInfoVisible" width="40%" @close="caseInfoVisible = false">
             <el-form label-width="100px">
                 <!-- 子流程名称显示 -->
                 <el-form-item label="专案名称">
@@ -472,15 +472,17 @@
                         <div class="text item">
                             {{ caseObj.description }}
                         </div>
-                        <label v-if="caseObj.description === null||caseObj.description===''">暂无描述</label>
+                        <label v-if="caseObj.description === null || caseObj.description === ''">暂无描述</label>
                     </el-card>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="caseInfoVisible=false">确定</el-button>
+                <el-button type="primary" @click="caseInfoVisible = false">确定</el-button>
                 <el-button @click="caseInfoVisible = false">取 消</el-button>
             </span>
         </el-dialog>
+
+
     </div>
 </template>
 
@@ -621,11 +623,12 @@ export default {
             // 时间进度
             caseSchedulePercentage: 0,
             // 专案信息
-            caseObj:{
-                name:null,
-                description:null
+            caseObj: {
+                name: null,
+                description: null
             },
-            caseInfoVisible:false
+            caseInfoVisible: false,
+
         }
     },
     computed: {
@@ -648,8 +651,10 @@ export default {
     },
     async mounted() {
         await this.getSubInfo(this.$route.query.caseId)
-        this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
-        this.showExecutionGantt()
+        // this.gantt = this.$echarts.init(document.getElementById('ganttChart'))
+        this.bar = this.$echarts.init(document.getElementById('barChart'))
+        this.showExecutionBar()
+        // this.showExecutionGantt()
     },
     methods: {
         //获取子流程的信息
@@ -1098,187 +1103,244 @@ export default {
             } else
                 return `剩余${this.casePlanDays - this.caseExecutionDays}天`
         },
-        // 显示执行甘特图
-        showExecutionGantt() {
-            var dataSeries = []
-            // 计划时间
-            var planTime_start_0 = {};
-            var planTime_start_1 = {};
-            var planTime_end = {};
-            planTime_start_0 = this.initGanttObj(planTime_start_0, "bar0", true, "#6ED77E", 4, "开始时间")
-            planTime_start_1 = this.initGanttObj(planTime_start_1, "bar1", true, "#6ED77E", 4, "开始时间")
-            planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
-
-            // 外界因素延期
-            var standardTime = {};
-            standardTime = this.initGanttObj(standardTime, "bar0", false, "skyblue", 2, "目标完成时间")
-
-            // 执行时间
-            var execTime_end = {};
-            execTime_end = this.initGanttObj(execTime_end, "bar1", false, "#FF7F50", 1, "完成/当前时间")
-
-            // y轴标签
-            var yAxis = []
-
-            for (let i = this.subInfo.length - 1; i >= 0; i--) {
-                if (this.subInfo[i].startTime === null)
-                    continue
-                planTime_start_0.data.push(new Date(this.subInfo[i].startTime))
-                planTime_start_1.data.push(new Date(this.subInfo[i].startTime))
-                planTime_end.data.push(new Date(this.subInfo[i].targetTime))
-                standardTime.data.push(new Date(this.subInfo[i].standardTime))
-                execTime_end.data.push(this.subInfo[i].finishTime === null ? new Date() : new Date(this.subInfo[i].finishTime))
-                yAxis.push(this.subInfo[i].subName)
+        // 显示执行柱状图
+        showExecutionBar() {
+            var section = []
+            var planDays = []
+            var executionDays = []
+            for (var i = 0; i < this.subInfo.length; i++) {
+                section.push(this.subInfo[i].subName)
+                planDays.push(this.subInfo[i].planDays)
+                executionDays.push(this.subInfo[i].executionDays)
             }
-            yAxis.push("计划工期")
-            planTime_start_0.data.push(new Date(this.subInfo[0].startTime))
-            planTime_start_1.data.push(new Date(this.subInfo[0].startTime))
-            planTime_end.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays)))
-            standardTime.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays, this.caseUnforcedDays)))
-            execTime_end.data.push(new Date())
-
-
-            dataSeries.push(planTime_start_0)
-            dataSeries.push(planTime_start_1)
-            dataSeries.push(planTime_end)
-            dataSeries.push(standardTime)
-            dataSeries.push(execTime_end)
-
             var option = {
                 title: {
-                    text: this.caseName,
-                    padding: 20,
-                    textStyle: {
-                        fontSize: 17,
-                        fontWeight: "bolder",
-                        color: "#333"
-                    },
-                    subtextStyle: {
-                        fontSize: 13,
-                        fontWeight: "bolder"
-                    }
-                },
-                legend: {
-                    data: ['开始时间', '预计完成时间', '目标完成时间', '完成/当前时间'],
-                    align: "right",
-                    right: 80,
-                    top: 50
-                },
-                grid: {
-                    containLabel: true,
-                    show: false,
-                    right: 130,
-                    left: 40,
-                    bottom: 40,
-                    top: 90
-                },
-                xAxis: {
-                    type: 'time',
-                    axisLabel: {
-                        show: true,
-                        interval: 5,
-                        formatter: function (value) {
-                            var data = new Date(value);
-                            var year = data.getFullYear();
-                            var month = data.getMonth() + 1;
-                            var day = data.getDate();
-
-                            if (day > 1) {
-                                // 如果是天，字体大小为30
-                                return '{fontSizeMini|' + day + '}';
-                            } else if (month > 1) {
-                                // 如果是月份，字体大小为原始大小
-                                return '{fontSize|' + month + '月' + '}';
-                            } else {
-                                // 如果是年份，字体大小为原始大小
-                                return '{fontSizeLarge|' + year + '年' + '}';
-                            }
-                        },
-                        rich: {
-                            fontSizeMini: {
-                                fontSize: 20
-                            },
-                            fontSize: {
-                                fontSize: 25
-                            },
-                            fontSizeLarge: {
-                                fontSize: 30
-                            }
-
-                        },
-                    },
-                },
-                yAxis: {
-                    axisLabel: {
-                        show: true,
-                        interval: 0,
-                        fontSize: 18, // 调整字体大小以提高可读性
-                        color: '#555', // 轻微调暗颜色以降低视觉疲劳
-                        fontWeight: "bolder"
-                    },
-                    data: yAxis,
-                    type: 'category',
-                    boundaryGap: true, // 确保条形图完全显示
+                    text: '执行进度',
+                    left: 'left'
                 },
                 tooltip: {
-                    trigger: "axis",
-                    formatter: function (params) {
-                        var res = ''
-                        res += params[0].axisValue + '<br/>';
-                        var set = new Set()
-                        for (var i = 0; i < params.length; i++) {
-                            if (set.has(params[i].seriesName))
-                                continue
-                            set.add(params[i].seriesName)
-                            res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
-                                params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
-                        }
-                        return res
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
                     }
                 },
-                series: dataSeries
+                legend:{
+                    data:['计划时间', '实际执行时间']
+                },
+                xAxis: {
+                    type: 'category',
+                    data: section
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '花费时间(天)'
+                },
+                series:[
+                    {
+                        name:'计划时间',
+                        type:'bar',
+                        data:planDays,
+                        label:{
+                            show:true,
+                            position:'top',
+                            fontSize:15
+                        }
+                    },
+                    {
+                        name:'实际执行时间',
+                        type:'bar',
+                        data:executionDays,
+                        label:{
+                            show:true,
+                            position:'top',
+                            fontSize:15
+                        }
+                    }
+                ]
             }
-            this.gantt.setOption(option)
+            this.bar.setOption(option)
         },
+        // 显示执行甘特图
+        // showExecutionGantt() {
+        //     var dataSeries = []
+        //     // 计划时间
+        //     var planTime_start_0 = {};
+        //     var planTime_start_1 = {};
+        //     var planTime_end = {};
+        //     planTime_start_0 = this.initGanttObj(planTime_start_0, "bar0", true, "#6ED77E", 4, "开始时间")
+        //     planTime_start_1 = this.initGanttObj(planTime_start_1, "bar1", true, "#6ED77E", 4, "开始时间")
+        //     planTime_end = this.initGanttObj(planTime_end, "bar0", false, "#6ED77E", 3, "预计完成时间")
+
+        //     // 外界因素延期
+        //     var standardTime = {};
+        //     standardTime = this.initGanttObj(standardTime, "bar0", false, "skyblue", 2, "目标完成时间")
+
+        //     // 执行时间
+        //     var execTime_end = {};
+        //     execTime_end = this.initGanttObj(execTime_end, "bar1", false, "#FF7F50", 1, "完成/当前时间")
+
+        //     // y轴标签
+        //     var yAxis = []
+
+        //     for (let i = this.subInfo.length - 1; i >= 0; i--) {
+        //         if (this.subInfo[i].startTime === null)
+        //             continue
+        //         planTime_start_0.data.push(new Date(this.subInfo[i].startTime))
+        //         planTime_start_1.data.push(new Date(this.subInfo[i].startTime))
+        //         planTime_end.data.push(new Date(this.subInfo[i].targetTime))
+        //         standardTime.data.push(new Date(this.subInfo[i].standardTime))
+        //         execTime_end.data.push(this.subInfo[i].finishTime === null ? new Date() : new Date(this.subInfo[i].finishTime))
+        //         yAxis.push(this.subInfo[i].subName)
+        //     }
+        //     yAxis.push("计划工期")
+        //     planTime_start_0.data.push(new Date(this.subInfo[0].startTime))
+        //     planTime_start_1.data.push(new Date(this.subInfo[0].startTime))
+        //     planTime_end.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays)))
+        //     standardTime.data.push(new Date(timeAdd(this.subInfo[0].startTime, this.casePlanDays, this.caseUnforcedDays)))
+        //     execTime_end.data.push(new Date())
+
+
+        //     dataSeries.push(planTime_start_0)
+        //     dataSeries.push(planTime_start_1)
+        //     dataSeries.push(planTime_end)
+        //     dataSeries.push(standardTime)
+        //     dataSeries.push(execTime_end)
+
+        //     var option = {
+        //         title: {
+        //             text: this.caseName,
+        //             padding: 20,
+        //             textStyle: {
+        //                 fontSize: 17,
+        //                 fontWeight: "bolder",
+        //                 color: "#333"
+        //             },
+        //             subtextStyle: {
+        //                 fontSize: 13,
+        //                 fontWeight: "bolder"
+        //             }
+        //         },
+        //         legend: {
+        //             data: ['开始时间', '预计完成时间', '目标完成时间', '完成/当前时间'],
+        //             align: "right",
+        //             right: 80,
+        //             top: 50
+        //         },
+        //         grid: {
+        //             containLabel: true,
+        //             show: false,
+        //             right: 130,
+        //             left: 40,
+        //             bottom: 40,
+        //             top: 90
+        //         },
+        //         xAxis: {
+        //             type: 'time',
+        //             axisLabel: {
+        //                 show: true,
+        //                 interval: 5,
+        //                 formatter: function (value) {
+        //                     var data = new Date(value);
+        //                     var year = data.getFullYear();
+        //                     var month = data.getMonth() + 1;
+        //                     var day = data.getDate();
+
+        //                     if (day > 1) {
+        //                         // 如果是天，字体大小为30
+        //                         return '{fontSizeMini|' + day + '}';
+        //                     } else if (month > 1) {
+        //                         // 如果是月份，字体大小为原始大小
+        //                         return '{fontSize|' + month + '月' + '}';
+        //                     } else {
+        //                         // 如果是年份，字体大小为原始大小
+        //                         return '{fontSizeLarge|' + year + '年' + '}';
+        //                     }
+        //                 },
+        //                 rich: {
+        //                     fontSizeMini: {
+        //                         fontSize: 20
+        //                     },
+        //                     fontSize: {
+        //                         fontSize: 25
+        //                     },
+        //                     fontSizeLarge: {
+        //                         fontSize: 30
+        //                     }
+
+        //                 },
+        //             },
+        //         },
+        //         yAxis: {
+        //             axisLabel: {
+        //                 show: true,
+        //                 interval: 0,
+        //                 fontSize: 18, // 调整字体大小以提高可读性
+        //                 color: '#555', // 轻微调暗颜色以降低视觉疲劳
+        //                 fontWeight: "bolder"
+        //             },
+        //             data: yAxis,
+        //             type: 'category',
+        //             boundaryGap: true, // 确保条形图完全显示
+        //         },
+        //         tooltip: {
+        //             trigger: "axis",
+        //             formatter: function (params) {
+        //                 var res = ''
+        //                 res += params[0].axisValue + '<br/>';
+        //                 var set = new Set()
+        //                 for (var i = 0; i < params.length; i++) {
+        //                     if (set.has(params[i].seriesName))
+        //                         continue
+        //                     set.add(params[i].seriesName)
+        //                     res += '<div style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background-color:' + params[i].color + ';"></div>' +
+        //                         params[i].seriesName + '：' + formatDate(params[i].value) + '<br/>'
+        //                 }
+        //                 return res
+        //             }
+        //         },
+        //         series: dataSeries
+        //     }
+        //     this.gantt.setOption(option)
+        // },
         // 初始化甘特图对象
-        initGanttObj(obj, stack, start, color, zlevel, name) {
-            obj.name = name
-            obj.stack = stack
-            obj.type = "bar";
-            // 表示结束时间
-            if (zlevel <= 2) {
-                obj.label = {
-                    show: true,
-                    color: "#333333",
-                    position: "right",
-                    fontSize: 18,
-                    formatter: function (params) {
-                        var data = new Date(params.value)
-                        return data.getMonth() + 1 + "-" + data.getDate()
-                    }
-                }
-            }
-            obj.zlevel = zlevel
-            if (start) {
-                obj.itemStyle = {
-                    normal: {
-                        color: "#fff"
-                    }
-                }
-            } else {
-                obj.itemStyle =
-                {
-                    normal: {
-                        borderRadius: 5,
-                        color: color,
-                        borderColor: "#fff",
-                        borderWidth: 2,
-                    }
-                }
-            }
-            obj.data = []
-            return obj
-        },
+        // initGanttObj(obj, stack, start, color, zlevel, name) {
+        //     obj.name = name
+        //     obj.stack = stack
+        //     obj.type = "bar";
+        //     // 表示结束时间
+        //     if (zlevel <= 2) {
+        //         obj.label = {
+        //             show: true,
+        //             color: "#333333",
+        //             position: "right",
+        //             fontSize: 18,
+        //             formatter: function (params) {
+        //                 var data = new Date(params.value)
+        //                 return data.getMonth() + 1 + "-" + data.getDate()
+        //             }
+        //         }
+        //     }
+        //     obj.zlevel = zlevel
+        //     if (start) {
+        //         obj.itemStyle = {
+        //             normal: {
+        //                 color: "#fff"
+        //             }
+        //         }
+        //     } else {
+        //         obj.itemStyle =
+        //         {
+        //             normal: {
+        //                 borderRadius: 5,
+        //                 color: color,
+        //                 borderColor: "#fff",
+        //                 borderWidth: 2,
+        //             }
+        //         }
+        //     }
+        //     obj.data = []
+        //     return obj
+        // },
         // 翻页
         async turnPage(value) {
             this.caseIndex += value
@@ -1290,7 +1352,7 @@ export default {
             this.caseId = this.caseList[this.caseIndex].id
             this.caseName = this.caseList[this.caseIndex].name
             await this.getSubInfo(this.caseId)
-            this.showExecutionGantt()
+            this.showExecutionBar()
         },
         // 控制表格行的颜色
         tableRowClassName({ row, rowIndex }) {
@@ -1324,12 +1386,22 @@ export default {
             })
         },
         // 显示专案描述
-        async showCaseDescription(){
+        async showCaseDescription() {
             // 获取专案信息
             var res = await getCaseById(this.caseId)
             this.caseObj = res.data
             this.caseInfoVisible = true
         },
+        // 标签切换
+        tabChange(tab, event) {
+            if (false && tab.$options.propsData.name) {
+                getCaseIssues()
+            }
+        },
+        // 获得专案问题列表
+        async getCaseIssues() {
+            var res = await getCaseIssues(this.caseId)
+        }
     }
 }
 </script>

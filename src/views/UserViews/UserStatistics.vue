@@ -59,7 +59,7 @@
             <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述"></el-table-column>
+        <el-table-column prop="description" label="描述" show-overflow-tooltip></el-table-column>
         <el-table-column prop="startTime" sortable="custom" label="开始时间"></el-table-column>
         <el-table-column prop="finishTime" sortable label="完成时间"></el-table-column>
         <el-table-column prop="planDays" sortable label="计划时间"></el-table-column>

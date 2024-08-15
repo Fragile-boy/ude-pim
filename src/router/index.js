@@ -20,6 +20,8 @@ import CaseIndex from '@/views/CaseViews/CaseIndex'
 import IndexView from '../views/CaseViews/IndexView.vue'
 import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
 import CaseSubView from '@/views/CaseViews/CaseSubView.vue'
+import CaseDicussion from '@/views/CaseViews/CaseDiscussion.vue'
+
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
 //子流程管理界面
@@ -53,6 +55,7 @@ import User4Case from '@/views/UserViews/User4Case.vue'
 import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
 import UserInfo from '@/views/UserViews/UserInfo.vue'
+import IssueDetail from '@/views/UserViews/IssueDetail.vue'
 
 // 需求界面
 import Demand from '@/components/Demand.vue'
@@ -85,6 +88,18 @@ const routes = [
         path: 'index',
         name: '主页',
         component: IndexView
+      },
+      // 专案讨论
+      {
+        path:'discussion',
+        name:'专案讨论',
+        component:CaseDicussion
+      },
+      // 问题详情
+      {
+        path:'issueDetail',
+        name:'问题详情',
+        component:IssueDetail
       },
       // 子流程详情页
       {
