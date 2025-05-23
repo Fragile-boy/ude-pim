@@ -98,7 +98,7 @@ export default {
                     if(res.data.type===1)
                         setTimeout(() => this.$router.push('/admin/index'), 1000)
                     else
-                        setTimeout(() => this.$router.push('/common/discussion'), 1000)
+                        setTimeout(() => this.$router.push('/user/info'), 1000)
                 } else {
                     this.$message.error(res.msg)
                 }

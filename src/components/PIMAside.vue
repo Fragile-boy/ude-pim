@@ -8,7 +8,6 @@
             </template>
             <el-menu-item index="/admin/index"><i class="el-icon-s-tools"></i>专案主页</el-menu-item>
             <el-menu-item index="/common/index"><i class="el-icon-s-tools"></i>专案详情</el-menu-item>
-            <el-menu-item index="/common/discussion"><i class="el-icon-s-tools"></i>专案讨论</el-menu-item>
             <el-menu-item index="/admin/caseList"><i class="el-icon-s-tools"></i>专案管理</el-menu-item>
             <el-menu-item index="/admin/subManage"><i class="el-icon-s-tools"></i>子流程管理</el-menu-item>
             <el-menu-item index="/admin/templeteManage"><i class="el-icon-s-tools"></i>模板管理</el-menu-item>
@@ -31,8 +30,8 @@
                     v-if="taskList.length" /></el-menu-item>
             <el-menu-item index="/admin/caseApply"><i class="el-icon-s-tools"></i>专案类申请<el-badge :value="caseSubList.length"
                     v-if="caseSubList.length" /></el-menu-item>
-            <el-menu-item index="/admin/info"><i class="el-icon-s-tools"></i>消息中心<el-badge :value="logList.length"
-                    v-if="logList.length" /></el-menu-item>
+            <el-menu-item index="/admin/info"><i class="el-icon-s-tools"></i>消息中心<el-badge :value="noticeList.length"
+                    v-if="noticeList.length" /></el-menu-item>
         </el-submenu>
 
         <el-submenu index="3" v-if="user.type === 1">
@@ -59,11 +58,11 @@
         <el-submenu index="5" v-if="user.type === 0">
             <template slot="title">
                 <i class="el-icon-user"></i>
-                <span>个人中心<el-badge is-dot :value="logList.length" class="item" v-if="logList.length" /></span>
+                <span>个人中心<el-badge is-dot :value="noticeList.length" class="item" v-if="noticeList.length" /></span>
             </template>
             <el-menu-item index="/user/index"><i class="el-icon-s-tools"></i>个人总览</el-menu-item>
-            <el-menu-item index="/user/info"><i class="el-icon-s-tools"></i>消息中心<el-badge :value="logList.length"
-                    v-if="logList.length" /></el-menu-item>
+            <el-menu-item index="/user/info"><i class="el-icon-s-tools"></i>消息中心<el-badge :value="noticeList.length"
+                    v-if="noticeList.length" /></el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
         </el-submenu>
@@ -106,7 +105,7 @@ export default {
         }
     },
     computed: {
-        ...mapState('log', ['logList']),
+        ...mapState('notice', ['noticeList']),
         ...mapState('apply', ['delayList', 'subList', 'finishList', 'caseSubList', 'taskList']),
         ...mapState(['user']),
         ...mapState('issuesReply', ['relativeObject'])
@@ -118,7 +117,7 @@ export default {
             this.getFinish()
             this.getCaseSubApplyList()
             this.getTaskList()
-            this.getLogList()
+            this.getNoticeList()
             this.getReplyCount()
             // 设置定时器，每隔1分钟执行一次getDelay，exceptionSub，getFinish，getCaseSubApplyList，getTaskList函数
             setInterval(() => {
@@ -127,22 +126,22 @@ export default {
                 this.getFinish()
                 this.getCaseSubApplyList()
                 this.getTaskList()
-                this.getLogList()
+                this.getNoticeList()
                 this.getReplyCount()
             }, 60000)
         } else if (this.user.type === 0) {
-            this.getLogList()
+            this.getNoticeList()
             this.exceptionSub()
             this.getReplyCount()
             setInterval(() => {
-                this.getLogList()
+                this.getNoticeList()
                 this.exceptionSub()
                 this.getReplyCount()
             }, 60000)
         }
     },
     methods: {
-        ...mapActions('log', ['getLogList']),
+        ...mapActions('notice', ['getNoticeList']),
         ...mapActions('apply', ['getDelay', 'exceptionSub', 'getFinish', 'getCaseSubApplyList', 'getTaskList']),
         ...mapActions('issuesReply', ['getReplyCount']),
     }

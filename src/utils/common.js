@@ -126,3 +126,29 @@ export async function checkResult(res) {
         })
     }
 }
+
+// 返回人员分类选项列表
+export function initDirectorOptions(){
+    return [
+        {
+            value: 0,
+            label: '机构',
+            children: []
+        },
+        {
+            value: 1,
+            label: '电控',
+            children: []
+        },
+        {
+            value: 2,
+            label: 'IE',
+            children: []
+        },
+        {
+            value: 3,
+            label: '机设',
+            children: []
+        }
+    ];
+}

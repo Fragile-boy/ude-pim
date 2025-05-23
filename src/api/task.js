@@ -44,3 +44,8 @@ export const getExceptionList = (id)=>{
 export const getExecutingTask = ()=>{
     return service.get('/task/getExecutingTask')
 }
+
+// 删除任务
+export const deleteTask = (id)=>{
+    return service.delete(`/task/deleteTask/${id}`)
+}

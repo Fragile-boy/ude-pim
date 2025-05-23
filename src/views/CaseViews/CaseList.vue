@@ -347,7 +347,7 @@
 import { mapActions, mapState } from 'vuex'
 import { getUserListWithAssistants, getUserStatus } from '@/api/user'
 import { addCase, getList, editCase, deleteCase, terminateCase, modifyDirector } from '@/api/case'
-import { checkResult } from '@/utils/common'
+import { checkResult,initDirectorOptions} from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
 import { getTempleteList, getSubsByTemplateId, saveTemplete } from '@/api/templete'
@@ -410,23 +410,7 @@ export default {
                 ],
             },
             //负责人的级联选择器
-            directorOptions: [
-                {
-                    value: 0,
-                    label: '机构',
-                    children: []
-                },
-                {
-                    value: 1,
-                    label: '电控',
-                    children: []
-                },
-                {
-                    value: 2,
-                    label: 'IE',
-                    children: []
-                }
-            ],
+            directorOptions: initDirectorOptions(),
             //添加关联关系显示标志位
             addRelationMenuVisible: false,
             //所有科员

@@ -92,7 +92,7 @@
                             </el-button>
                         </el-tooltip>
                         <el-tooltip class="item" effect="dark" content="重启" placement="top">
-                            <el-button icon="el-icon-video-play" type="success" size="mini" round
+                            <el-button :disabled="isSubmitting" icon="el-icon-video-play" type="success" size="mini" round
                                 @click="finishPause(scope.row.pauseId)" v-if="scope.row.pausing">
                             </el-button>
                         </el-tooltip>
@@ -183,7 +183,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="applyDelayVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitDelayApply()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="submitDelayApply()">{{ isSubmitting ?'提交中...' : '确 定'}}</el-button>
             </span>
         </el-dialog>
 
@@ -195,27 +195,28 @@
                 <el-form-item v-for="item in directors" :label="item.name" :key="item.id">
                     <el-row v-if="item.userId === user.id">
                         <el-col :span=9>
-                            <el-input v-model="item.description" placeholder="工作内容描述"
-                                :disabled="item.userId !== user.id"></el-input>
+                            <el-input v-model="item.description" placeholder="工作内容描述"></el-input>
                         </el-col>
                         <el-col :span="2" :offset="1">
                             <label>累计</label>
                         </el-col>
                         <el-col :span=8 :offset="1">
-                            <el-input v-model="item.duration" placeholder="工作时长(天)" type="number" step="0.1"
-                                :disabled="item.userId !== user.id"></el-input>
+                            <el-input v-model="item.duration" placeholder="工作时长(天)" type="number" step="0.1"></el-input>
                         </el-col>
                         <el-col :span="2" :offset="1">
                             <label>天</label>
                         </el-col>
                     </el-row>
-                    <el-input :placeholder="item.description === null ? '' : item.description + ',累计' + item.duration + '天'"
+                    <el-input
+                        :placeholder="item.description === null ? '' : item.description + ',累计' + item.duration + '天'"
                         :disabled="item.userId !== user.id" v-else></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="updateDescriptionVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitDirectorJobDescription()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="submitDirectorJobDescription()">{{
+                isSubmitting ?
+                    '提交中...' : '确 定' }}</el-button>
             </span>
         </el-dialog>
 
@@ -250,7 +251,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="applyCaseSubVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitApplyCaseSub()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="submitApplyCaseSub()">{{ isSubmitting ?'提交中...' : '确 定'}}</el-button>
             </span>
         </el-dialog>
 
@@ -273,7 +274,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="applyTaskVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitApplyTask()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="submitApplyTask()">{{ isSubmitting ?'提交中...' : '确 定'}}</el-button>
             </span>
         </el-dialog>
 
@@ -283,7 +284,7 @@
             </el-date-picker>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="selectFinishTimeVisible = false">取 消</el-button>
-                <el-button type="primary" @click="submitFinish()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="submitFinish()">{{ isSubmitting ?'提交中...' : '确 定' }}</el-button>
             </span>
         </el-dialog>
 
@@ -293,7 +294,7 @@
             </el-date-picker>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="selectStartTimeVisible = false">取 消</el-button>
-                <el-button type="primary" @click="launch()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="launch()">{{ isSubmitting ?'提交中...' : '确 定' }}</el-button>
             </span>
         </el-dialog>
 
@@ -308,11 +309,23 @@
             </el-table>
         </el-drawer>
 
-        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%">
-            <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%" @close="initPauseObj">
+            <el-form :model="pauseObj" label-width="80px">
+                <el-form-item label="暂停原因">
+                    <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+                </el-form-item>
+                <el-form-item label="暂停时长">
+                    <el-input type="number" v-model.number="pauseObj.presetDay" placeholder="请输入暂停预设时长"
+                        @input="computeRestoreTime"></el-input>
+                </el-form-item>
+                <el-form-item label="恢复时间" v-if="pauseObj.presetDay !== null">
+                    <el-input :disabled="true" :value="pauseObj.presetFinishTime"></el-input>
+                </el-form-item>
+            </el-form>
+
             <span slot="footer" class="dialog-footer">
                 <el-button @click="pauseVisible = false">取 消</el-button>
-                <el-button type="primary" @click="startPause()">确 定</el-button>
+                <el-button :disabled="isSubmitting" type="primary" @click="startPause()">{{ isSubmitting ?'提交中...' : '确 定' }}</el-button>
             </span>
         </el-dialog>
     </div>
@@ -426,8 +439,11 @@ export default {
                 description: '',
                 taskId: null,
                 caseSubId: null,
-                target: ''
-            }
+                target: '',
+                presetDay: null,
+            },
+            // 是否正在提交
+            isSubmitting: false
         }
     },
     async created() {
@@ -548,19 +564,30 @@ export default {
             this.$refs.descriptionFormRef.resetFields()
         },
         submitDelayApply() {
+            if (this.isSubmitting) {
+                return
+            }
+            this.isSubmitting = true
+
             this.$refs.applyDelayFormRef.validate(async (valid) => {
-                if (valid) {
-                    this.delayApplyObject.applyId = this.user.id
-                    const res = await saveApply(this.delayApplyObject)
-                    if (res.code === 200) {
-                        this.$message.success(res.data)
-                        this.delayApplyObject = {}
-                        this.applyDelayVisible = false
-                        this.getTaskByUserId()
-                    } else
-                        this.$message.error(res.msg)
+                try {
+                    if (valid) {
+                        this.delayApplyObject.applyId = this.user.id
+                        const res = await saveApply(this.delayApplyObject)
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                            this.delayApplyObject = {}
+                            this.applyDelayVisible = false
+                            this.getTaskByUserId()
+                        } else
+                            this.$message.error(res.msg)
+                    }
+                } finally {
+                    this.isSubmitting = false
                 }
             })
+
+
         },
         //尝试完结任务
         async tryFinish(row) {
@@ -601,19 +628,26 @@ export default {
         },
         //完结任务
         async submitFinish() {
-            if (this.curTask.applyTime < this.curTask.startTime) {
-                this.$message.error("结束时间小于开始时间，请检查输入")
+            if(this.isSubmitting)
                 return
+            this.isSubmitting = true
+            try {
+                if (this.curTask.applyTime < this.curTask.startTime) {
+                    this.$message.error("结束时间小于开始时间，请检查输入")
+                    return
+                }
+                this.curTask.applyId = this.user.id
+                this.curTask.applyTime = format4back(this.curTask.applyTime)
+                const res = await saveFinishApply(this.curTask)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.selectFinishTimeVisible = false
+                    this.getTaskByUserId()
+                } else
+                    this.$message.error(res.msg)
+            }finally{
+                this.isSubmitting = false
             }
-            this.curTask.applyId = this.user.id
-            this.curTask.applyTime = format4back(this.curTask.applyTime)
-            const res = await saveFinishApply(this.curTask)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                this.selectFinishTimeVisible = false
-                this.getTaskByUserId()
-            } else
-                this.$message.error(res.msg)
         },
         //提交各负责人的工作描述
         async submitDirectorJobDescription() {
@@ -627,28 +661,42 @@ export default {
                     break;
                 }
             }
-            for (var i = 0; i < this.directors.length; i++) {
-                if (this.directors[i].description === null || this.directors[i].description === '') {
-                    // 有负责人的描述为空，说明还未填写，仅更新描述，不提交完结
-                    const res = await updateDescription(this.directors)
-                    if (res.code === 200) {
-                        this.$message.success(res.data)
-                        this.updateDescriptionVisible = false
-                    } else {
-                        this.$message.error(res.error)
+            if (this.isSubmitting)
+                return
+            this.isSubmitting = true
+            try {
+                // 一边更新自己的描述，一边检查是否还有人的描述信息为空
+                var flag = true
+                for (var i = 0; i < this.directors.length; i++) {
+                    // 更新自己的描述
+                    if (this.directors[i].userId === this.user.id) {
+                        var obj = {
+                            "id": this.directors[i].id,
+                            "description": this.directors[i].description,
+                            "duration": this.directors[i].duration,
+                        }
+                        var result = await updateDescription([obj])
+                        if (result.code !== 200) {
+                            this.$message.error(result.data)
+                            return
+                        } else {
+                            this.$message.success(result.data)
+                            this.updateDescriptionVisible = false
+                        }
                     }
+                    if (this.directors[i].description === null || this.directors[i].description === '') {
+                        // 有负责人的描述为空，说明还未填写，仅更新描述，不提交完结
+                        flag = false;
+                    }
+                }
+                // 有人还没有完结，则仅更新当前人的工作描述信息
+                if (!flag) {
                     return
                 }
-            }
-            // 所有人的描述都有了，则说明准备结束了
-            const res = await updateDescription(this.directors)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                this.updateDescriptionVisible = false
+                // 所有人的描述都有了，则说明准备结束了, 延迟200ms打开这个界面，避免显得太突兀
                 setTimeout(() => this.openSelectFinishTime({ caseSubId: this.directors[0].caseSubId }), 200)
-
-            } else {
-                this.$message.error(res.error)
+            } finally {
+                this.isSubmitting = false
             }
         },
         async getUnfinishedCaseList() {
@@ -680,30 +728,44 @@ export default {
         },
         //申请子流程
         submitApplyCaseSub() {
+            if (this.isSubmitting)
+                return
+            this.isSubmitting = true
             this.$refs.applyCaseSubFormRef.validate(async (valid) => {
-                if (valid) {
-                    this.applyCaseSubUser.applyId = this.user.id
-                    const res = await saveApplyCaseSub(this.applyCaseSubUser)
-                    if (res.code === 200) {
-                        this.$message.success(res.data)
-                        this.applyCaseSubVisible = false
-                    } else {
-                        this.$message.error(res.msg)
+                try {
+                    if (valid) {
+                        this.applyCaseSubUser.applyId = this.user.id
+                        const res = await saveApplyCaseSub(this.applyCaseSubUser)
+                        if (res.code === 200) {
+                            this.$message.success(res.data)
+                            this.applyCaseSubVisible = false
+                        } else {
+                            this.$message.error(res.msg)
+                        }
                     }
+                } finally {
+                    this.isSubmitting = false
                 }
             })
         },
         submitApplyTask() {
+            if (this.isSubmitting)
+                return
+            this.isSubmitting = true
             this.$refs.applyTaskFormRef.validate(async (valid) => {
-                if (valid) {
-                    this.applyTask.applyId = this.user.id
-                    const res = await saveApplyTask(this.applyTask)
-                    if (res.code === 200) {
-                        this.applyTaskVisible = false
-                        this.$message.success(res.data)
-                    } else {
-                        this.$message.error(res.msg)
+                try {
+                    if (valid) {
+                        this.applyTask.applyId = this.user.id
+                        const res = await saveApplyTask(this.applyTask)
+                        if (res.code === 200) {
+                            this.applyTaskVisible = false
+                            this.$message.success(res.data)
+                        } else {
+                            this.$message.error(res.msg)
+                        }
                     }
+                }finally{
+                    this.isSubmitting = false
                 }
             })
 
@@ -877,13 +939,20 @@ export default {
         },
         //启动阶段
         async launch() {
-            const res = await startOrFinish(this.curInterruptTask)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                //刷新界面
-                this.getTaskByUserId()
-                this.getExceptionList()
-                this.selectStartTimeVisible = false
+            if(this.isSubmitting)
+                return
+            this.isSubmitting = true
+            try{
+                const res = await startOrFinish(this.curInterruptTask)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    //刷新界面
+                    this.getTaskByUserId()
+                    this.getExceptionList()
+                    this.selectStartTimeVisible = false
+                }
+            }finally{
+                this.isSubmitting = false
             }
         },
         // 计算执行时间
@@ -894,6 +963,15 @@ export default {
             }
             // 依次是开始时间，计划时间，外界因素延期时间，人为延期时间，本次申请时间
             this.delayApplyObject.presetFinishTime = formatDate(timeAdd(this.delayApplyObject.startTime, this.delayApplyObject.planDays, this.delayApplyObject.unforcedDays, this.delayApplyObject.applyDelay, this.delayApplyObject.applyDays))
+        },
+        // 计算暂停恢复时间
+        computeRestoreTime() {
+            // 当前时间
+            var now = new Date()
+            // 加上暂停时间
+            now.setDate(now.getDate() + this.pauseObj.presetDay)
+            // 格式化时间
+            this.pauseObj.presetFinishTime = formatDate(now)
         },
         // 初始化甘特图对象
         initGanttObj(obj, stack, start, color, zlevel, name) {
@@ -1067,39 +1145,60 @@ export default {
         openPause(row) {
             this.pauseObj.taskId = row.taskId
             this.pauseObj.caseSubId = row.caseSubId
-            this.pauseObj.target = row.caseName + "->" + row.subName
+            this.pauseObj.target = row.caseName + (row.subName !== null ? "->" + row.subName : '')
             this.pauseVisible = true
         },
         // 开始暂停
         async startPause() {
-            if (this.pauseObj.description === null || this.pauseObj.description === '') {
-                this.$message.error("暂停原因不能为空")
+            if(this.isSubmitting)
                 return
+            this.isSubmitting = true
+            try{
+                if (this.pauseObj.description === null || this.pauseObj.description === '' || this.pauseObj.presetDay === null || this.pauseObj.presetDay === '') {
+                    this.$message.error("暂停原因和暂停时间不能为空")
+                    return
+                }
+                const res = await startPause(this.pauseObj)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.initPauseObj()
+                    this.pauseVisible = false
+                }
+                this.getTaskByUserId()
+            }finally{
+                this.isSubmitting = false
             }
-            const res = await startPause(this.pauseObj)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                this.pauseObj.description = ''
-                this.pauseObj.taskId = null
-                this.pauseObj.caseSubId = null
-                this.pauseObj.target = null
-                this.pauseVisible = false
-            }
-            this.getTaskByUserId()
         },
         // 停止暂停
         finishPause(pauseId) {
+            if(this.isSubmitting)
+                    return
+            this.isSubmitting = true
             this.$confirm('确定重启该任务吗?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const res = await finishPause(pauseId)
-                if (res.code === 200) {
-                    this.$message.success(res.data)
-                    this.getTaskByUserId()
+                try{
+                    const res = await finishPause(pauseId)
+                    if (res.code === 200) {
+                        this.$message.success(res.data)
+                        this.getTaskByUserId()
+                    }
+                }finally{
+                    this.isSubmitting = false
                 }
             })
+        },
+        initPauseObj() {
+            this.pauseObj = {
+                taskId: null,
+                caseSubId: null,
+                target: null,
+                description: null,
+                presetDay: null,
+                presetFinishTime: null
+            }
         }
     }
 }

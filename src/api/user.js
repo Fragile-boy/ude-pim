@@ -10,6 +10,11 @@ export const getUserListWithAssistants = () => {
     return service.get('/user/userListWithAssistants')
 }
 
+// 获取所有用户，包括领导，不包括游客
+export const allUserList = () => {
+    return service.get('/user/allUserList')
+}
+
 //获得用户页面数据
 export const getUserPage = (obj) => {
     return service.get('/user/page', { params: obj })

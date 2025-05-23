@@ -108,7 +108,7 @@
         </el-pagination>
 
         <!-- 新增专案问题表单显示 -->
-        <el-dialog :title="newIssue.id === null ? '新增问题' : '编辑问题'" :visible.sync="newIssueVisible" width="70%"
+        <el-dialog :title="newIssue.id === null ? '新增问题' : '编辑问题'" :visible.sync="newIssueVisible" width="80%"
             @close="initNewIssue()">
             <el-form ref="issuesForm" :model="newIssue" label-width="80px" :rules="issuesRules">
                 <el-form-item label="问题名称" prop="title">
@@ -142,6 +142,11 @@
                         </el-option>
                     </el-select>
                 </el-form-item>
+
+                <el-form-item label="提醒谁看" v-if="newIssue.id ===null">
+                    <AllUser v-model="newIssue.notifiedUserIds"></AllUser>
+                </el-form-item>
+
 
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -200,6 +205,7 @@ export default {
                 type: null,
                 caseId: null,
                 status: null,
+                notifiedUserIds:null,
             },
             issuesRules: {
                 title: [
@@ -252,7 +258,7 @@ export default {
         await this.getReplyCount()
         // 先处理map对象
         this.relativeObject.forEach(item => {
-            var issueId = item.content
+            var issueId = item.content.split(" ")[0]
             if (this.relativeIssueId.has(issueId))
                 this.relativeIssueId.set(issueId, this.relativeIssueId.get(issueId) + 1)
             else
@@ -318,6 +324,12 @@ export default {
         },
         // 新增专案问题
         async submitNewIssue() {
+            this.newIssue.notifiedUserIds = this.newIssue.notifiedUserIds.map(item => {
+                if(item.length==3)
+                    return item[2]
+                else
+                    return item[1]
+            })
             this.$refs.issuesForm.validate(async valid => {
                 if (!valid) {
                     this.$message.error('表单校验错误，请检查输入！');
@@ -356,6 +368,7 @@ export default {
                 this.$message.error("获取专案列表失败！")
             }
         },
+        // 用户点击排序规则后的逻辑
         handleCommand(command) {
             if (command === 'timeUp')
                 this.sortByTime = true;
@@ -411,6 +424,8 @@ export default {
             }
         },
         initNewIssue() {
+            if (this.newIssue.id === null)
+                return;
             // 初始化newIssue对象
             this.newIssue = {
                 id: null,
@@ -419,6 +434,7 @@ export default {
                 type: null,
                 caseId: null,
                 status: null,
+                notifiedUserIds:null,
             }
         },
         deleteIssues(id) {
@@ -452,9 +468,10 @@ export default {
     margin-right: 30px !important;
 }
 
-.newItem {
-    /* animation: blink 0.6s linear 2; */
-}
+/* .newItem {
+    /* animation: blink 0.6s linear 2; *//*
+
+} */
 
 @keyframes blink {
     0% {

@@ -8,10 +8,11 @@
         </div>
         <el-card>
             <el-row>
-                <el-col :span="2">
+                <el-col :span="4">
                     <el-button type="warning" @click="navigateToUserProjectManagerPage()">近况追踪</el-button>
+                    <el-button type="info" @click="$router.push('/common/weekmeetcomments')">周会回顾</el-button>
                 </el-col>
-                <el-col :span="1" :offset="17">
+                <el-col :span="1" :offset="15">
                     <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
                 </el-col>
                 <el-col :span="1">
@@ -89,7 +90,7 @@
                         <!-- 这里后面留着查看信息 -->
                         <el-tooltip class="item" effect="dark" content="显示备注" placement="top">
                             <el-button icon="el-icon-info" type="primary" size="mini" round
-                                @click="openCommentView(scope.row)" v-if="scope.row.caseSubId">
+                                @click="openCommentView(scope.row)">
                             </el-button>
                         </el-tooltip>
                         <el-tooltip class="item" effect="dark" content="更新信息" placement="top" v-if="user.type === 1">
@@ -110,6 +111,69 @@
                     </template>
                 </el-table-column>
             </el-table>
+        </el-card>
+
+        <el-card v-if="commitVisible">
+            <el-row>
+                <el-col :span="23" v-if="user.status === 2 || user.type === 1">
+                    <el-row>
+                        <el-col :span="21">
+                            <el-input type="textarea" :rows="4" v-model="commitForm.newContent" placeholder="请输入最新备注"
+                                @keyup.enter.native="submitCommitForm"></el-input>
+                        </el-col>
+                        <el-col :span="1" :offset="1">
+                            <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
+                                <el-button size="medium" type="primary" icon="el-icon-finished" round
+                                    @click="submitCommitForm"></el-button>
+                            </el-tooltip>
+                        </el-col>
+                        <el-col :span="1">
+                            <el-tooltip class="item" effect="dark" content="撤回最新" placement="top">
+                                <el-button size="medium" type="danger" icon="el-icon-toilet-paper" round
+                                    @click="deleteCommit"></el-button>
+                            </el-tooltip>
+                        </el-col>
+                    </el-row>
+                </el-col>
+
+                <el-col :span="1" :offset="(user.status === 2 || user.type === 1) ? 0 : 23">
+                    <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
+                        style="margin-bottom: 5px;"></el-button>
+                </el-col>
+            </el-row>
+            <div class="commit_area" style="margin-top: 10px;">
+                <el-card style="width: 40%; margin-right: 20px;">
+                    <h2>专案：{{ commitForm.caseName }}</h2>
+                    <br>
+                    <br>
+                    <h3>阶段：{{ commitForm.subName }}</h3>
+                </el-card>
+
+                <el-card class="box-card" style="width: 55%;">
+                    <h2>备注信息</h2>
+                    <ul v-show="!showAllCommit">
+                        <li v-for="(o, index) in commitForm.content.slice(0, 4)" :key="o.id" class="text item">
+                            <h3 :style="{ color: index < 2 ? 'red' : 'black', 'white-space': 'pre-wrap' }">{{ o.content
+                                }}</h3>
+                        </li>
+                    </ul>
+                    <ul v-show="showAllCommit">
+                        <li v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
+                            <h3 :style="{ color: index < 2 ? 'red' : 'black', 'white-space': 'pre-wrap' }">{{ o.content
+                                }}</h3>
+                        </li>
+                    </ul>
+                    <label v-if="commitForm.content.length === 0">暂无备注</label>
+                    <el-row>
+                        <el-col :span="2" :offset="10">
+                            <a class="viewItem" @click="showAll" v-if="!showAllCommit">展开全部</a>
+                            <a class="viewItem" @click="showAll" v-else>收起</a>
+                        </el-col>
+                    </el-row>
+                </el-card>
+
+
+            </div>
         </el-card>
 
         <el-card style="margin-top: 5px;" v-if="exceptionList.length > 0">
@@ -133,67 +197,6 @@
                 </el-table-column>
 
             </el-table>
-        </el-card>
-
-        <el-card v-if="commitVisible">
-            <el-row>
-                <el-col :span="23" v-if="user.status === 2 || user.type === 1">
-                    <el-row>
-                        <el-col :span="21">
-                            <el-input v-model="commitForm.newContent" placeholder="请输入最新备注"
-                                @keyup.enter.native="submitCommitForm"></el-input>
-                        </el-col>
-                        <el-col :span="1" :offset="1">
-                            <el-tooltip class="item" effect="dark" content="提交备注" placement="top">
-                                <el-button size="medium" type="primary" icon="el-icon-finished" round
-                                    @click="submitCommitForm"></el-button>
-                            </el-tooltip>
-                        </el-col>
-                        <el-col :span="1">
-                            <el-tooltip class="item" effect="dark" content="撤回最新" placement="top">
-                                <el-button size="medium" type="danger" icon="el-icon-toilet-paper" round
-                                    @click="deleteCommit"></el-button>
-                            </el-tooltip>
-                        </el-col>
-                    </el-row>
-                </el-col>
-
-                <el-col :span="1" :offset="(user.status === 2 || user.type === 1) ? 0 : 23">
-                    <el-button type="primary" @click="commitVisible = false" icon="el-icon-back" round
-                        style="margin-bottom: 5px;"></el-button>
-                </el-col>
-            </el-row>
-            <div class="commit_area">
-                <el-card style="width: 40%; margin-right: 20px;">
-                    <h2>专案：{{ commitForm.caseName }}</h2>
-                    <br>
-                    <br>
-                    <h3>阶段：{{ commitForm.subName }}</h3>
-                </el-card>
-
-                <el-card class="box-card" style="width: 55%;">
-                    <h2>备注信息</h2>
-                    <ul v-show="!showAllCommit">
-                        <li v-for="(o, index) in commitForm.content.slice(0, 4)" :key="o.id" class="text item">
-                            <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
-                        </li>
-                    </ul>
-                    <ul v-show="showAllCommit">
-                        <li v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
-                            <h3 :style="{ color: index < 2 ? 'red' : 'black' }">{{ o.content }}</h3>
-                        </li>
-                    </ul>
-                    <label v-if="commitForm.content.length === 0">暂无备注</label>
-                    <el-row>
-                        <el-col :span="2" :offset="10">
-                            <a class="viewItem" @click="showAll" v-if="!showAllCommit">展开全部</a>
-                            <a class="viewItem" @click="showAll" v-else>收起</a>
-                        </el-col>
-                    </el-row>
-                </el-card>
-
-
-            </div>
         </el-card>
 
         <el-card class="gantt-chart">
@@ -228,8 +231,28 @@
             </el-table>
         </el-drawer>
 
-        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%">
+        <!-- <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%">
             <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="pauseVisible = false">取 消</el-button>
+                <el-button type="primary" @click="startPause()">确 定</el-button>
+            </span>
+        </el-dialog> -->
+
+        <el-dialog title="暂停描述" :visible.sync="pauseVisible" width="30%" @close="initPauseObj">
+            <el-form :model="pauseObj" label-width="80px">
+                <el-form-item label="暂停原因">
+                    <el-input v-model="pauseObj.description" placeholder="描述暂停原因，后续将作为外界因素延期原因，请认真填写"></el-input>
+                </el-form-item>
+                <el-form-item label="暂停时长">
+                    <el-input type="number" v-model.number="pauseObj.presetDay" placeholder="请输入暂停预设时长"
+                        @input="computeRestoreTime"></el-input>
+                </el-form-item>
+                <el-form-item label="恢复时间" v-if="pauseObj.presetDay !== null">
+                    <el-input :disabled="true" :value="pauseObj.presetFinishTime"></el-input>
+                </el-form-item>
+            </el-form>
+
             <span slot="footer" class="dialog-footer">
                 <el-button @click="pauseVisible = false">取 消</el-button>
                 <el-button type="primary" @click="startPause()">确 定</el-button>
@@ -268,10 +291,10 @@
 </template>
 
 <script>
-import { timeSub, formatDate, timeAdd } from '@/utils/common'
+import { timeSub, formatDate, timeAdd, initDirectorOptions } from '@/utils/common'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList, notStartTaskList } from '@/api/task'
 import { getUserListWithAssistants } from '@/api/user'
-import { getById, saveCommit, deleteCommit } from '@/api/caseSubCommit'
+import { getById, saveCommit, deleteCommit, getLastWeekComment } from '@/api/caseSubCommit'
 import { getDelayById } from '@/api/caseDelayApply'
 import { startPause, finishPause, getPauseInfo } from '@/api/pause'
 import { countUser, updateDescription } from '@/api/caseSubUser'
@@ -283,23 +306,7 @@ export default {
         return {
             userInfo: [],
             //负责人的级联选择器
-            directorOptions: [
-                {
-                    value: 0,
-                    label: '机构',
-                    children: []
-                },
-                {
-                    value: 1,
-                    label: '电控',
-                    children: []
-                },
-                {
-                    value: 2,
-                    label: 'IE',
-                    children: []
-                }
-            ],
+            directorOptions: initDirectorOptions(),
             userMap: new Map(),
             userName2IdMap: new Map(),
             curUser: null,
@@ -328,7 +335,8 @@ export default {
                 description: '',
                 taskId: null,
                 caseSubId: null,
-                target: ''
+                target: '',
+                presetDay: null,
             },
             // 用户工作描述信息
             updateDescriptionVisible: false,
@@ -358,7 +366,7 @@ export default {
     //缓存界面路由导航进入之前
     beforeRouteEnter(to, from, next) {
         next((vm) => {
-            if(vm.user.type===0)
+            if (vm.user.type === 0)
                 vm.setIsCollapse(true)
             // 个人界面查询的跳转
             if ('userName' in to.query) {
@@ -391,12 +399,13 @@ export default {
             var today = new Date();
             var month = today.getMonth() + 1;
             var day = today.getDate();
-            return month + '/' + day + "："
+            var res = "日期：" + month + '/' + day
+            res += "\n现状：\n问题：\n计划："
+            return res
         },
         async getTaskByUserId() {
             var res = await taskList(this.curUser)
             this.userInfo = res.data
-            console.log(this.userInfo)
 
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
@@ -448,19 +457,11 @@ export default {
                     this.commitForm.subName = '暂无数据'
                     return
                 }
-                var caseSubCount = 0
                 for (var i = 0; i < this.userInfo.length; i++) {
-                    if (this.userInfo[i].caseSubId !== null) {
-                        caseSubCount++
+                    if (this.userInfo[i].caseSubId !== null || this.userInfo[i].taskId !== null) {
                         this.openCommentView(this.userInfo[i])
                         break
                     }
-                }
-                // 没有专案子阶段，说明全是任务
-                if (caseSubCount === 0) {
-                    this.commitForm.content = []
-                    this.commitForm.caseName = '暂无数据'
-                    this.commitForm.subName = '暂无数据'
                 }
             }
         },
@@ -670,12 +671,13 @@ export default {
             this.commitForm.caseName = row.caseName
             this.commitForm.subName = row.subName
             this.commitForm.caseSubId = row.caseSubId
+            this.commitForm.taskId = row.taskId
             this.getAndShowCommit()
         },
         //获取并显示评论
         async getAndShowCommit() {
             // 获取专案子流程对应的所有备注
-            var res = await getById(this.commitForm.caseSubId)
+            var res = await getById(this.commitForm.caseSubId !== null ? this.commitForm.caseSubId : this.commitForm.taskId)
             res = res.data
             //备注数组必须清空，否则会叠加
             this.commitForm.content = []
@@ -696,8 +698,9 @@ export default {
             }
             const commmitObj = {}
             commmitObj.caseSubId = this.commitForm.caseSubId
+            commmitObj.taskId = this.commitForm.taskId
             commmitObj.content = this.commitForm.newContent
-            commmitObj.createUser = this.user.idw
+            commmitObj.createUser = this.user.id
             var res = await saveCommit(commmitObj)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -814,20 +817,27 @@ export default {
         },
         // 开始暂停
         async startPause() {
-            if (this.pauseObj.description === null || this.pauseObj.description === '') {
-                this.$message.error("暂停原因不能为空")
+            if (this.pauseObj.description === null || this.pauseObj.description === '' || this.pauseObj.presetDay === null || this.pauseObj.presetDay === '') {
+                this.$message.error("暂停原因和暂停时间不能为空")
                 return
             }
             const res = await startPause(this.pauseObj)
             if (res.code === 200) {
                 this.$message.success(res.data)
-                this.pauseObj.description = ''
-                this.pauseObj.taskId = null
-                this.pauseObj.caseSubId = null
-                this.pauseObj.target = null
+                this.initPauseObj()
                 this.pauseVisible = false
             }
             this.getTaskByUserId()
+        },
+        initPauseObj() {
+            this.pauseObj = {
+                taskId: null,
+                caseSubId: null,
+                target: null,
+                description: null,
+                presetDay: null,
+                presetFinishTime: null
+            }
         },
         // 停止暂停
         finishPause(pauseId) {
@@ -853,7 +863,6 @@ export default {
         },
         // 2024.5.29 管理员点击更新用户完结信息
         async updateUserInfo(row) {
-            console.log(row)
             this.updateDescriptionVisible = true;
             const res = await countUser(row.caseSubId)
             this.directors = res.data
@@ -866,12 +875,11 @@ export default {
                 if (this.directors[i].duration === "") {
                     this.directors[i].duration = null
                 }
-                if(this.directors[i].description === "")
+                if (this.directors[i].description === "")
                     this.directors[i].description = null
             }
             for (var i = 0; i < this.directors.length; i++) {
-                if ((this.directors[i].description === null && this.directors[i].duration !== null)
-                    || (this.directors[i].description !== null && this.directors[i].duration === null)) {
+                if ((this.directors[i].description === null) !== (this.directors[i].duration === null)) {
                     incompleteInfoFound = true
                     break;
                 }
@@ -906,7 +914,17 @@ export default {
                 }
             }
             this.updateView()
-        }
+        },
+        // 计算暂停恢复时间
+        computeRestoreTime() {
+            // 当前时间
+            var now = new Date()
+            // 加上暂停时间
+            now.setDate(now.getDate() + this.pauseObj.presetDay)
+            // 格式化时间
+            this.pauseObj.presetFinishTime = formatDate(now)
+        },
+
     }
 }
 </script>

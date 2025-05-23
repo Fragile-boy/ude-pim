@@ -9,6 +9,7 @@ import CaseStatus from './components/CaseStatus'
 import CaseTable from './components/CaseTable'
 import CaseSubTable from './components/CaseSubTable'
 import CaseBox from './components/CaseBox'
+import AllUser from './components/AllUser.vue'
 import axios from './plugins/service'
 import router from './router'
 import * as echarts from 'echarts';
@@ -52,6 +53,7 @@ Vue.component("CaseSubTable",CaseSubTable)
 Vue.component("CaseBox",CaseBox)
 Vue.component("CasePie",CasePie)
 Vue.component("NavigationBar",NavigationBar)
+Vue.component("AllUser",AllUser)
 
 Vue.prototype.$axios = axios
 Vue.prototype.$echarts = echarts;

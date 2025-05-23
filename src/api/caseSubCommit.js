@@ -36,3 +36,8 @@ export const deleteCommit = (id)=>{
 export const updateCommit = (obj)=>{
     return service.put('/caseSubComment',obj)
 }
+
+// 获得上周周会新增的备注
+export const getLastWeekComment = ()=>{
+    return service.get('/caseSubComment/lastWeekComment')
+}

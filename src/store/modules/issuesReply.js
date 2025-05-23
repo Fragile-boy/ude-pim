@@ -1,4 +1,4 @@
-import { getReplyCount } from "@/api/log"
+import { getReplyCount } from "@/api/notice"
 import { Notification } from "element-ui"
 
 

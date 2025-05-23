@@ -19,7 +19,7 @@
           </el-col>
           <!-- 消息区域 -->
           <el-col :span="1" :offset="15">
-            <el-badge :value="logList.length" :hidden="logList.length === 0" class="item">
+            <el-badge :value="noticeList.length" :hidden="noticeList.length === 0" class="item">
               <el-button round @click="$router.push('/user/info')"><i class="el-icon-chat-dot-round"></i></el-button>
             </el-badge>
           </el-col>
@@ -257,7 +257,7 @@ export default {
   },
   computed: {
     ...mapState(['user']),
-    ...mapState('log', ['logList'])
+    ...mapState('notice', ['noticeList'])
   },
   created() {
 

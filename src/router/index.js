@@ -47,6 +47,7 @@ import caseAnalysis from '@/views/dataViews/caseAnalysis'
 import UserList from '@/views/ManageViews/UserList'
 import UserProjectManagement from '@/views/ManageViews/UserProjectManagement'
 import UserProjectTracking from '@/views/ManageViews/UserProjectTracking'
+import WeekMeetComments from '@/views/ManageViews/WeekMeetComments'
 
 
 // 个人中心界面
@@ -144,6 +145,12 @@ const routes = [
         path: 'schedule',
         name: '待办事项',
         component: TodoView
+      },
+      //周会回顾界面
+      {
+        path: 'weekMeetComments',
+        name: '周会回顾',
+        component: WeekMeetComments
       }
     ]
   },
@@ -350,7 +357,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.path.includes('user')) {
     
     // await store.dispatch('fetchUserData', getInfo())
-    if (user.status > 2) {
+    if (user.status == 10) {
       Message({
         message: '你无权访问用户界面,正跳转回主页',
         type: 'error' // 可以是 'success', 'warning', 'info', 'error' 中的一个

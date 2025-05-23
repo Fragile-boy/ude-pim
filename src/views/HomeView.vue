@@ -19,7 +19,7 @@
     <!-- 主体区域 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside :width="isCollapse ? '55px' : '200px'" v-if="user.status <= 2" style="margin-left: -10px;">
+      <el-aside :width="isCollapse ? '55px' : '200px'" v-if="user.status !=10" style="margin-left: -10px;">
         <div class="toggle-button" @click="toggleCollapse">
           <i class="el-icon-back" v-if="!isCollapse"></i>
           <i class="el-icon-right" v-else style="margin-left: 10px;"></i>

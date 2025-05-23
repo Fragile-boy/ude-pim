@@ -159,7 +159,7 @@
 <script>
 import { mapState } from 'vuex';
 import { allFinishTask } from '@/api/task'
-import { timeSub } from '@/utils/common';
+import { timeSub,initDirectorOptions } from '@/utils/common';
 import { getUserListWithAssistants } from '@/api/user'
 import { getDelayById } from '@/api/caseDelayApply'
 export default {
@@ -229,23 +229,7 @@ export default {
                 avgAchievingRate: 0,
             },
             //负责人的级联选择器
-            directorOptions: [
-                {
-                    value: 0,
-                    label: '机构',
-                    children: []
-                },
-                {
-                    value: 1,
-                    label: '电控',
-                    children: []
-                },
-                {
-                    value: 2,
-                    label: 'IE',
-                    children: []
-                }
-            ],
+            directorOptions: initDirectorOptions(),
             userMap: new Map(),
             curUser: null,
             curIndex: 0,

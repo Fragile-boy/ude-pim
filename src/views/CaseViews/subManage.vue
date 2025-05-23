@@ -27,9 +27,9 @@
             </div>
             <!-- 表格区域，显示子流程 -->
             <el-table :data="subList" border scrope>
-                <el-table-column prop="id" label="编号">
-                </el-table-column>
                 <el-table-column prop="name" label="流程名">
+                </el-table-column>
+                <el-table-column prop="sort" label="执行序号">
                 </el-table-column>
                 <el-table-column label="操作">
                     <template slot-scope="scope">

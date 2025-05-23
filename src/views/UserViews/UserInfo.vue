@@ -20,7 +20,7 @@
                 </el-col>
             </el-row>
             <!-- 日志任务的详情 -->
-            <el-table :data="logList" v-if="!showHistory">
+            <el-table :data="noticeList" v-if="!showHistory">
                 <el-table-column label="消息">
                     <template slot-scope="scope">
                         <div style="white-space: pre-wrap;">{{ scope.row.content }}</div>
@@ -36,7 +36,7 @@
             </el-table>
             <!-- 历史消息 -->
             <div v-if="showHistory">
-                <el-table :data="historyLogList">
+                <el-table :data="historyNoticeList">
                     <el-table-column label="消息" width="1200">
                         <template slot-scope="scope">
                             <div style="white-space: pre-wrap;">{{ scope.row.content }}</div>
@@ -140,12 +140,13 @@
 </template>
 
 <script>
-import { getHistoryLogByUserId, batchCheckLog } from '@/api/log'
+import { getHistoryNoticeByUserId, batchCheckNotice } from '@/api/notice'
 import { mapActions, mapState } from 'vuex'
 import { checkingApplyCaseSub, removeCaseSubApply } from '@/api/applyCaseSub'
 import { checkingApplyTask, removeTaskApply } from '@/api/applyTask'
 import { getDelayListByUserId, removeDelayApply } from '@/api/caseDelayApply'
 import { getFinishListByUserId, removeFinishApply } from '@/api/caseFinishApply'
+import { formatTimestamp } from '@/utils/common'
 export default {
     data() {
         return {
@@ -159,7 +160,7 @@ export default {
             applyTaskList: [],
             delayList: [],
             finishList: [],
-            historyLogList: [],
+            historyNoticeList: [],
             total: null,
         }
     },
@@ -167,20 +168,26 @@ export default {
         // 仅普通用户需要调用
         if (this.user.type === 0)
             this.getAllList()
-        this.getLogWithMe()
+        this.getNoticeWithMe()
     },
     computed: {
-        ...mapState('log', ['logList']),
+        ...mapState('notice', ['noticeList']),
         ...mapState(['user'])
     },
     methods: {
-        ...mapActions('log', ['getLogList', 'checkMessage']),
+        ...mapActions('notice', ['getNoticeList', 'checkMessage']),
         // 获取个人相关的历史消息
-        async getLogWithMe() {
+        async getNoticeWithMe() {
             this.queryObj.userId = this.user.id
-            const res = await getHistoryLogByUserId(this.queryObj)
+            const res = await getHistoryNoticeByUserId(this.queryObj)
             if (res.code === 200) {
-                this.historyLogList = res.data.records
+                this.historyNoticeList = res.data.records
+                this.historyNoticeList.forEach(item => {
+                    item.createTime = formatTimestamp(parseInt(item.createAt))
+                    if(item.content.includes('\t'))
+                        item.createName = item.content.split('\t')[0]
+                    else item.createName = item.content.split(" ")[0]
+                })
                 this.total = res.data.total
             }
 
@@ -188,16 +195,16 @@ export default {
         handleSizeChange(val) {
             this.queryObj.pageSize = val
             this.queryObj.page = 1
-            this.getLogWithMe()
+            this.getNoticeWithMe()
         },
         handleCurrentChange(val) {
             this.queryObj.page = val
-            this.getLogWithMe()
+            this.getNoticeWithMe()
         },
         async handleCheckMessage(row) {
             const res = await this.checkMessage(row)
             this.$message.success(res.data)
-            this.getLogList()
+            this.getNoticeList()
         },
         async getAllList() {
             var res = await checkingApplyCaseSub(this.user.id)
@@ -301,11 +308,11 @@ export default {
             })
         },
         async batchCheckMessage(){
-            var res = await batchCheckLog()
+            var res = await batchCheckNotice()
             if(res.code===200)
                 this.$message.success(res.data)
-            await this.getLogList()
-            await this.getLogWithMe()
+            await this.getNoticeList()
+            await this.getNoticeWithMe()
         }
     }
 }

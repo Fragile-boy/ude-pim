@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import caseM from '@/store/modules/caseM'
 import log from './modules/log'
 import apply from './modules/apply'
+import notice from './modules/notice'
 import issuesReply from './modules/issuesReply'
 import { getInfo, setInfo } from '@/utils/storage'
 import { updateUser } from '@/api/user'
@@ -46,6 +47,7 @@ export default new Vuex.Store({
   modules: {
     caseM,
     log,
+    notice,
     apply,
     issuesReply,
   }

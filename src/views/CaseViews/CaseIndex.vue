@@ -83,6 +83,7 @@
                         <el-table-column prop="caseName" label="专案" width="250"></el-table-column>
                         <el-table-column prop="subName" label="阶段"></el-table-column>
                         <el-table-column prop="userNames" label="负责人" width="150"></el-table-column>
+                        <el-table-column prop="presetDay" label="暂停时长"></el-table-column>
                         <el-table-column prop="pauseStart" label="暂停于" width="100"></el-table-column>
                         <el-table-column label="已暂停">
                             <template slot-scope="scope">
@@ -233,7 +234,6 @@ export default {
         async getHalfYearFinishCaseSubAmount() {
             const res = await getHalfYearFinishCaseSubAmount()
             this.caseSubFinishInfo = res.data
-            console.log(this.caseSubFinishInfo)
         },
         initBar() {
             var option = {

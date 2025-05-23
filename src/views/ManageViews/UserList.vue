@@ -53,6 +53,7 @@
                         <el-tag effect="dark" v-if="scope.row.status === 0">机构</el-tag>
                         <el-tag effect="dark" type="success" v-else-if="scope.row.status === 1">电控</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 2">IE</el-tag>
+                        <el-tag effect="dark" type="info" v-else-if="scope.row.status === 3">机设</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作">
@@ -306,6 +307,7 @@ export default {
                 { value: 0, label: "机构" },
                 { value: 1, label: "电控" },
                 { value: 2, label: "IE" },
+                { value: 3, label: "机设"}
             ],
             addFormRules: {
                 name: [

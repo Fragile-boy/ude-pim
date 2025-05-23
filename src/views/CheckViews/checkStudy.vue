@@ -119,7 +119,7 @@ export default {
                     const res = await judgeApply(row)
                     if (res.code === 200) {
                         this.$message.success(res.data)
-                        this.getApplyList()
+                        this.getTaskList()
                     } else {
                         this.$message.error(res.msg)
                     }
@@ -138,16 +138,11 @@ export default {
                     const res = await judgeApply(row)
                     if (res.code === 200) {
                         this.$message.success(res.data)
-                        this.getApplyList()
+                        this.getTaskList()
                     } else {
                         this.$message.error(res.msg)
                     }
-                }).catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '取消操作'
-                    });
-                });
+                })
             }
         },
         openHistory() {

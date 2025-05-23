@@ -19,3 +19,11 @@ body,
 .textarea-placeholder-multiline::placeholder {
     white-space: pre-wrap;
 }
+
+/* 覆盖 v-md-editor 编辑区的基础文字字体大小
+
+.v-md-editor-preview p,
+.v-md-editor-preview span,
+.v-md-editor-preview {
+  font-size: 24px; /* 设置你想要的字体大小 *//*
+} */

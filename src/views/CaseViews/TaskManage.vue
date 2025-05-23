@@ -68,7 +68,8 @@
                             </el-table-column>
                             <el-table-column>
                                 <template slot-scope="scope">
-                                    <el-tooltip class="item" effect="dark" :content="scope.row.pauseDesc" placement="top">
+                                    <el-tooltip class="item" effect="dark" :content="scope.row.pauseDesc"
+                                        placement="top">
                                         <el-button type="info" icon="el-icon-position" round size="mini"
                                             @click="redirectToDetailPage(scope.row)"></el-button>
                                     </el-tooltip>
@@ -118,6 +119,11 @@
                                     @click="openTaskDetail(scope.row)">
                                 </el-button>
                             </el-tooltip>
+                            <el-tooltip class="item" effect="dark" content="删除任务" placement="right-start">
+                                <el-button icon="el-icon-delete" type="danger" size="mini" round
+                                    @click="deleteTask(scope.row)">
+                                </el-button>
+                            </el-tooltip>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -142,7 +148,8 @@
                     <el-col :span="12" :offset="2">
                         <el-form-item label="负责人">
                             <el-select v-model="curTaskObj.director" placeholder="请选择科员" @change="handleUserChange()">
-                                <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                                <el-option-group v-for="group in directorOptions" :key="group.value"
+                                    :label="group.label">
                                     <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                         :value="item.value">
                                     </el-option>
@@ -237,9 +244,9 @@
 </template>
 
 <script>
-import { allTaskList, updateTask, addTask, getExecutingTask } from '@/api/task';
+import { allTaskList, updateTask, addTask, getExecutingTask, deleteTask } from '@/api/task';
 import { getUserListWithAssistants } from '@/api/user';
-import { format4back, formatDate, timeAdd, timeSub } from '@/utils/common';
+import { format4back, formatDate, timeAdd, timeSub, initDirectorOptions } from '@/utils/common';
 import { getDelayById } from '@/api/caseDelayApply'
 import { mapState } from 'vuex';
 
@@ -255,22 +262,7 @@ export default {
         return {
             taskList: [],
             //负责人的级联选择器
-            directorOptions: [
-                {
-                    value: 0,
-                    label: '机构',
-                    children: []
-                },
-                {
-                    value: 1,
-                    label: '电控',
-                    children: []
-                }, {
-                    value: 2,
-                    label: 'IE',
-                    children: []
-                }
-            ],
+            directorOptions: initDirectorOptions(),
             curUser: null,
             taskDetailVisible: false,
             curTaskObj: {},
@@ -348,6 +340,24 @@ export default {
             //先清空，避免有些对象没有的属性没有被覆盖s
             this.curTaskObj = {}
             this.curTaskObj = { ...row }
+        },
+        // 删除任务
+        async deleteTask(row) {
+            this.$confirm('此操作将永久删除该任务, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                var res = await deleteTask(row.id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getAllTaskList()
+                } else {
+                    this.$message.error(res.msg)
+                }
+            }).catch(() => {
+                this.$message.info('已取消删除')
+            })
         },
         //修改任务信息
         async submitTaskChange() {
@@ -428,10 +438,10 @@ export default {
             })
         },
         // 表格双击事件
-        handleDoubleClick(row, column){
-            if(column.label==="外界因素延期"){
+        handleDoubleClick(row, column) {
+            if (column.label === "外界因素延期") {
                 this.showDelay(row, "外界因素延期")
-            }else if (column.label === "人为因素延期")
+            } else if (column.label === "人为因素延期")
                 this.showDelay(row, "人为因素延期")
         },
         // 显示不可抗力延期
