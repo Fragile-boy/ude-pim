@@ -41,6 +41,7 @@
             </template>
             <el-menu-item index="/admin/monthlyAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
             <el-menu-item index="/common/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
+            <el-menu-item index="/admin/scoreManager"><i class="el-icon-s-tools"></i>积分管理</el-menu-item>
         </el-submenu>
 
         <el-submenu index="4" v-if="user.type === 1">

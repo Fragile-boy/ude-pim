@@ -102,6 +102,7 @@
                         <template slot-scope="scope">
                             <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
                             <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                            <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微任务</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="description" label="描述"></el-table-column>
@@ -195,14 +196,32 @@
 
         <!-- 新增任务图层 -->
         <el-dialog title="任务详情" :visible.sync="addTaskVisible" width="30%">
-            <el-form ref="addTaskFormRef" :rules="applyTaskRules" :model="addTaskObj" label-width="80px">
+            <el-form ref="addTaskFormRef" :rules="applyTaskRules" :model="addTaskObj" label-width="100px">
                 <el-form-item label="任务类型" prop="type">
-                    <el-select v-model="addTaskObj.type" placeholder="请选择任务类型">
-                        <el-option v-for="item in [{ label: '技术研究', value: 2 }, { label: '临时事务', value: 1 }]"
+                    <el-select v-model="addTaskObj.type" placeholder="请选择任务类型" @change="isCaseSubTask=(addTaskObj.type===3)">
+                        <el-option v-for="item in [{ label: '技术研究', value: 2 }, { label: '临时事务', value: 1 }, {label: '微阶段', value: 3 }]"
                             :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
                 </el-form-item>
+
+                <el-form-item label="专案名称" v-if="isCaseSubTask">
+                    <el-select v-model="unFinishedCaseId" placeholder="请选择"
+                        @change="getUnfinishedSubList()">
+                        <el-option v-for="item in unFinishedCaseList" :key="item.id" :label="item.name"
+                            :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="子流程名称" v-if="isCaseSubTask">
+                    <el-select v-model="addTaskObj.name" placeholder="请选择">
+                        <el-option v-for="item in unfinishedSubList" :key="item.id" :label="item.subName"
+                            :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
                 <el-form-item label="任务描述" prop="description">
                     <el-input type="textarea" placeholder="请输入任务描述" v-model="addTaskObj.description"></el-input>
                 </el-form-item>
@@ -249,6 +268,8 @@ import { getUserListWithAssistants } from '@/api/user';
 import { format4back, formatDate, timeAdd, timeSub, initDirectorOptions } from '@/utils/common';
 import { getDelayById } from '@/api/caseDelayApply'
 import { mapState } from 'vuex';
+import { unFinishedCaseList } from '@/api/case'
+import { unfinishedSubList } from '@/api/caseSub'
 
 export default {
     data() {
@@ -294,6 +315,10 @@ export default {
             delayList: [],
             // 抽屉
             delayDrawer: false,
+            unFinishedCaseId: null,
+            unFinishedCaseList: [],
+            unfinishedSubList: [],
+            isCaseSubTask: false,
         }
     },
     async created() {
@@ -301,6 +326,7 @@ export default {
         this.curUser = this.directorOptions[0].children[0].value
         this.getAllTaskList()
         this.getExecutingTask()
+        this.getUnfinishedCaseList()
     },
     computed: {
         ...mapState(['user'])
@@ -394,6 +420,17 @@ export default {
             this.$refs.addTaskFormRef.validate(async (valid) => {
                 if (valid) {
                     this.addTaskObj.createUser = this.user.id
+                    if(this.addTaskObj.type === 3){
+                        // 获取选中的文本
+                        const caseName = this.unFinishedCaseList.find(
+                            item => item.id === this.unFinishedCaseId
+                            )?.name || '';
+                            
+                            const subName = this.unfinishedSubList.find(
+                            item => item.id === this.addTaskObj.name
+                            )?.subName || '';
+                            this.addTaskObj.description = caseName + "：" + subName + "\n" + this.addTaskObj.description
+                    }
                     const res = await addTask(this.addTaskObj)
                     if (res.code === 200) {
                         this.addTaskVisible = false
@@ -449,6 +486,26 @@ export default {
             var res = await getDelayById({ caseSubId: null, taskId: row.id, delayType: delayType })
             this.delayList = res.data
             this.delayDrawer = true
+        },
+        // 显示所有未完成的专案列表
+        async getUnfinishedCaseList() {
+            const res = await unFinishedCaseList()
+            if (res.code === 200) {
+                this.unFinishedCaseList = res.data
+            } else {
+                this.$message.error(res.msg)
+                return
+            }
+        },
+        //专案变化的回调函数
+        async getUnfinishedSubList() {
+            const res = await unfinishedSubList({ caseId: this.unFinishedCaseId, userId: this.user.id })
+            if (res.code === 200) {
+                this.unfinishedSubList = res.data
+            } else {
+                this.$message.error(res.msg)
+                return
+            }
         },
     }
 }

@@ -82,6 +82,11 @@
                                 @click="openEditCaseSub(scope.row)"></el-button>
                         </el-tooltip>
 
+                        <el-tooltip effect="dark" content="生成专案报表" placement="top" v-if="scope.row.finishTime !== null">
+                            <el-button type="info" size="mini" icon="el-icon-document" round
+                                @click="openReport(scope.row)"></el-button>
+                        </el-tooltip>
+
                     </template>
                 </el-table-column>
             </el-table>
@@ -134,7 +139,8 @@
                 <el-form-item label="负责人" prop="directors">
                     <el-cascader v-model="addCaseForm.directors" :options="directorOptions" :show-all-levels="false"
                         placeholder="请选择负责人"></el-cascader>
-                    <el-button v-if="dialogTitle=='修改专案'" type="warning" size="mini" round style="margin-left:5px" @click="modifyDirector">批量修改</el-button>
+                    <el-button v-if="dialogTitle == '修改专案'" type="warning" size="mini" round style="margin-left:5px"
+                        @click="modifyDirector">批量修改</el-button>
                 </el-form-item>
 
                 <el-form-item label="专案描述" prop="description">
@@ -157,8 +163,9 @@
                 <el-dropdown split-button type="warning" @command="openAddRelationSubByTemplate">
                     按模板
                     <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item v-for="item in templateList" :key="item.id" :command="item.id">{{ item.description
-                        }}</el-dropdown-item>
+                        <el-dropdown-item v-for="item in templateList" :key="item.id" :command="item.id">{{
+                    item.description
+                }}</el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
             </el-col>
@@ -192,8 +199,8 @@
                 </el-table-column>
                 <el-table-column label="负责人">
                     <template slot-scope="scope">
-                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable placeholder="请选择"
-                            @change="selectChange()">
+                        <el-select :key="forceUpdateKey" v-model="scope.row.chargeId" multiple filterable
+                            placeholder="请选择" @change="selectChange()">
                             <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
                                 <el-option v-for="item in group.children" :key="item.value" :label="item.label"
                                     :value="item.value">
@@ -215,7 +222,8 @@
                 </el-table-column>
                 <el-table-column label="难度">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.level" :placeholder="curLevel + ''" @change="getPlanDays(scope.row)">
+                        <el-select v-model="scope.row.level" :placeholder="curLevel + ''"
+                            @change="getPlanDays(scope.row)">
                             <el-option v-for="item in levelInfo" :key="item" :value="item">
                             </el-option>
                         </el-select>
@@ -347,7 +355,7 @@
 import { mapActions, mapState } from 'vuex'
 import { getUserListWithAssistants, getUserStatus } from '@/api/user'
 import { addCase, getList, editCase, deleteCase, terminateCase, modifyDirector } from '@/api/case'
-import { checkResult,initDirectorOptions} from '@/utils/common'
+import { checkResult, initDirectorOptions } from '@/utils/common'
 import { getAllSub, getPresetDay } from '@/api/sub'
 import { insertRelation, getSubList, insertCaseSub, removeCaseSub, updateCaseSubSort } from '@/api/caseSub'
 import { getTempleteList, getSubsByTemplateId, saveTemplete } from '@/api/templete'
@@ -454,7 +462,7 @@ export default {
             // 新增阶段信息
             newSubObj: {},
             // 新增阶段前一个阶段信息
-            lastSubObj: {},
+            lastSubObj: {}
         }
     },
     computed: {
@@ -858,17 +866,40 @@ export default {
             }
         },
         // 批量修改负责人
-        async modifyDirector(){
-            console.log(this.addCaseForm)            
-            console.log(this.addCaseForm.id)            
+        async modifyDirector() {
+            console.log(this.addCaseForm)
+            console.log(this.addCaseForm.id)
             console.log(this.addCaseForm.directors[1])
             console.log(this.oldDirector)
-            if(this.addCaseForm.directors[1]==this.oldDirector){
+            if (this.addCaseForm.directors[1] == this.oldDirector) {
                 this.$message.error('负责人未改变')
                 return
             }
-            var res = await modifyDirector({caseId:this.addCaseForm.id,oldDirector:this.oldDirector,newDirector:this.addCaseForm.directors[1]})
+            var res = await modifyDirector({ caseId: this.addCaseForm.id, oldDirector: this.oldDirector, newDirector: this.addCaseForm.directors[1] })
             this.$message.success(res.data)
+        },
+
+        openReport(row){
+            this.$router.push({
+                name: '专案报告',
+                params:{
+                    caseData: JSON.stringify(row)
+                }
+            })
+        },
+
+        // 根据分数获取颜色
+        getScoreColor(score) {
+            if (score >= 90) return '#67C23A';
+            if (score >= 80) return '#409EFF';
+            if (score >= 60) return '#E6A23C';
+            return '#F56C6C';
+        },
+
+        // 格式化日期
+        formatDate(date) {
+            if (!date) return '';
+            return new Date(date).toLocaleDateString();
         }
     }
 }

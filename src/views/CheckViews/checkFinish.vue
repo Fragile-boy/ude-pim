@@ -25,6 +25,7 @@
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                        <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微阶段</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="description" label="描述">
@@ -173,6 +174,34 @@
                 </el-table-column>
             </el-table>
         </el-drawer>
+
+        <el-dialog 
+            title="设置微任务影响系数" 
+            :visible.sync="showImpactDialog"
+            width="30%">
+            <div>
+                <p>微阶段有效时间: {{ minTime }}天</p>
+                <el-form label-width="120px">
+                <el-form-item label="影响系数">
+                    <el-slider 
+                    v-model="tempCoefficient"
+                    :min="0"
+                    :max="1"
+                    :step="0.05"
+                    show-input
+                    @input="calculateImpact">
+                    </el-slider>
+                </el-form-item>
+                <el-form-item label="计算结果">
+                    <el-input readonly :value="`${impactDays} 天`"></el-input>
+                </el-form-item>
+                </el-form>
+            </div>
+            <span slot="footer">
+                <el-button @click="showImpactDialog = false">取消</el-button>
+                <el-button type="primary" @click="submitCommit()">确定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -209,6 +238,11 @@ export default {
             // 外界因素延期时间
             delayList:null,
             delayDrawer:false,
+            // 微阶段影响系数
+            tempCoefficient: 0.6,
+            showImpactDialog: false,
+            minTime: 0,
+            impactDays: 0
         }
     },
     computed: {
@@ -222,6 +256,27 @@ export default {
     },
     methods: {
         ...mapActions('apply', ['getFinish']),
+        openImpactDialog() {
+            this.minTime = Math.min(this.curObj.planDays, this.curObj.executionDays)
+            this.impactDays = (this.minTime * this.tempCoefficient).toFixed(0)
+            this.showImpactDialog = true
+        },
+        calculateImpact(){
+            this.impactDays = Math.ceil(this.minTime * this.tempCoefficient)
+        },
+        //
+        async submitCommit() {
+            this.curObj.impactCoefficient = this.tempCoefficient
+            this.curObj.impactDays = this.impactDays
+            const res = await judgeFinishApply(this.curObj);
+            if (res.code === 200) {
+                this.$message.success(res.data);
+                setTimeout(() => this.getFinish(), 500);
+                this.showImpactDialog = false
+            } else {
+                this.$message.error(res.msg);
+            }
+        },
         async handleCheck(row, status) {
             row.status = status
             row.checkUser = this.user.id
@@ -229,29 +284,36 @@ export default {
             if (row.estimateValue === "错误！")
                 row.estimateValue = null
             this.curObj = { ...row }
+            console.log(this.curObj)
             //通过
             if (status === 1) {
                 //意味着这是一个任务
                 if (row.type !== null) {
-                    this.$confirm('您正在通过该任务的完结申请, 是否继续?', '提示', {
-                        confirmButtonText: '确定',
-                        cancelButtonText: '取消',
-                        type: 'warning'
-                    }).then(async () => {
-                        const res = await judgeFinishApply(this.curObj)
-                        if (res.code === 200) {
-                            this.$message.success(res.data)
-                            setTimeout(() => this.getFinish(), 500)
-                        } else {
-                            this.$message.error(res.msg)
-                        }
-                    }).catch(() => {
-                        this.$message({
-                            type: 'info',
-                            message: '已取消操作'
+                    // 如果是微任务(type=3)，需要额外输入影响系数
+                    if (row.type === 3) {
+                        this.openImpactDialog()   
+                    } else {
+                        // 非微任务直接确认
+                        this.$confirm('您正在通过该任务的完结申请, 是否继续?', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }).then(async () => {
+                            const res = await judgeFinishApply(this.curObj);
+                            if (res.code === 200) {
+                                this.$message.success(res.data);
+                                setTimeout(() => this.getFinish(), 500);
+                            } else {
+                                this.$message.error(res.msg);
+                            }
+                        }).catch(() => {
+                            this.$message({
+                                type: 'info',
+                                message: '已取消操作'
+                            });
                         });
-                    });
-                    return
+                    }
+                    return;
                 }
                 //打开界面，获取信息
                 const res = await countUser(row.caseSubId)

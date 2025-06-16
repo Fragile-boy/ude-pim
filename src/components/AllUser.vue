@@ -1,5 +1,5 @@
 <template>
-    <el-cascader v-model="selectedValue" :options="assistants" :props="{ multiple: true }" collapse-tags clearable placeholder="请选择要提醒的人"
+    <el-cascader v-model="selectedValue" :options="assistants" :props="{ multiple: multiplable }" collapse-tags clearable :placeholder="placeholder"
         @change="handleChange">
     </el-cascader>
 </template>
@@ -14,6 +14,14 @@ export default {
             type: Array,
             default: () => []
         },
+        placeholder: {
+            type: String,
+            default: '请选择要提醒的人'
+        },
+        multiplable:{
+            type: Boolean,
+            default: true
+        }
     },
     data() {
         return {

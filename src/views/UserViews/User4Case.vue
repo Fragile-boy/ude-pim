@@ -36,6 +36,7 @@
                         <el-tag effect="dark" type="success" v-if="scope.row.type === 0">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                        <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微阶段</el-tag>
                     </template>
                 </el-table-column>
                 <!-- <el-table-column prop="description" label="描述"></el-table-column> -->
@@ -152,7 +153,7 @@
                 class="form">
                 <el-form-item label="申请类型">
                     <el-input
-                        :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : '技术研究'"
+                        :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' :delayApplyObject.type === 2 ?'技术研究': '微阶段'"
                         disabled></el-input>
                 </el-form-item>
 
@@ -256,15 +257,33 @@
         </el-dialog>
 
         <el-dialog title="申请任务" :visible.sync="applyTaskVisible" width="30%"
-            @close="$refs.applyTaskFormRef.resetFields()">
-            <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="80px">
+            @close="applyTaskFormReset()">
+            <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="90px">
                 <el-form-item label="任务类型" prop="type">
-                    <el-select v-model="applyTask.type" placeholder="请选择任务类型">
-                        <el-option v-for="item in [{ label: '技术研究', value: 2 }, { label: '临时事务', value: 1 }]"
+                    <el-select v-model="applyTask.type" placeholder="请选择任务类型" @change="isCaseSubTask=applyTask.type === 3">
+                        <el-option v-for="item in taskTypes"
                             :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
                 </el-form-item>
+
+                <el-form-item label="专案名称" v-if="isCaseSubTask">
+                    <el-select placeholder="请选择" v-model="applyCaseSubUser.caseId"
+                        @change="getUnfinishedSubList()">
+                        <el-option v-for="item in unFinishedCaseList" :key="item.id" :label="item.name"
+                            :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="子流程名称" prop="comment" v-if="isCaseSubTask">
+                    <el-select v-model="applyTask.comment" placeholder="请选择" @change="flushCaseSubId">
+                        <el-option v-for="item in unfinishedSubList" :key="item.id" :label="item.subName"
+                            :value="item.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+
                 <el-form-item label="任务描述" prop="description">
                     <el-input type="textarea" placeholder="请输入任务描述" v-model="applyTask.description"></el-input>
                 </el-form-item>
@@ -333,7 +352,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import { timeSub, timeAdd, formatDate, format4back } from '@/utils/common'
+import { timeSub, timeAdd, formatDate, format4back,initTaskTypeOptions } from '@/utils/common'
 import { unFinishedCaseList } from '@/api/case'
 import { unfinishedSubList, startOrFinish } from '@/api/caseSub'
 import { taskList, recentTaskList, recentHalfYear, getExceptionList } from '@/api/task'
@@ -360,6 +379,9 @@ export default {
             callback()
         }
         return {
+            // 是否是子流程的微阶段任务
+            isCaseSubTask: false,
+            taskTypes: initTaskTypeOptions(),
             userInfo: [],
             applyDelayVisible: false,
             delayApplyObject: {},
@@ -411,7 +433,13 @@ export default {
             unfinishedSubList: [],
             //专案研究显示
             applyTaskVisible: false,
-            applyTask: {},
+            applyTask: {
+                name: '',
+                type: null,
+                description: '',
+                planDays: null,
+                comment: ''
+            },
             //当前申请完结的任务
             curTask: {},
             //完结选择时间弹窗
@@ -466,6 +494,11 @@ export default {
         ...mapState(['user'])
     },
     methods: {
+        applyTaskFormReset(){
+            this.$refs.applyTaskFormRef.resetFields()
+            this.unfinishedSubList = []
+            this.applyCaseSubUser.caseId = null
+        },
         // 获取当前用户的中断未开始的任务
         async getExceptionList() {
             const res = await getExceptionList(this.user.id)
@@ -714,7 +747,12 @@ export default {
         //专案变化的回调函数
         async getUnfinishedSubList() {
             this.applyCaseSubUser.caseSubId = null
-            const res = await unfinishedSubList({ caseId: this.applyCaseSubUser.caseId, userId: this.user.id })
+            var res;
+            if(this.applyTaskVisible){
+                res = await unfinishedSubList({ caseId: this.applyCaseSubUser.caseId, userId: null })
+            }else{
+                res = await unfinishedSubList({ caseId: this.applyCaseSubUser.caseId, userId: this.user.id })
+            }
             if (res.code === 200) {
                 this.unfinishedSubList = res.data
             } else {
@@ -756,6 +794,18 @@ export default {
                 try {
                     if (valid) {
                         this.applyTask.applyId = this.user.id
+                        // 判断是否是子流程的微阶段任务，如果是，在描述前加上子流程名称
+                        if(this.applyTask.type===3){
+                            // 获取选中的文本
+                            const caseName = this.unFinishedCaseList.find(
+                            item => item.id === this.applyCaseSubUser.caseId
+                            )?.name || '';
+                            
+                            const subName = this.unfinishedSubList.find(
+                            item => item.id === this.applyTask.comment
+                            )?.subName || '';
+                            this.applyTask.description = caseName + "：" + subName + "\n" + this.applyTask.description
+                        }
                         const res = await saveApplyTask(this.applyTask)
                         if (res.code === 200) {
                             this.applyTaskVisible = false

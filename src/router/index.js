@@ -21,6 +21,7 @@ import IndexView from '../views/CaseViews/IndexView.vue'
 import CasePersonView from '@/views/CaseViews/CasePersonView.vue'
 import CaseSubView from '@/views/CaseViews/CaseSubView.vue'
 import CaseDicussion from '@/views/CaseViews/CaseDiscussion.vue'
+import CaseReport from '@/views/CaseViews/CaseReport.vue'
 
 //专案列表界面
 import CaseList from '@/views/CaseViews/CaseList'
@@ -42,6 +43,7 @@ import checkApply from '@/views/CheckViews/checkApply'
 // 数据统计界面
 import monthlyAnalysis from '@/views/dataViews/monthlyAnalysis'
 import caseAnalysis from '@/views/dataViews/caseAnalysis'
+import scoreManager from '@/views/dataViews/scoreManager'
 
 //部员管理界面
 import UserList from '@/views/ManageViews/UserList'
@@ -171,6 +173,11 @@ const routes = [
         name: '专案列表',
         component: CaseList
       },
+      {
+        path: 'caseReport',
+        name: '专案报告',
+        component: CaseReport
+      },
       //子流程管理
       {
         path: 'subManage',
@@ -232,6 +239,12 @@ const routes = [
         path: 'monthlyAnalysis',
         name: '月报分析',
         component: monthlyAnalysis
+      },
+      //积分管理
+      {
+        path: 'scoreManager',
+        name: '积分管理',
+        component: scoreManager
       },
       //部员列表
       {

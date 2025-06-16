@@ -152,3 +152,28 @@ export function initDirectorOptions(){
         }
     ];
 }
+
+// 返回任务的人类选项列表
+export function initTaskTypeOptions(){
+    return [
+        { label: '临时事务', value: 1 },
+        { label: '技术研究', value: 2 }, 
+        { label: '微阶段', value: 3 }
+    ]
+}
+
+// 返回得分的选项列表
+export function initScoreOptions(){
+    return [
+        {
+            value: "discipline",
+            label: "纪律",
+            children: []
+        },
+        {
+            value: "contribution",
+            label: "贡献",
+            children: []
+        }
+    ]
+}
