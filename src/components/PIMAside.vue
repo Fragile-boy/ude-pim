@@ -66,6 +66,7 @@
                     v-if="noticeList.length" /></el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
+            <el-menu-item index="/user/scoreStatistics"><i class="el-icon-s-tools"></i>积分统计</el-menu-item>
         </el-submenu>
 
         <el-submenu index="6" v-if="user.type === 0">

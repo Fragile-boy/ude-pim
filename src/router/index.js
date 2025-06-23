@@ -44,6 +44,7 @@ import checkApply from '@/views/CheckViews/checkApply'
 import monthlyAnalysis from '@/views/dataViews/monthlyAnalysis'
 import caseAnalysis from '@/views/dataViews/caseAnalysis'
 import scoreManager from '@/views/dataViews/scoreManager'
+import KPI from '@/views/dataViews/KPI'
 
 //部员管理界面
 import UserList from '@/views/ManageViews/UserList'
@@ -59,6 +60,7 @@ import UserStatistics from '@/views/UserViews/UserStatistics.vue'
 import UserChart from '@/views/UserViews/UserChart.vue'
 import UserInfo from '@/views/UserViews/UserInfo.vue'
 import IssueDetail from '@/views/UserViews/IssueDetail.vue'
+import ScoreStatistics from '@/views/UserViews/ScoreStatistics.vue'
 
 // 需求界面
 import Demand from '@/components/Demand.vue'
@@ -246,6 +248,11 @@ const routes = [
         name: '积分管理',
         component: scoreManager
       },
+      {
+        path: 'KPI',
+        name: 'KPI管理',
+        component: KPI
+      },
       //部员列表
       {
         path: 'userList',
@@ -290,6 +297,12 @@ const routes = [
         name: '图表统计',
         component: UserChart
       },
+      {
+        // 积分统计页
+        path:'scoreStatistics',
+        name:'积分统计',
+        component: ScoreStatistics
+      }
     ]
   },
 
