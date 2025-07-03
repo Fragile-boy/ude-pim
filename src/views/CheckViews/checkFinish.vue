@@ -19,7 +19,7 @@
                 </el-row>
             </div>
             <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick"
-                :cell-class-name="cellClassName">
+                :cell-class-name="cellClassName" :row-class-name="rowClassName">
                 <el-table-column label="类型">
                     <template slot-scope="scope">
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
@@ -287,6 +287,10 @@ export default {
             console.log(this.curObj)
             //通过
             if (status === 1) {
+                if(row.estimateValue===null||row.estimateValue<0){
+                    this.$message.error("预计积分错误，请检查执行时间等信息是否正常！")
+                    return
+                }
                 //意味着这是一个任务
                 if (row.type !== null) {
                     // 如果是微任务(type=3)，需要额外输入影响系数
@@ -380,17 +384,6 @@ export default {
         },
         //提交积分比例（插入比例数据，修改子流程完结状态）
         async submitDirectorRate() {
-            // 2023.10.27 泽伟哥说取消限制积分必须是100%
-            // //检查积分比例是否合理
-            // var sum = 0;
-            // this.directorList.forEach(item => {
-            //     sum += +item.value
-            // })
-            // // console.log(sum)
-            // if (sum !== 100) {
-            //     this.$message.error("积分总和不为100，请检查积分比例")
-            //     return
-            // }
             const res = await submitDirectorValue(this.directorList)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -486,6 +479,9 @@ export default {
             this.delayDrawer = true
         },
         cellClassName({ row, column, rowindex, columnIndex }) {
+            if(column.label==='预计积分'&&row.estimateValue==-1.0){
+                return 'warning-row'
+            }
             if (column.label === '申请完结时间' || column.label === '预计积分') {
                 return 'heightLight'
             }
@@ -512,5 +508,10 @@ export default {
     100% {
         background: #60E5E5;
     }
+}
+
+/* 红色背景 + 白色文字 */
+.el-table>>>.warning-row {
+  background-color: #f47c7f !important;  /* 浅红色背景 */
 }
 </style>

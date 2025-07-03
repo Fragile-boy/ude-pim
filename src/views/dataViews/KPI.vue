@@ -2,9 +2,27 @@
     <div class="kpi-module">
         <!-- 时间筛选 -->
         <div class="filter-section">
-            <el-date-picker v-model="selectedMonth" type="month" placeholder="选择月份" format="yyyy年MM月"
-                value-format="yyyy-MM" @change="fetchKpiData">
-            </el-date-picker>
+            <el-form :inline="true">
+                <el-form-item label="选择月份">
+                    <el-date-picker v-model="selectedMonth" type="month" placeholder="选择月份" format="yyyy年MM月"
+                        value-format="yyyy-MM" @change="fetchKpiData()">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="选择科员" v-if="user.type===1">
+                    <el-select v-model="curUser" placeholder="请选择科员" @change="handleUserChange()">
+                        <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                            <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-option-group>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="" v-if="user.type===1">
+                    <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
+                    <el-button type="primary" icon="el-icon-bottom" round @click="changeUser(1)"></el-button>
+                </el-form-item>
+            </el-form>
+
         </div>
 
         <!-- KPI概览卡片 -->
@@ -13,18 +31,20 @@
                 <el-col :span="3" v-for="(item, index) in kpiSummary" :key="index">
                     <el-card shadow="hover">
                         <div class="kpi-card">
-                            <div class="kpi-name">{{ item.name }}</div>
-                            <div class="kpi-value">{{ item.value }} <span class="kpi-unit">{{ item.unit }}</span></div>
-                            <div class="kpi-progress">
-                                <el-progress v-if="item.maxValue"
-                                    :percentage="(item.value / item.maxValue * 100).toFixed(1)"
-                                    :color="getProgressColor(item.value / item.maxValue * 100)">
-                                </el-progress>
+                            <div class="kpi-name">{{ item.kpiName }}</div>
+                            <div class="kpi-value">{{ item.currentValue }} <span class="kpi-unit">{{ item.unit }}</span>
+                            </div>
+                            <div class="kpi-compare">
+                                <span :class="item.trend > 0 ? 'up' : 'down'">
+                                    <i class="el-icon-s-data"></i>
+                                </span>
+                                {{ item.lastValue }}
+                                <span class="kpi-unit">{{ item.unit }} 上月</span>
                             </div>
                             <div class="kpi-compare">
                                 <span :class="item.trend > 0 ? 'up' : 'down'">
                                     <i :class="item.trend > 0 ? 'el-icon-top' : 'el-icon-bottom'"></i>
-                                    {{ Math.abs(item.trend) }}%
+                                    {{ Math.abs(item.changeRate) }}%
                                 </span>
                                 环比
                             </div>
@@ -43,29 +63,34 @@
                             <div class="table-title">个人KPI明细数据</div>
                             <el-button type="primary" size="small" @click="exportKpiData">导出数据</el-button>
                         </div>
-                        <el-table :data="kpiDetails" style="width: 100%" border stripe v-loading="loading">
-                            <el-table-column prop="name" label="KPI指标" width="180">
+                        <el-table :data="kpiSummary" style="width: 100%" border stripe v-loading="loading"
+                            :cell-style="{ textAlign: 'center' }" :header-cell-style="{ textAlign: 'center' }">
+                            <el-table-column prop="kpiName" label="KPI指标" width="180">
                             </el-table-column>
-                            <el-table-column prop="target" label="目标值" width="120">
-                            </el-table-column>
-                            <el-table-column prop="actual" label="实际值" width="120">
-                            </el-table-column>
-                            <el-table-column prop="completion" label="达成率" width="120">
+                            <el-table-column prop="currentValue" label="得分" width="120">
                                 <template slot-scope="scope">
-                                    <el-tag :type="getCompletionType(scope.row.completion)">
-                                        {{ scope.row.completion }}%
-                                    </el-tag>
+                                    <span :class="{
+                                        'score-highlight': true,
+                                        'higher-than-avg': scope.row.currentValue > scope.row.avgValue,
+                                        'lower-than-avg': scope.row.currentValue < scope.row.avgValue,
+                                        'equal-to-avg': scope.row.currentValue === scope.row.avgValue
+                                    }">
+                                        {{ scope.row.currentValue }}
+                                    </span>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="weight" label="权重" width="120">
+                            <el-table-column prop="rank" label="排名"></el-table-column>
+                            <el-table-column prop="maxValue" label="最高分">
+                                <template slot-scope="scope">
+                                    {{ scope.row.maxValue.toFixed(2) }}
+                                </template>
                             </el-table-column>
-                            <el-table-column prop="score" label="得分" width="120">
-                            </el-table-column>
-                            <el-table-column prop="departmentAvg" label="部门平均" width="120">
+                            <el-table-column prop="avgValue" label="部门平均" width="120">
                             </el-table-column>
                             <el-table-column label="操作" width="120">
                                 <template slot-scope="scope">
-                                    <el-button size="mini" @click="handleDetail(scope.row)">详情</el-button>
+                                    <el-button size="mini" @click="showDetail(scope.row)"
+                                        v-if="scope.row.type !== 'totalScore'">详情</el-button>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -73,9 +98,9 @@
                 </el-col>
                 <el-col :span="8">
                     <el-card shadow="hover">
-                        <div class="chart-title">本月KPI得分组成</div>
+                        <div class="chart-title">{{ selectedMonth }} KPI得分组成</div>
                         <div class="chart-container">
-                            <KPIPieChart :data="kpiDetails" />
+                            <KPIPieChart :data="kpiScoreDetails" :cur-date="selectedMonth" />
                         </div>
                     </el-card>
                 </el-col>
@@ -91,6 +116,187 @@
                 </div>
             </el-card>
         </div>
+
+        <!-- 详情弹窗 -->
+        <el-dialog :title="currentDetailTitle" :visible.sync="detailVisible" width="80%">
+
+            <!-- 纪律得分详情 -->
+            <div v-if="currentDetailType === 'discipline'">
+                <el-table :data="currentDetailData" border :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ textAlign: 'center' }">
+                    <el-table-column prop="categoryName" label="考核项" width="180"></el-table-column>
+                    <el-table-column prop="scoreValue" label="得分" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'lower-than-avg': true
+                            }">
+                                {{ scope.row.scoreValue.toFixed(2) }}
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="recordDate" label="记录日期" width="120">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="success">{{ scope.row.recordDate }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="recordedName" label="记录人" width="100">
+                    </el-table-column>
+                    <el-table-column prop="description" label="描述">
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <!-- 贡献得分详情 -->
+            <div v-if="currentDetailType === 'contribution'">
+                <el-table :data="currentDetailData" border :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ textAlign: 'center' }">
+                    <el-table-column prop="categoryName" label="考核项" width="180"></el-table-column>
+                    <el-table-column prop="scoreValue" label="得分" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">
+                                {{ scope.row.scoreValue.toFixed(2) }}
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="recordDate" label="记录日期" width="120">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="success">{{ scope.row.recordDate }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="recordedName" label="记录人" width="100">
+                    </el-table-column>
+                    <el-table-column prop="description" label="描述">
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <!-- 临时任务详情 -->
+            <div v-if="currentDetailType === 'tempTask' || currentDetailType === 'tempTaskAchieveRate'">
+                <el-table :data="currentDetailData" border :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ textAlign: 'center' }">
+                    <el-table-column prop="type" label="任务种类" width="100">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时任务</el-tag>
+                            <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="description" label="任务描述" width="300"></el-table-column>
+                    <el-table-column prop="startTime" label="开始时间" width="200"></el-table-column>
+                    <el-table-column prop="finishTime" label="完成时间" width="200"></el-table-column>
+                    <el-table-column prop="planDays" label="计划天数" width="120"></el-table-column>
+                    <el-table-column prop="unforcedDays" label="外界延期" width="120"></el-table-column>
+                    <el-table-column prop="executionTime" label="实际执行天数" width="120"></el-table-column>
+                    <el-table-column prop="score" label="得分" width="80">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">{{ scope.row.score.toFixed(2) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="achieveRate" label="达成率" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">{{ scope.row.achieveRate.toFixed(2) }}%
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="userName" label="执行人"></el-table-column>
+                </el-table>
+            </div>
+
+            <!-- 项目阶段详情 -->
+            <div v-if="currentDetailType === 'projectPhase' || currentDetailType === 'projectPhaseAchieveRate'">
+                <el-table :data="currentDetailData" border :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ textAlign: 'center' }">
+                    <el-table-column prop="caseName" label="专案" width="200"></el-table-column>
+                    <el-table-column prop="subName" label="阶段" width="120"></el-table-column>
+                    <el-table-column prop="startTime" label="开始时间" width="200"></el-table-column>
+                    <el-table-column prop="finishTime" label="完成时间" width="200"></el-table-column>
+                    <el-table-column prop="planDays" label="计划天数" width="120"></el-table-column>
+                    <el-table-column prop="unforcedDays" label="外界延期" width="120"></el-table-column>
+                    <el-table-column prop="executionDays" label="实际执行天数" width="120"></el-table-column>
+                    <el-table-column prop="value" label="得分比例(%)" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">{{ scope.row.value === null ? 0 : scope.row.value.toFixed(2) }}%
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="score" label="得分" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">
+                                {{ scope.row.userPoints.toFixed(2) }}
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="achieveRate" label="达成率" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">{{ scope.row.achieveRate.toFixed(2) }}%</span>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <!-- 项目结项详情 -->
+            <div v-if="currentDetailType === 'projectClose'">
+                <el-table :data="currentDetailData" border :cell-style="{ textAlign: 'center' }"
+                    :header-cell-style="{ textAlign: 'center' }">
+                    <el-table-column prop="caseName" label="专案" width="300"></el-table-column>
+                    <el-table-column prop="totalPlanDays" label="计划时间" width="200"></el-table-column>
+                    <el-table-column prop="caseCompletionPoints" label="结案分数" width="200">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'lower-than-avg': true
+                            }">{{ scope.row.caseCompletionPoints.toFixed(2) }}</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="userType" label="身份" width="200">
+                        <template slot-scope="scope">
+                            <el-tag effect="dark" type="primary"
+                                v-if="scope.row.userType === 'sub_member'">设计人员</el-tag>
+                            <el-tag effect="dark" type="warning"
+                                v-else-if="scope.row.userType === 'participant'">辅助人员</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="commissionRate" label="提成占比" width="200">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">
+                                {{ scope.row.commissionRate.toFixed(2) }} %
+                            </span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="userFinalPoints" label="得分" width="120">
+                        <template slot-scope="scope">
+                            <span :class="{
+                                'score-highlight': true,
+                                'higher-than-avg': true
+                            }">
+                                {{ scope.row.userFinalPoints.toFixed(2) }}
+                            </span>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -98,7 +304,10 @@
 // import * as echarts from 'echarts'
 import KPITrendChart from '@/components/KpiComponents/KPITrendChart'
 import KPIPieChart from '@/components/KpiComponents/KPIPieChart'
-
+import { getMonthKpi } from '@/api/kpi'
+import { mapState } from 'vuex'
+import { initDirectorOptions } from '@/utils/common'
+import { getUserListWithAssistants } from '@/api/user'
 export default {
     components: {
         KPITrendChart,
@@ -107,103 +316,110 @@ export default {
     data() {
         return {
             selectedMonth: this.getPreviousMonth(), // 默认当前年月
-            kpiSummary: [
-                { name: '纪律得分', value: 85, unit: '分', maxValue: 100, trend: 5.2 },
-                { name: '贡献得分', value: 78, unit: '分', maxValue: 100, trend: -2.1 },
-                { name: '临时任务得分', value: 92, unit: '分', maxValue: 100, trend: 3.5 },
-                { name: '专案阶段得分', value: 83, unit: '分', maxValue: 100, trend: 1.8 },
-                { name: '专案结案得分', value: 88, unit: '分', maxValue: 100, trend: 2.3 },
-                { name: '部门积分平均', value: 82, unit: '分', maxValue: 100, trend: 1.2 },
-                { name: '临时任务达成率', value: 92, unit: '%', maxValue: 100, trend: 3.5 },
-                { name: '专案任务达成率', value: 88, unit: '%', maxValue: 100, trend: 1.8 }
-            ],
-            kpiDetails: [
-                {
-                    id: 1,
-                    name: '纪律得分',
-                    target: 90,
-                    actual: 85,
-                    completion: 94.4,
-                    weight: 20,
-                    score: 17,
-                    departmentAvg: 82
-                },
-                {
-                    id: 2,
-                    name: '贡献得分',
-                    target: 85,
-                    actual: 78,
-                    completion: 91.8,
-                    weight: 15,
-                    score: 14,
-                    departmentAvg: 75
-                },
-                {
-                    id: 3,
-                    name: '临时任务得分',
-                    target: 100,
-                    actual: 92,
-                    completion: 92,
-                    weight: 25,
-                    score: 23,
-                    departmentAvg: 88
-                },
-                {
-                    id: 4,
-                    name: '专案阶段得分',
-                    target: 90,
-                    actual: 83,
-                    completion: 92.2,
-                    weight: 15,
-                    score: 13,
-                    departmentAvg: 80
-                },
-                {
-                    id: 5,
-                    name: '专案结案得分',
-                    target: 95,
-                    actual: 88,
-                    completion: 92.6,
-                    weight: 25,
-                    score: 22,
-                    departmentAvg: 85
-                }
-            ],
-            trendChartData: [
-                [80, 82, 83, 85, 84, 85, 85], // 纪律得分
-                [75, 76, 78, 80, 79, 78, 78], // 贡献得分
-                [85, 87, 88, 90, 91, 92, 92], // 临时任务得分
-                [82, 84, 85, 86, 87, 88, 88], // 专案阶段得分
-                [80, 82, 84, 85, 86, 87, 88], // 专案结案得分
-                [85, 87, 88, 90, 91, 92, 92], // 临时任务达成率
-                [82, 84, 85, 86, 87, 88, 88]  // 专案任务达成率
-            ],
+            kpiSummary: [],
+            kpiScoreDetails: [],
+            disciplineDetails: [],
+            contributionDetails: [],
+            tempTaskDetails: [],
+            projectPhaseDetails: [],
+            projectCloseDetails: [],
+            trendChartData: [],
             lineChart: null,
             pieChart: null,
-            loading: false
+            loading: false,
+            detailVisible: false,
+            currentDetailTitle: '',
+            currentDetailType: '',
+            currentDetailData: [],
+            //负责人的级联选择器
+            directorOptions: initDirectorOptions(),
+            allUsers: [],
+            curUser: null,
+        }
+    },
+    computed: {
+        ...mapState(['user'])
+    },
+    async mounted() {
+        // 首次加载时获取参数
+        this.initFromRouteParams(this.$route.params)
+        if(this.user.type===1){
+            await this.getAllUser()
+        }else{
+            this.curUser = this.user.id
+        }
+        this.fetchKpiData()
+    },
+    beforeDestroy() {
+        if (this.lineChart) {
+            this.lineChart.dispose()
+        }
+        if (this.pieChart) {
+            this.pieChart.dispose()
         }
     },
     methods: {
+        initFromRouteParams(params) {
+            this.curUser = params.curUser || null
+            this.selectedMonth = params.selectedMonth || this.getPreviousMonth()
+        },
+        //获取所有科员信息
+        async getAllUser() {
+            //获取所有科员信息
+            var { data: res } = await getUserListWithAssistants()
+            for (var i = 0; i < res.length; i++) {
+                this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
+            }
+            // 扁平化用户列表
+            this.allUsers = this.directorOptions.reduce((acc, group) => {
+                return acc.concat(group.children);
+            }, []);
+            if(this.curUser===null)
+                this.curUser = this.directorOptions[0].children[0].value
+        },
+        handleUserChange() {
+            this.fetchKpiData()
+        },
         getPreviousMonth() {
             const now = new Date()
             now.setMonth(now.getMonth() - 1)
             return now.toISOString().slice(0, 7)
         },
-        fetchKpiData() {
+        async fetchKpiData() {
             this.loading = true
+            this.queryYear = this.selectedMonth.slice(0, 4)
+            this.queryMonth = this.selectedMonth.slice(5, 7)
+            // 检查查询日期的合理性
+            if(this.selectedMonth<="2025-03"){
+                this.$message.error("KPI数据从2025年4月开始统计！")
+                return
+            }
+            const params = {
+                userId: this.curUser,
+                year: Number(this.queryYear),
+                month: Number(this.queryMonth)
+            }
+            const res = await getMonthKpi(params)
+            if (res.code === 200) {
+                const data = res.data
+                this.kpiSummary = data.comparisons
+                this.kpiSummary.forEach(item => {
+                    item.currentValue = item.currentValue === null ? 0 : item.currentValue.toFixed(2)
+                    item.lastValue = item.lastValue === null ? 0 : item.lastValue.toFixed(2)
+                })
+                this.kpiScoreDetails = this.kpiSummary.slice(0, 5)
+                this.disciplineDetails = data.currentMonth.disciplineDetails
+                this.contributionDetails = data.currentMonth.contributionDetails
+                this.tempTaskDetails = data.currentMonth.tempTaskDetails
+                this.projectPhaseDetails = data.currentMonth.projectPhaseDetails
+                this.projectCloseDetails = data.currentMonth.projectCloseDetails
+                // 趋势数据
+                this.trendChartData = data.historyData
+            }
             // 模拟API请求
             setTimeout(() => {
                 this.loading = false
             }, 500)
-        },
-        getProgressColor(percentage) {
-            if (percentage >= 90) {
-                return '#67C23A'
-            } else if (percentage >= 80) {
-                return '#E6A23C'
-            } else {
-                return '#F56C6C'
-            }
         },
         getCompletionType(percentage) {
             if (percentage >= 100) {
@@ -220,19 +436,56 @@ export default {
         },
         exportKpiData() {
             this.$message.success('导出数据成功')
+        },
+        showDetail(row) {
+            if (row.type === "totalScore")
+                return;
+            this.currentDetailTitle = `${row.kpiName}详情`
+            this.currentDetailType = row.type
+
+            switch (row.type) {
+                case 'discipline':
+                    this.currentDetailData = this.disciplineDetails
+                    break
+                case 'contribution':
+                    this.currentDetailData = this.contributionDetails
+                    break
+                case 'tempTask':
+                    this.currentDetailData = this.tempTaskDetails
+                    break
+                case 'projectPhase':
+                    this.currentDetailData = this.projectPhaseDetails
+                    break
+                case 'projectClose':
+                    this.currentDetailData = this.projectCloseDetails
+                    break
+                case 'tempTaskAchieveRate':
+                    this.currentDetailData = this.tempTaskDetails
+                    break
+                case 'projectPhaseAchieveRate':
+                    this.currentDetailData = this.projectPhaseDetails
+                    break
+            }
+
+            this.detailVisible = true
+        },
+        // 修改当前科员
+        changeUser(step) {
+
+            // 查找当前用户索引
+            const currentIndex = this.allUsers.findIndex(user => user.value === this.curUser);
+
+            // 计算新索引，使用模运算处理循环
+            const newIndex = (currentIndex + step + this.allUsers.length) % this.allUsers.length;
+
+            // 更新当前用户
+            this.curUser = this.allUsers[newIndex].value;
+
+            // 更新视图
+            this.fetchKpiData();
         }
     },
-    mounted() {
-        this.fetchKpiData()
-    },
-    beforeDestroy() {
-        if (this.lineChart) {
-            this.lineChart.dispose()
-        }
-        if (this.pieChart) {
-            this.pieChart.dispose()
-        }
-    }
+
 }
 </script>
 
@@ -257,7 +510,10 @@ export default {
 }
 
 .kpi-module .kpi-overview {
+    background-color: #f5f7fa;
+    padding: 20px;
     margin-bottom: 20px;
+    border-radius: 4px;
 }
 
 .kpi-module .kpi-overview .kpi-card {
@@ -322,5 +578,26 @@ export default {
 .kpi-module .kpi-table .table-header .table-title {
     font-size: 16px;
     font-weight: bold;
+}
+
+.score-highlight {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.higher-than-avg {
+    color: #67C23A;
+    background-color: rgba(103, 194, 58, 0.1);
+}
+
+.lower-than-avg {
+    color: #F56C6C;
+    background-color: rgba(245, 108, 108, 0.1);
+}
+
+.equal-to-avg {
+    color: #909399;
+    background-color: rgba(144, 147, 153, 0.1);
 }
 </style>

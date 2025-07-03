@@ -45,6 +45,7 @@ import monthlyAnalysis from '@/views/dataViews/monthlyAnalysis'
 import caseAnalysis from '@/views/dataViews/caseAnalysis'
 import scoreManager from '@/views/dataViews/scoreManager'
 import KPI from '@/views/dataViews/KPI'
+import TeamKpi from '@/views/dataViews/TeamKpi'
 
 //部员管理界面
 import UserList from '@/views/ManageViews/UserList'
@@ -73,6 +74,7 @@ import test from '@/components/TestFunction.vue'
 
 import store from '@/store'
 import { getInfo } from '@/utils/storage'
+import MicroPhase from '@/components/MicroPhase.vue'
 
 
 Vue.use(VueRouter)
@@ -96,15 +98,15 @@ const routes = [
       },
       // 专案讨论
       {
-        path:'discussion',
-        name:'专案讨论',
-        component:CaseDicussion
+        path: 'discussion',
+        name: '专案讨论',
+        component: CaseDicussion
       },
       // 问题详情
       {
-        path:'issueDetail',
-        name:'问题详情',
-        component:IssueDetail
+        path: 'issueDetail',
+        name: '问题详情',
+        component: IssueDetail
       },
       // 子流程详情页
       {
@@ -155,6 +157,22 @@ const routes = [
         path: 'weekMeetComments',
         name: '周会回顾',
         component: WeekMeetComments
+      },
+      //积分管理
+      {
+        path: 'scoreManager',
+        name: '积分管理',
+        component: scoreManager
+      },
+      {
+        path: 'KPI',
+        name: 'KPI管理',
+        component: KPI
+      },
+      {
+        path: 'microPhase',
+        name: '微专案管理',
+        component: MicroPhase
       }
     ]
   },
@@ -165,9 +183,9 @@ const routes = [
     children: [
       // 专案主页
       {
-        path:'index',
-        name:'管理员主页',
-        component:CaseIndex
+        path: 'index',
+        name: '管理员主页',
+        component: CaseIndex
       },
       // 专案列表
       {
@@ -242,16 +260,10 @@ const routes = [
         name: '月报分析',
         component: monthlyAnalysis
       },
-      //积分管理
       {
-        path: 'scoreManager',
-        name: '积分管理',
-        component: scoreManager
-      },
-      {
-        path: 'KPI',
-        name: 'KPI管理',
-        component: KPI
+        path: 'teamKpi',
+        name: '团队KPI',
+        component: TeamKpi
       },
       //部员列表
       {
@@ -299,8 +311,8 @@ const routes = [
       },
       {
         // 积分统计页
-        path:'scoreStatistics',
-        name:'积分统计',
+        path: 'scoreStatistics',
+        name: '积分统计',
         component: ScoreStatistics
       }
     ]
@@ -330,7 +342,7 @@ const routes = [
 
 const router = new VueRouter({
   // mode: 'history',
-  base:'/ude-pim',
+  base: '/ude-pim',
   routes
 })
 
@@ -381,7 +393,7 @@ router.beforeEach(async (to, from, next) => {
   }
   //检查用户界面
   if (to.path.includes('user')) {
-    
+
     // await store.dispatch('fetchUserData', getInfo())
     if (user.status == 10) {
       Message({

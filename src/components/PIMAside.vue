@@ -41,7 +41,8 @@
             </template>
             <el-menu-item index="/admin/monthlyAnalysis"><i class="el-icon-s-tools"></i>月报分析</el-menu-item>
             <el-menu-item index="/common/caseAnalysis"><i class="el-icon-s-tools"></i>专案分析</el-menu-item>
-            <el-menu-item index="/admin/scoreManager"><i class="el-icon-s-tools"></i>积分管理</el-menu-item>
+            <el-menu-item index="/common/scoreManager"><i class="el-icon-s-tools"></i>积分管理</el-menu-item>
+            <el-menu-item index="/admin/teamKpi"><i class="el-icon-s-tools"></i>Kpi统计</el-menu-item>
         </el-submenu>
 
         <el-submenu index="4" v-if="user.type === 1">
@@ -66,7 +67,9 @@
                     v-if="noticeList.length" /></el-menu-item>
             <el-menu-item index="/user/progress"><i class="el-icon-s-tools"></i>执行任务</el-menu-item>
             <el-menu-item index="/user/statistics"><i class="el-icon-s-tools"></i>数据统计</el-menu-item>
-            <el-menu-item index="/user/scoreStatistics"><i class="el-icon-s-tools"></i>积分统计</el-menu-item>
+            <el-menu-item index="/user/scoreStatistics" v-if="user.status!=4"><i class="el-icon-s-tools"></i>积分统计</el-menu-item>
+            <el-menu-item index="/common/scoreManager" v-if="user.status==4"><i class="el-icon-s-tools"></i>积分管理</el-menu-item>
+            <el-menu-item index="/common/kpi"><i class="el-icon-s-tools"></i>Kpi统计</el-menu-item>
         </el-submenu>
 
         <el-submenu index="6" v-if="user.type === 0">

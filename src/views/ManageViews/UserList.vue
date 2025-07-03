@@ -54,6 +54,7 @@
                         <el-tag effect="dark" type="success" v-else-if="scope.row.status === 1">电控</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 2">IE</el-tag>
                         <el-tag effect="dark" type="info" v-else-if="scope.row.status === 3">机设</el-tag>
+                        <el-tag effect="dark" type="warning" v-else-if="scope.row.status === 4">助理</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="操作">
@@ -61,7 +62,7 @@
                         <el-button icon="el-icon-edit" type="primary" round size="mini"
                             @click="openEditUser(scope.row.id)"></el-button>
                         <el-button icon="el-icon-delete" type="danger" round size="mini"
-                            @click="removeUser(scope.row.id)"></el-button>
+                            @click="removeUser(scope.row)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -73,7 +74,7 @@
         </el-card>
 
         <!-- 添加用户dialog -->
-        <el-dialog title="添加用户" :visible.sync="addFormVisible" width="30%" @close="$refs.addFormRef.resetFields()">
+        <el-dialog title="添加用户" :visible.sync="addFormVisible" width="35%" @close="$refs.addFormRef.resetFields()">
             <el-form ref="addFormRef" :model="addForm" label-width="80px" :rules="addFormRules">
                 <el-row :gutter="20">
                     <el-col :span="12">
@@ -96,6 +97,24 @@
                     </el-select>
                 </el-form-item>
 
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="入职日期" prop="hireTime">
+                            <el-date-picker v-model="addForm.hireTime" type="date" placeholder="选择入职日期"
+                                value-format="yyyy-MM-dd">
+                            </el-date-picker>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="离职日期" prop="terminationTime">
+                            <el-date-picker v-model="addForm.terminationTime" type="date" placeholder="选择离职日期"
+                                value-format="yyyy-MM-dd"
+                                :disabled="!addForm.hireTime">
+                            </el-date-picker>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addFormVisible = false">取 消</el-button>
@@ -104,7 +123,7 @@
         </el-dialog>
 
         <!-- 修改用户dialog -->
-        <el-dialog title="修改用户" :visible.sync="editFormVisible" width="30%" @close="$refs.editFormRef.resetFields()">
+        <el-dialog title="修改用户" :visible.sync="editFormVisible" width="35%" @close="$refs.editFormRef.resetFields()">
             <el-form ref="editFormRef" :model="editForm" label-width="80px" :rules="addFormRules">
                 <el-row :gutter="20">
                     <el-col :span="12">
@@ -126,6 +145,22 @@
                         </el-option>
                     </el-select>
                 </el-form-item>
+
+                <el-row :gutter="20">
+                    <el-col :span="12">
+                        <el-form-item label="入职日期" prop="hireTime">
+                            <el-date-picker v-model="editForm.hireTime" type="date" placeholder="选择入职日期">
+                            </el-date-picker>
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="12">
+                        <el-form-item label="离职日期" prop="terminationTime">
+                            <el-date-picker v-model="editForm.terminationTime" type="date" placeholder="选择离职日期"
+                                :disabled="!editForm.hireTime">
+                            </el-date-picker>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
 
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -201,10 +236,11 @@
                         <el-tag effect="dark" type="primary" v-else>{{ scope.row.startTime }}</el-tag>
                     </template>
                 </el-table-column>
-                
+
                 <el-table-column label="更换负责人">
                     <template slot-scope="scope">
-                        <el-select v-model="scope.row.userId" placeholder="请选择负责人" :disabled="scope.row.startTime!==null&&(scope.row.description===null||scope.row.description==='')">
+                        <el-select v-model="scope.row.userId" placeholder="请选择负责人"
+                            :disabled="scope.row.startTime !== null && (scope.row.description === null || scope.row.description === '')">
                             <el-option v-for="item in allUser" :key="item.id" :label="item.name" :value="item.id">
                             </el-option>
                         </el-select>
@@ -213,8 +249,10 @@
 
                 <el-table-column label="操作">
                     <template slot-scope="scope">
-                        <el-button type="danger" icon="el-icon-delete" @click=deleteByChargeId(scope.row.id) v-if="scope.row.startTime===null"></el-button>
-                        <el-button type="success" icon="el-icon-success" @click="updateUserInfo(scope.row)" v-if="scope.row.startTime!==null"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" @click=deleteByChargeId(scope.row.id)
+                            v-if="scope.row.startTime === null"></el-button>
+                        <el-button type="success" icon="el-icon-success" @click="updateUserInfo(scope.row)"
+                            v-if="scope.row.startTime !== null"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -224,20 +262,20 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="工作描述" width="30%" :visible.sync="updateDescriptionVisible" @close="updateDescriptionVisible=false">
+        <el-dialog title="工作描述" width="30%" :visible.sync="updateDescriptionVisible"
+            @close="updateDescriptionVisible = false">
             <el-form label-width="90px" ref="descriptionFormRef" class="form">
                 <el-form-item :label="curCaseSubUser.userName">
                     <el-row>
                         <el-col :span=9>
-                            <el-input v-model="curCaseSubUser.description" placeholder="工作内容描述"
-                                ></el-input>
+                            <el-input v-model="curCaseSubUser.description" placeholder="工作内容描述"></el-input>
                         </el-col>
                         <el-col :span="2" :offset="1">
                             <label>累计</label>
                         </el-col>
                         <el-col :span=8 :offset="1">
-                            <el-input v-model="curCaseSubUser.duration" placeholder="工作时长(天)" type="number" step="0.1"
-                                ></el-input>
+                            <el-input v-model="curCaseSubUser.duration" placeholder="工作时长(天)" type="number"
+                                step="0.1"></el-input>
                         </el-col>
                         <el-col :span="2" :offset="1">
                             <label>天</label>
@@ -260,6 +298,7 @@ import { mapActions, mapState } from 'vuex'
 import { updatePassword, getUserListWithAssistants } from '@/api/user'
 import { getChargeCaseSub } from '@/api/caseSub'
 import { removeDirector, removeDirectorById, updateChargeCaseSub, updateDescriptionById } from '@/api/caseSubUser'
+import { formatDate } from '@/utils/common'
 export default {
     data() {
         var checkNumber = (rule, value, callback) => {
@@ -301,13 +340,16 @@ export default {
             addForm: {
                 name: '',
                 number: '',
-                status: null
+                status: null,
+                hireTime: null,
+                terminationTime: null
             },
             statusOps: [
                 { value: 0, label: "机构" },
                 { value: 1, label: "电控" },
                 { value: 2, label: "IE" },
-                { value: 3, label: "机设"}
+                { value: 3, label: "机设" },
+                { value: 4, label: "助理" }
             ],
             addFormRules: {
                 name: [
@@ -320,6 +362,9 @@ export default {
                 status: [
                     { required: true, message: '请选择职务', trigger: 'blur' }
                 ],
+                hireTime: [
+                    {required: true, message: '请选择入职日期', trigger: 'change'}
+                ]
             },
             //修改用户窗口显示
             editFormVisible: false,
@@ -328,7 +373,9 @@ export default {
                 name: '',
                 number: '',
                 status: null,
-                email: ''
+                email: '',
+                hireTime: null,
+                terminationTime: null
             },
             //修改密码，修改个人信息
             editUserVisible: false,
@@ -346,6 +393,9 @@ export default {
                 email: [
                     { required: true, message: '电子邮箱不能为空', trigger: 'blur' },
                     { validator: checkEmail, trigger: 'blur' }
+                ],
+                hireTime: [
+                    {required: true, message: '请选择入职日期', trigger: 'change'}
                 ]
             },
             passwordInfo: {
@@ -365,13 +415,13 @@ export default {
             chargeCaseSubVisible: false,
             allUser: [],
             // 当前专案负责人信息
-            curCaseSubUser:{
-                id:null,
-                description:null,
-                duration:null
+            curCaseSubUser: {
+                id: null,
+                description: null,
+                duration: null
             },
             // 更新窗口的显示
-            updateDescriptionVisible:false
+            updateDescriptionVisible: false
         }
     },
     created() {
@@ -437,6 +487,9 @@ export default {
         },
         //修改用户
         async editUser() {
+            console.log(this.editForm)
+            this.editForm.hireTime = this.editForm.hireTime===null?null:formatDate(this.editForm.hireTime)
+            this.editForm.terminationTime = this.editForm.terminationTime===null?null:formatDate(this.editForm.terminationTime)
             const res = await updateUser(this.editForm)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -447,7 +500,11 @@ export default {
             }
         },
         //移除用户
-        async removeUser(id) {
+        async removeUser(obj) {
+            if(obj.terminationTime===null){
+                this.$message.error("请先设定该用户的离职日期！！！")
+                return;
+            }
             //如果该页只有一个表项，删除后应该回到上一页
             if (this.userList.length === 1)
                 this.queryInfo.page -= 1
@@ -521,13 +578,13 @@ export default {
             }
         },
         // 更新负责人的工作信息
-        updateUserInfo(row){
+        updateUserInfo(row) {
             this.curCaseSubUser.id = row.id
             this.curCaseSubUser.description = row.description
             this.curCaseSubUser.duration = row.duration
             this.curCaseSubUser.userId = row.userId
-            for(var i =0;i<this.allUser.length;i++){
-                if(this.allUser[i].id === row.userId){
+            for (var i = 0; i < this.allUser.length; i++) {
+                if (this.allUser[i].id === row.userId) {
                     this.curCaseSubUser.userName = this.allUser[i].name
                     break
                 }
@@ -535,8 +592,8 @@ export default {
             console.log(this.curCaseSubUser)
             this.updateDescriptionVisible = true
         },
-        async submitDirectorJobDescription(){
-            if (this.curCaseSubUser.description === '' || this.curCaseSubUser.description === null || this.curCaseSubUser.duration==='' || this.curCaseSubUser.duration===null) {
+        async submitDirectorJobDescription() {
+            if (this.curCaseSubUser.description === '' || this.curCaseSubUser.description === null || this.curCaseSubUser.duration === '' || this.curCaseSubUser.duration === null) {
                 this.$message.error("对工作描述不够完善，请检查工作描述和累计工作日信息")
                 return;
             }

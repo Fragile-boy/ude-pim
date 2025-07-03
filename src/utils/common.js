@@ -149,6 +149,10 @@ export function initDirectorOptions(){
             value: 3,
             label: '机设',
             children: []
+        },{
+            value: 4,
+            label: '助理',
+            children: []
         }
     ];
 }

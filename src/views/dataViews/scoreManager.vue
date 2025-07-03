@@ -40,8 +40,9 @@
 
         <!-- 积分记录表格 -->
         <div class="record-table">
-            <el-table :data="records" border style="width: 100%" v-loading="loading" :cell-style="{ textAlign: 'center' }"
-                :header-cell-style="{ textAlign: 'center' }" :default-sort="{ prop: 'recordDate', order: 'descending' }">
+            <el-table :data="records" border style="width: 100%" v-loading="loading"
+                :cell-style="{ textAlign: 'center' }" :header-cell-style="{ textAlign: 'center' }"
+                :default-sort="{ prop: 'recordDate', order: 'descending' }">
                 <el-table-column prop="userName" label="部员" width="100">
                 </el-table-column>
                 <el-table-column prop="categoryName" label="积分名称" width="240">
@@ -123,7 +124,8 @@
                 </el-table-column>
                 <el-table-column prop="categoryType" label="类型" width="120">
                     <template slot-scope="scope">
-                        <el-tag effect="dark" type="success" v-if="scope.row.categoryType === 'contribution'">贡献</el-tag>
+                        <el-tag effect="dark" type="success"
+                            v-if="scope.row.categoryType === 'contribution'">贡献</el-tag>
                         <el-tag effect="dark" type="danger"
                             v-else-if="scope.row.categoryType === 'discipline'">纪律</el-tag>
                     </template>
@@ -178,6 +180,7 @@ import { updateScoreCategory, getScoreCategories, getScoreCategoriesList, addSco
 import { getList, addRecord, deleteRecord, editRecord } from '@/api/scoreManager'
 import { initScoreOptions, formatDate } from '@/utils/common'
 import ScoreCharts from '@/components/ScoreComponents/ScoreCharts'
+import { mapState } from 'vuex'
 export default {
     components: {
         ScoreCharts
@@ -329,24 +332,36 @@ export default {
             },
         }
     },
+    computed: {
+        ...mapState(['user'])
+    },
     created() {
         this.fetchRecords();
         this.fetchCategories();
     },
+    mounted() {
+        console.log(this.user)
+        if (this.user.type !== 1 && this.user.status !== 4) {
+            this.$message.error("你无权访问该界面！")
+            // 回到之前的界面
+            this.$router.go(-1)
+            return
+        }
+    },
     methods: {
         // 获取本月日期范围
         getCurrentMonthRange() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
-        const startDate = new Date(year, month, 1);
-        const endDate = new Date(year, month + 1, 0);
-        
-        return [
-            formatDate(startDate),
-            formatDate(endDate)
-        ];
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+
+            const startDate = new Date(year, month, 1);
+            const endDate = new Date(year, month + 1, 0);
+
+            return [
+                formatDate(startDate),
+                formatDate(endDate)
+            ];
         },
         // 获取积分记录
         async fetchRecords() {
@@ -359,8 +374,8 @@ export default {
                 userId: this.queryForm.userId,
                 categoryId: this.queryForm.categoryId,
                 categoryType: this.queryForm.categoryType,
-                startDate: this.queryForm.dateRange && this.queryForm.dateRange[0] ? this.queryForm.dateRange[0] : null,
-                endDate: this.queryForm.dateRange && this.queryForm.dateRange[1] ? this.queryForm.dateRange[1] : null,
+                startDate: this.queryForm.dateRange && this.queryForm.dateRange[0] ? formatDate(this.queryForm.dateRange[0]) : null,
+                endDate: this.queryForm.dateRange && this.queryForm.dateRange[1] ? formatDate(this.queryForm.dateRange[1]) : null,
                 page: this.queryForm.page,
                 pageSize: this.queryForm.pageSize
             }

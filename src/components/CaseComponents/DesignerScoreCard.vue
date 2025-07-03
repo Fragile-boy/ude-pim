@@ -18,12 +18,12 @@
           {{ scope.row.executionScore.toFixed(0) + (scope.row.isDesigner ? '' : '%') }}
         </template>
       </el-table-column>
-      <el-table-column prop="scoreRate" label="结案积分" width="100" align="center">
+      <el-table-column prop="closureScore" label="结案积分" width="100" align="center">
         <template slot-scope="scope">
           {{ scope.row.closureScore.toFixed(0) }}
         </template>
       </el-table-column>
-      <el-table-column prop="scoreRate" label="总积分" width="100" align="center">
+      <el-table-column prop="totalScore" label="总积分" width="100" align="center">
         <template slot-scope="scope">
           {{ scope.row.totalScore.toFixed(0) }}
         </template>
@@ -38,7 +38,7 @@
       <el-table-column label="操作" width="60" align="center" v-if="editable">
         <template slot-scope="scope">
           <el-button type="danger" size="mini" icon="el-icon-delete" circle @click="removeMember(scope.row)"
-            v-if='scope.row.role !== "机构" && scope.row.role !== "电控"'></el-button>
+            v-if='scope.row.isDesigner === false'></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -190,7 +190,9 @@ export default {
     },
     // 计算总执行积分
     totalExecutionScore() {
-      return this.designerData.reduce((sum, designer) => sum + designer.executionScore, 0)
+      return this.designerData.reduce((sum, designer) => {
+        return designer.isDesigner? sum + designer.executionScore : sum
+      }, 0)
     },
     // 计算总结案积分
     totalClosureScore() {
@@ -215,8 +217,8 @@ export default {
     processedDesignerData() {
       var data = this.sortedDesignerData.map(designer => ({
         ...designer,
-        scoreRate: designer.totalScore / this.totalScore * 100,
-        totalScore: designer.executionScore + designer.closureScore
+        totalScore: designer.isDesigner ? designer.executionScore + designer.closureScore : designer.closureScore,
+        scoreRate: designer.totalScore / this.totalScore * 100
       }));
       console.log('处理后数据', data)
       return data

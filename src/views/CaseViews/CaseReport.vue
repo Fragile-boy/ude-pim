@@ -117,13 +117,13 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="预估费用(元)" prop="estimatedCost">
-              <el-input-number v-model="reportForm.estimatedCost" :min="0" :precision="2"
+              <el-input-number v-model="reportForm.estimatedCost" :min="0"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="实际费用(元)" prop="actualCost">
-              <el-input-number v-model="reportForm.actualCost" :min="0" :precision="2"
+              <el-input-number v-model="reportForm.actualCost" :min="0"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -132,7 +132,7 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="改善费用(元)" prop="improvementCost">
-              <el-input-number v-model="reportForm.improvementCost" :min="0" :precision="2"
+              <el-input-number v-model="reportForm.improvementCost" :min="0"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -164,13 +164,13 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="目标CT" prop="targetCt">
-              <el-input-number v-model="reportForm.targetCt" :min="0" :precision="2"
+              <el-input-number v-model="reportForm.targetCt" :min="0" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="实际CT" prop="actualCt">
-              <el-input-number v-model="reportForm.actualCt" :min="0" :precision="2"
+              <el-input-number v-model="reportForm.actualCt" :min="0" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -181,13 +181,13 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="目标延误率(%)" prop="targetDelayRate">
-              <el-input-number v-model="reportForm.targetDelayRate" :min="0" :max="100" :precision="2"
+              <el-input-number v-model="reportForm.targetDelayRate" :min="0" :max="100" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="实际延误率(%)" prop="actualDelayRate">
-              <el-input-number v-model="reportForm.actualDelayRate" :min="0" :max="100" :precision="2"
+              <el-input-number v-model="reportForm.actualDelayRate" :min="0" :max="100" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -198,13 +198,13 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="目标不良率(%)" prop="targetDefectRate">
-              <el-input-number v-model="reportForm.targetDefectRate" :min="0" :max="100" :precision="2"
+              <el-input-number v-model="reportForm.targetDefectRate" :min="0" :max="100" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="实际不良率(%)" prop="actualDefectRate">
-              <el-input-number v-model="reportForm.actualDefectRate" :min="0" :max="100" :precision="2"
+              <el-input-number v-model="reportForm.actualDefectRate" :min="0" :max="100" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -492,7 +492,7 @@ export default {
           // 结案积分 = 结案积分*（1-参与人员占比总和）*执行阶段积分占比
           this.designerScores[i].closureScore = this.reportData.finishScore*leftRate*(this.designerScores[i].executionScore / totalScore);
           this.designerScores[i].totalScore = +this.designerScores[i].closureScore + +this.designerScores[i].executionScore;
-          this.designerScores[i].isDeigner = true;
+          this.designerScores[i].isDesigner = true;
         }
         // 加上设计人员的数据
         for(var i=0;i<this.memberList.length;i++){
@@ -504,7 +504,7 @@ export default {
             executionScore: member.commissionRate,
             closureScore: member.commissionRate*this.reportData.finishScore/100,
             totalScore: member.commissionRate*this.reportData.finishScore/100,
-            isDeigner: false,
+            isDesigner: false,
           }
           this.designerScores.push(newMember);
         }

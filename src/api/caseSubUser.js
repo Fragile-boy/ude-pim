@@ -15,9 +15,14 @@ export const removeDirectorById = (id) => {
     return service.delete(`/caseSubUser/${id}`)
 }
 
-//添加负责人
+//添加负责人（管理员端api）
 export const setDirector = (obj) => {
     return service.post('/caseSubUser/setDirector', obj)
+}
+
+// 新增负责人(客户端api)
+export const addDirector = (obj) => {
+    return service.post('/caseSubUser/addDirector', obj)
 }
 
 // 完结状态，并赋值积分比例

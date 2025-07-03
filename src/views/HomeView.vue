@@ -31,7 +31,7 @@
         <div style="margin-bottom: 10px; margin-top: -10px;">
           <NavigationBar></NavigationBar>
         </div>
-        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage','caseDiscussion']">
+        <keep-alive :include="['indexPage', 'userStatistics', 'caseTracking', 'checkException', 'caseAnalysis','caseManage','caseDiscussion', 'teamKpi']">
           <router-view></router-view>
         </keep-alive>
       </el-main>

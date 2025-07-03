@@ -10,17 +10,41 @@ export default {
         data: {
             type: Array,
             required: true
+        },
+        curDate:{
+            type: String,
+            required: true
         }
     },
     mounted() {
         this.initChart()
     },
+    watch: {
+        data: {
+            handler(newVal) {
+                if (newVal && newVal.length > 0) {
+                    this.$nextTick(() => {
+                        this.$refs.chart && this.updateChart();
+                    })
+                }
+            },
+            deep: true,
+            immediate: true
+        }
+    },
     methods: {
+        updateChart() {
+            // 销毁并重新创建图表
+            if (this.chart) {
+                this.chart.dispose();
+            }
+            this.initChart();
+        },
         initChart() {
             const chart = echarts.init(this.$refs.chart)
             chart.setOption({
                 title: {
-                    text: '本月KPI得分组成',
+                    text: `${this.curDate} KPI得分组成`,
                     left: 'center',
                     textStyle: {
                         fontSize: 16,
@@ -39,7 +63,7 @@ export default {
                     orient: 'horizontal',
                     bottom: 0,
                     textStyle: { color: '#606266' },
-                    data: this.data.map(item => item.name)
+                    data: this.data.map(item => item.kpiName)
                 },
                 series: [{
                     name: 'KPI得分组成',
@@ -71,8 +95,8 @@ export default {
                     },
                     labelLine: { show: true, length: 10, length2: 15 },
                     data: this.data.map((item, index) => ({
-                        value: item.score,
-                        name: item.name,
+                        value: item.currentValue,
+                        name: item.kpiName,
                         itemStyle: { color: this.getFixedColor(index) }
                     }))
                 }]
