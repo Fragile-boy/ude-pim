@@ -30,7 +30,6 @@ export default {
     loading: 'handleLoading'
   },
   mounted() {
-    this.initChart()
     this.updateChart()
   },
   beforeDestroy() {
@@ -39,8 +38,11 @@ export default {
     }
   },
   methods: {
-    initChart() {
-      this.chart = echarts.init(this.$refs.chart)
+    updateChart() {
+      if(this.chart){
+        this.chart.dispose()
+      }
+      this.initChart()
       window.addEventListener('resize', this.resizeChart)
     },
 
@@ -58,7 +60,8 @@ export default {
       }
     },
 
-    updateChart() {
+    initChart() {
+      this.chart = echarts.init(this.$refs.chart)
       if (!this.data || this.data.length === 0) return
       // 避免触发监听事件
       var temp = [...this.data]
@@ -82,7 +85,7 @@ export default {
           formatter: params => {
             let html = `<div style="margin-bottom: 5px; font-weight: bold">${params[0].name}</div>`
             params.forEach(item => {
-              const value = item.value.toFixed(2)
+              const value = item.value.toFixed(1)
               html += `
                   <div style="display: flex; align-items: center; margin: 3px 0">
                     <span style="display: inline-block; width: 10px; height: 10px; background: ${item.color}; margin-right: 5px"></span>
@@ -94,7 +97,7 @@ export default {
             const total = params.reduce((sum, item) => {
               return item.seriesName.includes('率')?sum:sum+ item.value
             }, 0)
-            const totalValue = total.toFixed(2)
+            const totalValue = total.toFixed(1)
             html += `
                 <div style="display: flex; align-items: center; margin-top: 5px; padding-top: 5px; border-top: 1px dashed #eee">
                   <span style="flex: 1">总分:</span>
@@ -106,7 +109,7 @@ export default {
         },
         legend: {
           data: [
-            '纪律得分', '贡献得分', '临时任务', '项目阶段', '项目结项', '临时任务达成率', '项目阶段达成率'
+            '纪律得分', '贡献得分', '临时任务', '专案阶段', '专案完结', '临时任务达成率', '项目阶段达成率'
           ],
           bottom: 10
         },
@@ -128,13 +131,13 @@ export default {
         yAxis: [
           {
             type: 'value',
-            name: '得分',
+            name: '得分(分)',
             nameLocation: 'middle',
             nameGap: 40
           },
           {
             type: 'value',
-            name: '达成率',
+            name: '达成率(%)',
             nameLocation: 'middle',
             nameGap: 40,
             min: 0
@@ -170,7 +173,7 @@ export default {
           markLine: {
             silent: true,
             data: [{
-              yAxis: this.averageScore,
+              yAxis: this.averageScore.toFixed(1),
               name: '平均分',
               label: {
                 formatter: '平均分: {c}',
@@ -219,7 +222,7 @@ export default {
           }
         },
         {
-          name: '项目阶段',
+          name: '专案阶段',
           type: 'bar',
           stack: 'total',
           emphasis: {
@@ -235,7 +238,7 @@ export default {
           }
         },
         {
-          name: '项目结项',
+          name: '专案完结',
           type: 'bar',
           stack: 'total',
           emphasis: {

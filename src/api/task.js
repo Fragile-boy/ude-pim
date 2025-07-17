@@ -49,3 +49,8 @@ export const getExecutingTask = ()=>{
 export const deleteTask = (id)=>{
     return service.delete(`/task/deleteTask/${id}`)
 }
+
+// 获得专案子流程对应的微阶段任务
+export const getMicroCaseSubList = (id)=>{
+    return service.get(`/task/getMicroCaseSubList/${id}`)
+}

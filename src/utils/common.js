@@ -162,7 +162,7 @@ export function initTaskTypeOptions(){
     return [
         { label: '临时事务', value: 1 },
         { label: '技术研究', value: 2 }, 
-        { label: '微阶段', value: 3 }
+        { label: '专案微阶段', value: 3 }
     ]
 }
 

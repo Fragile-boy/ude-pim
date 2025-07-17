@@ -10,6 +10,11 @@ export const getList = (obj) => {
     return service.get('case/list', { params: obj })
 }
 
+// 返回专案DTO
+export const getDTOById = (id)=>{
+    return service.get(`case/dto/${id}`)
+}
+
 // 新增专案
 export const addCase = (caseObj) => {
     return service.post('case', caseObj)

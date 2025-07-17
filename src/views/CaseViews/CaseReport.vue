@@ -2,9 +2,9 @@
   <div class="case-closure-container">
     <!-- 头部标题和操作按钮 -->
     <div class="closure-header">
-      <h2>{{ reportData.name }} - 专案完结信息</h2>
+      <h2>{{ reportData.name }} - 专案报告</h2>
       <div class="action-buttons">
-        <el-button type="primary" @click="completeReport()">完善完结信息</el-button>
+        <el-button type="primary" @click="completeReport()" v-if="user.type === 1">完善完结信息</el-button>
         <el-button @click="goBack">返回</el-button>
       </div>
     </div>
@@ -14,10 +14,11 @@
       <el-descriptions :column="3" border>
         <el-descriptions-item label="专案名称">{{ reportData.name }}</el-descriptions-item>
         <el-descriptions-item label="难度等级">{{ reportData.level }}</el-descriptions-item>
-        <el-descriptions-item label="专案状态">已完结</el-descriptions-item>
+        <el-descriptions-item label="专案状态">{{ reportData.finishTime !== null ? '已完结' : '执行中' }}</el-descriptions-item>
         <el-descriptions-item label="开始日期">{{ reportData.startTime }}</el-descriptions-item>
         <el-descriptions-item label="结案日期">{{ reportData.finishTime }}</el-descriptions-item>
         <el-descriptions-item label="持续时间">{{ reportData.duration }} 天</el-descriptions-item>
+        <el-descriptions-item label="专案描述">{{ reportData.description }}</el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -32,9 +33,9 @@
         <el-descriptions :column="2" border>
           <el-descriptions-item label="计划执行天数">{{ reportData.planDay }}</el-descriptions-item>
           <el-descriptions-item label="实际执行天数">{{ reportData.executionDays }}</el-descriptions-item>
-          <el-descriptions-item label="目标达成率">{{ (reportData.targetAchievementRate * 100).toFixed() }}
+          <el-descriptions-item label="目标进度达成率">{{ reportData.targetAchievementRate }}
             %</el-descriptions-item>
-          <el-descriptions-item label="实际达成率">{{ `${reportData.daysAchievementRate} %` }}</el-descriptions-item>
+          <el-descriptions-item label="实际进度达成率">{{ `${reportData.daysAchievementRate} %` }}</el-descriptions-item>
         </el-descriptions>
       </el-card>
 
@@ -45,12 +46,20 @@
           <span>费用指标</span>
         </div>
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="预估费用(元)">{{ reportData.estimatedCost }}</el-descriptions-item>
-          <el-descriptions-item label="实际费用(元)">{{ reportData.actualCost }}</el-descriptions-item>
-          <el-descriptions-item label="改善费用(元)">{{ reportData.improvementCost }}</el-descriptions-item>
-          <el-descriptions-item label="目标失败成本">{{ (reportData.targetFailureCostRate * 100).toFixed() }}
-            %</el-descriptions-item>
-          <el-descriptions-item label="实际失败成本">{{ reportData.failureCostRatio }} %</el-descriptions-item>
+          <el-descriptions-item label="预估费用(元)">{{
+            reportData.estimatedCost === null ? '0' :
+              reportData.estimatedCost.toLocaleString('zh-CN')}}</el-descriptions-item>
+          <el-descriptions-item label="改善费用(元)">{{
+            reportData.improvementCost === null ? '0' :
+              reportData.improvementCost.toLocaleString('zh-CN')}}</el-descriptions-item>
+          <el-descriptions-item label="实际费用(元)">{{
+            reportData.actualCost === null ? '0' :
+              reportData.actualCost.toLocaleString('zh-CN')}}</el-descriptions-item>
+          <el-descriptions-item label="目标设计失误率">{{ reportData.targetFailureCostRate }}%</el-descriptions-item>
+          <el-descriptions-item label="预估差异(元)">{{ reportData.estimatedDifference === null ? '0' :
+            reportData.estimatedDifference.toLocaleString('zh-CN') }}</el-descriptions-item>
+          <el-descriptions-item label="实际设计失误率">{{ reportData.failureCostRatio }} %</el-descriptions-item>
+          <el-descriptions-item label="预估差异占比(%)">{{ reportData.differenceRatio }}%</el-descriptions-item>
         </el-descriptions>
       </el-card>
 
@@ -96,35 +105,24 @@
       </el-card>
 
       <!-- 设计人员积分分配 :designer-data="designerScores"-->
-      <designer-score-card :designer-data="designerScores" :case-id="caseId" :total-score="reportData.totalScore" @refresh="getUserScore()" />
+      <designer-score-card :designer-data="designerScores" :case-id="caseId" :total-score="reportData.totalScore"
+        @refresh="getUserScore()" />
     </div>
-
-    <!-- 专案总结编辑区 -->
-    <!-- <el-card shadow="hover" class="summary-card">
-      <div slot="header" class="summary-header">
-        <i class="el-icon-edit"></i>
-        <span>专案总结</span>
-      </div>
-      <el-input type="textarea" :rows="6" placeholder="请输入专案总结" v-model="reportData.summary" resize="none">
-      </el-input>
-    </el-card> -->
 
     <!-- 专案报表数据输入对话框 -->
     <el-dialog :title="reportDialogTitle" :visible.sync="reportInputVisible" width="50%"
       @close="handleReportDialogClose">
-      <el-form :model="reportForm" :rules="reportRules" ref="reportFormRef" label-width="120px">
+      <el-form :model="reportForm" :rules="reportRules" ref="reportFormRef" label-width="140px">
         <!-- 费用相关字段 -->
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="预估费用(元)" prop="estimatedCost">
-              <el-input-number v-model="reportForm.estimatedCost" :min="0"
-                controls-position="right"></el-input-number>
+              <el-input-number v-model="reportForm.estimatedCost" :min="0" controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="实际费用(元)" prop="actualCost">
-              <el-input-number v-model="reportForm.actualCost" :min="0"
-                controls-position="right"></el-input-number>
+              <el-input-number v-model="reportForm.actualCost" :min="0" controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
         </el-row>
@@ -146,14 +144,14 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="目标达成率(%)" prop="targetAchievementRate">
-              <el-input-number v-model="reportForm.targetAchievementRate" :min="0" :precision="2" :step="0.1"
+            <el-form-item label="目标进度达成率(%)" prop="targetAchievementRate">
+              <el-input-number v-model="reportForm.targetAchievementRate" :min="0" :step="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="目标失败成本(%)" prop="targetFailureCostRate">
-              <el-input-number v-model="reportForm.targetFailureCostRate" :min="0" :step="0.1" :precision="2"
+            <el-form-item label="目标设计失误率(%)" prop="targetFailureCostRate">
+              <el-input-number v-model="reportForm.targetFailureCostRate" :min="0" :step="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
@@ -163,13 +161,13 @@
         <el-divider>CT指标</el-divider>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="目标CT" prop="targetCt">
+            <el-form-item label="目标CT(s)" prop="targetCt">
               <el-input-number v-model="reportForm.targetCt" :min="0" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="实际CT" prop="actualCt">
+            <el-form-item label="实际CT(s)" prop="actualCt">
               <el-input-number v-model="reportForm.actualCt" :min="0" :precision="1"
                 controls-position="right"></el-input-number>
             </el-form-item>
@@ -260,6 +258,8 @@ import {
   getClosureInfoByCaseId
 } from '@/api/caseClosureInfo'
 import { getUserScore } from '@/api/caseClosureInfo'
+import { getDTOById } from '@/api/case'
+import { mapState } from 'vuex'
 export default {
   components: {
     DesignerScoreCard
@@ -277,8 +277,8 @@ export default {
         estimatedCost: 0,
         actualCost: 0,
         improvementCost: 0,
-        targetFailureCostRate: 0.07,
-        targetAchievementRate: 0.75,
+        targetFailureCostRate: 7,
+        targetAchievementRate: 75,
         targetCt: 0,
         actualCt: 0,
         targetDelayRate: 0,
@@ -331,6 +331,10 @@ export default {
         improvementCost: 0,
         targetFailureCostRate: 0,
         failureCostRatio: 0,
+        // 预估差异
+        estimatedDifference: 0,
+        // 差异比例
+        differenceRatio: 0,
         planDay: 0,
         executionDays: 0,
         targetAchievementRate: 0,
@@ -357,24 +361,35 @@ export default {
       designerScores: []
     }
   },
-  created() {
-    if (!this.$route.params.caseData) {
+  async created() {
+    if (!this.$route.query.caseId) {
       this.$message.warning('请选择专案查看报告')
       this.$router.push({ name: '专案列表' }) // 重定向到专案列表页
       return
     }
-    this.caseObject = JSON.parse(this.$route.params.caseData)
+    this.caseId = this.$route.query.caseId
+    const res = await getDTOById(this.caseId)
+    if (res.code === 200) {
+      this.caseObject = res.data
+    } else {
+      this.$message.error("获取专案信息失败")
+      return
+    }
+    // this.caseObject = JSON.parse(this.$route.params.caseData)
     console.log(this.caseObject)
-    this.caseId = this.caseObject.id
     this.reportForm.caseId = this.caseId
     this.loadCaseData()
     this.getUserScore()
+  },
+  computed: {
+    ...mapState(['user'])
   },
   methods: {
     async loadCaseData() {
       try {
         // 加载专案基础信息
         this.reportData = { ...this.reportData, ...this.caseObject }
+        console.log(this.reportData)
 
         // 加载结案信息
         const closureRes = await getClosureInfoByCaseId(this.caseId)
@@ -391,17 +406,16 @@ export default {
 
     // 生成报表数据
     generateReport() {
-      // 计算持续时间
-      const startDate = new Date(this.reportData.startTime)
-      const finishDate = new Date(this.reportData.finishTime)
-      const duration = Math.ceil((finishDate - startDate) / (1000 * 60 * 60 * 24))
-      this.reportData.duration = duration
-
       // 计算时间指标
       const daysAchievementRate = Math.round((this.reportData.planDay / this.reportData.executionDays) * 100)
       this.reportData.daysAchievementRate = daysAchievementRate
 
       // 计算费用指标
+      // 预估差异
+      if (this.reportData.actualCost) {
+        this.reportData.estimatedDifference = this.reportData.actualCost - this.reportData.estimatedCost
+        this.reportData.differenceRatio = Math.round(this.reportData.estimatedDifference / this.reportData.estimatedCost * 100 + Number.EPSILON)
+      }
       this.reportData.failureCostRatio = this.reportData.improvementCost /
         (this.reportData.actualCost - this.reportData.improvementCost + Number.EPSILON) * 100
       this.reportData.failureCostRatio = this.reportData.failureCostRatio.toFixed(0)
@@ -414,8 +428,8 @@ export default {
       this.reportData.oeeAchievementRate = oeeRate
 
       // 计算专案评分
-      this.reportData.progressScore = Math.min(20, 10 * this.reportData.daysAchievementRate / 75).toFixed(0)
-      this.reportData.failureCostScore = Math.min(30, 10 * 7 / this.reportData.failureCostRatio).toFixed(0)
+      this.reportData.progressScore = Math.min(20, 10 * this.reportData.daysAchievementRate / this.reportData.targetAchievementRate).toFixed(0)
+      this.reportData.failureCostScore = Math.min(30, 10 * this.reportData.targetFailureCostRate / this.reportData.failureCostRatio).toFixed(0)
       this.reportData.finishScore = (this.reportData.planDay * 0.4).toFixed(0)
 
       // 计算总分
@@ -473,10 +487,9 @@ export default {
       var totalCommissionRate = 0;
       if (ret.code === 200) {
         this.memberList = ret.data
-        console.log('参与人员列表', this.memberList)
-        for(var i=0;i<this.memberList.length;i++){
+        for (var i = 0; i < this.memberList.length; i++) {
           var member = this.memberList[i];
-          totalCommissionRate += member.commissionRate||0;
+          totalCommissionRate += member.commissionRate || 0;
         }
       }
       const res = await getUserScore(this.caseId)
@@ -484,32 +497,30 @@ export default {
         this.designerScores = res.data
         var totalScore = 0;
         // 分给额外参与人员以后，还剩下多少结案积分的比例
-        var leftRate = (100 - totalCommissionRate)/100;
+        var leftRate = (100 - totalCommissionRate) / 100;
         for (var i = 0; i < this.designerScores.length; i++) {
           totalScore += this.designerScores[i].executionScore;
         }
         for (var i = 0; i < this.designerScores.length; i++) {
           // 结案积分 = 结案积分*（1-参与人员占比总和）*执行阶段积分占比
-          this.designerScores[i].closureScore = this.reportData.finishScore*leftRate*(this.designerScores[i].executionScore / totalScore);
+          this.designerScores[i].closureScore = this.reportData.finishScore * leftRate * (this.designerScores[i].executionScore / totalScore);
           this.designerScores[i].totalScore = +this.designerScores[i].closureScore + +this.designerScores[i].executionScore;
           this.designerScores[i].isDesigner = true;
         }
         // 加上设计人员的数据
-        for(var i=0;i<this.memberList.length;i++){
+        for (var i = 0; i < this.memberList.length; i++) {
           var member = this.memberList[i];
           var newMember = {
             id: member.id,
             userName: member.userName,
             role: member.role,
             executionScore: member.commissionRate,
-            closureScore: member.commissionRate*this.reportData.finishScore/100,
-            totalScore: member.commissionRate*this.reportData.finishScore/100,
+            closureScore: member.commissionRate * this.reportData.finishScore / 100,
+            totalScore: member.commissionRate * this.reportData.finishScore / 100,
             isDesigner: false,
           }
           this.designerScores.push(newMember);
         }
-        
-        console.log('设计师评分列表', this.designerScores)
       }
     },
   }

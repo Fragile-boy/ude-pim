@@ -173,7 +173,12 @@ const routes = [
         path: 'microPhase',
         name: '微专案管理',
         component: MicroPhase
-      }
+      },
+      {
+        path: 'caseReport',
+        name: '专案报告',
+        component: CaseReport
+      },
     ]
   },
   // 管理员界面
@@ -192,11 +197,6 @@ const routes = [
         path: 'caseList',
         name: '专案列表',
         component: CaseList
-      },
-      {
-        path: 'caseReport',
-        name: '专案报告',
-        component: CaseReport
       },
       //子流程管理
       {

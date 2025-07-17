@@ -16,7 +16,7 @@
                     <el-page-header @back="$router.back()" :content="caseName">
                     </el-page-header>
                     <el-button icon="el-icon-info" type="primary" size="mini" circle
-                        style="margin-left: 10px; margin-bottom: 9px;" @click="showCaseDescription()"></el-button>
+                        style="margin-left: 10px; margin-bottom: 9px;" @click="showCaseReport()"></el-button>
                 </el-col>
                 <el-col :span="2">
                     <span style="font-size:25px;padding-left: 17px;">专案进度</span>
@@ -78,7 +78,7 @@
                                     <el-tag v-if="scope.row.directorRate.length !== 0" type="warning"
                                         class="chargeNameTag">
                                         积分：{{ ((scope.row.directorRate[index] * scope.row.value * 1.0) /
-                    100).toFixed(2)
+                                            100).toFixed(2)
                                         }}
                                     </el-tag>
                                 </el-col>
@@ -190,7 +190,7 @@
         <!-- 甘特图显示区域 -->
         <el-card>
             <div id="barChart" style="width: 100%; height: 500px;"></div>
-            <div id="ganttChart" style="width: 100%; height: 1000px;" v-if="user.status===2"></div>
+            <div id="ganttChart" style="width: 100%; height: 1000px;" v-if="user.status === 2"></div>
         </el-card>
 
         <!-- 显示负责人手头的子流程 -->
@@ -222,6 +222,101 @@
                 </el-table>
             </div>
         </el-drawer>
+
+        <!-- 显示专案微阶段
+        <el-drawer :visible.sync="microCaseSubVisible" :direction="direction" size="50%">
+            <div>
+                <span>{{ microParentInfo.caseName }}</span>
+                <span>{{ microParentInfo.subName }}</span>
+                <span>微阶段列表</span>
+            </div>
+            <el-table :data="microCaseSubList">
+                <el-table-column prop="description" label="描述"></el-table-column>
+                <el-table-column prop="startTime" label="开始时间"></el-table-column>
+                <el-table-column prop="finishTime" label="结束时间"></el-table-column>
+                <el-table-column prop="planDays" label="计划天数"></el-table-column>
+                <el-table-column prop="durationDays" label="持续天数"></el-table-column>
+                <el-table-column prop="executionDays" label="执行天数"></el-table-column>
+                <el-table-column prop="userName" label="负责人"></el-table-column>
+            </el-table>
+        </el-drawer> -->
+
+        <el-drawer :visible.sync="microCaseSubVisible" :direction="direction" size="50%" :wrapperClosable="false"
+            class="micro-case-drawer">
+
+            <!-- 头部标题区 -->
+            <div slot="title" class="drawer-header">
+                <div class="case-title">
+                    <el-tooltip effect="dark" :content="microParentInfo.caseName" placement="top">
+                        <span class="text-ellipsis">{{ microParentInfo.caseName }}</span>
+                    </el-tooltip>
+                    <el-divider direction="vertical" />
+                    <el-tooltip effect="dark" :content="microParentInfo.subName" placement="top">
+                        <span class="text-ellipsis">{{ microParentInfo.subName }}</span>
+                    </el-tooltip>
+                </div>
+                <div class="drawer-subtitle">微阶段列表</div>
+            </div>
+
+            <!-- 表格内容区 -->
+            <div class="drawer-body">
+                <el-table :data="microCaseSubList" stripe border size="small" height="calc(100vh - 180px)"
+                    element-loading-text="数据加载中..." class="micro-case-table">
+
+                    <el-table-column prop="description" label="描述" min-width="180" show-overflow-tooltip>
+                    </el-table-column>
+
+                    <el-table-column prop="startTime" label="开始时间" width="120" align="center">
+                        <template slot-scope="{row}">
+                            {{ row.startTime }}
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="finishTime" label="结束时间" width="120" align="center">
+                        <template slot-scope="{row}">
+                            {{ row.finishTime }}
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="planDays" label="计划天数" width="100" align="center">
+                        <template slot-scope="{row}">
+                            <el-tag size="mini" :type="row.planDays > row.durationDays ? 'danger' : 'success'">
+                                {{ row.planDays }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="durationDays" label="持续天数" width="100" align="center">
+                        <template slot-scope="{row}">
+                            <el-tag size="mini" type="info">
+                                {{ row.durationDays }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="executionDays" label="执行天数" width="100" align="center">
+                        <template slot-scope="{row}">
+                            <el-tag size="mini" :type="row.executionDays > row.planDays ? 'warning' : 'primary'">
+                                {{ row.executionDays }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column prop="userName" label="负责人" width="120" align="center">
+                        <template slot-scope="{row}">
+                            <el-popover trigger="hover" placement="top">
+                                <div>
+                                    <p>联系方式: {{ row.userPhone || '无' }}</p>
+                                    <p>部门: {{ row.userDept || '无' }}</p>
+                                </div>
+                                <el-tag slot="reference" size="mini">{{ row.userName }}</el-tag>
+                            </el-popover>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+        </el-drawer>
+
         <!-- 显示外界因素延期 -->
         <el-drawer :visible.sync="delayDrawer" :direction="direction" size="50%">
             <el-table :data="delayList" style="width: 100%" border>
@@ -254,7 +349,7 @@
                             <el-button icon="el-icon-edit" size="mini" round type="primary" @click="editCommit(o)"
                                 v-if="user.type === 1 || user.status === 2"></el-button>
                             <el-button icon="el-icon-delete" size="mini" round type="danger" @click="deleteCommit(o)"
-                            v-if="user.type === 1 || user.status === 2"></el-button>
+                                v-if="user.type === 1 || user.status === 2"></el-button>
                         </div>
                         <label v-if="commitForm.content.length === 0">暂无备注</label>
                     </el-card>
@@ -396,7 +491,7 @@
                         <div>
                             <el-tag class="chargeNameTag" type="warning" v-for="item in curCaseSubObj.chargeName"
                                 :key="item">{{
-                    item }}</el-tag>
+                                item }}</el-tag>
                         </div>
                     </div>
                 </el-form-item>
@@ -471,29 +566,6 @@
             </span>
         </el-dialog>
 
-        <el-dialog title="专案信息" :visible.sync="caseInfoVisible" width="40%" @close="caseInfoVisible = false">
-            <el-form label-width="100px">
-                <!-- 子流程名称显示 -->
-                <el-form-item label="专案名称">
-                    <el-input v-model="caseObj.name" disabled></el-input>
-                </el-form-item>
-                <!-- 备注显示区域 -->
-                <el-form-item label="专案描述">
-                    <el-card class="box-card">
-                        <div class="text item">
-                            {{ caseObj.description }}
-                        </div>
-                        <label v-if="caseObj.description === null || caseObj.description === ''">暂无描述</label>
-                    </el-card>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="caseInfoVisible = false">确定</el-button>
-                <el-button @click="caseInfoVisible = false">取 消</el-button>
-            </span>
-        </el-dialog>
-
-
     </div>
 </template>
 
@@ -506,6 +578,7 @@ import { getDelayByStatus, saveApply, updateDelay, deleteDelay } from '@/api/cas
 import { getById, saveCommit, updateCommit, deleteCommit } from '@/api/caseSubCommit';
 import { getUserListWithAssistants } from '@/api/user'
 import { getPresetDay } from '@/api/sub'
+import { getMicroCaseSubList } from '@/api/task'
 import { getCaseById } from '@/api/case'
 
 export default {
@@ -623,7 +696,12 @@ export default {
                 description: null
             },
             caseInfoVisible: false,
-
+            microCaseSubVisible: false,
+            microCaseSubList: [],
+            microParentInfo: {
+                caseName: null,
+                subName: null
+            }
         }
     },
     computed: {
@@ -748,7 +826,6 @@ export default {
         async handleDoubleClick(row, column) {
             if (column.label === '外界因素延期') {
                 this.getUnforcedDays(row)
-                this.delayDrawer = true
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
             else if (column.label === '积分') {
@@ -756,9 +833,24 @@ export default {
                     this.expandRowKeys = this.subInfo.map(r => r.id); // 假设数据中的每一行有唯一的id属性
                 else
                     this.expandRowKeys = [];
+            } else if (column.label === '计划时间') {
+                this.getMicroCaseSubList(row)
             }
 
         },
+        // 获得特定子流程关联的微阶段列表
+        async getMicroCaseSubList(row) {
+            const res = await getMicroCaseSubList(row.id)
+            if (res.code === 200) {
+                this.microCaseSubList = res.data
+                this.microCaseSubVisible = true
+                this.microParentInfo.caseName = row.caseName
+                this.microParentInfo.subName = row.subName
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        //获得特定子流程的外界因素延期列表
         async getUnforcedDays(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '外界因素延期' })
             this.delayList = res.data
@@ -768,6 +860,7 @@ export default {
                 item.caseName = row.caseName
                 item.subName = row.subName
             })
+            this.delayDrawer = true
         },
         async getApplyDelay(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '人为因素延期' })
@@ -1126,7 +1219,7 @@ export default {
                 section.push(this.subInfo[i].subName)
                 planDays.push(this.subInfo[i].planDays)
                 executionDays.push(this.subInfo[i].executionDays)
-                continueDays.push(this.subInfo[i].startTime===null?null:timeSub(this.subInfo[i].startTime, this.subInfo[i].finishTime === null ? new Date() : this.subInfo[i].finishTime))
+                continueDays.push(this.subInfo[i].startTime === null ? null : timeSub(this.subInfo[i].startTime, this.subInfo[i].finishTime === null ? new Date() : this.subInfo[i].finishTime))
             }
             var option = {
                 title: {
@@ -1438,11 +1531,13 @@ export default {
             })
         },
         // 显示专案描述
-        async showCaseDescription() {
-            // 获取专案信息
-            var res = await getCaseById(this.caseId)
-            this.caseObj = res.data
-            this.caseInfoVisible = true
+        async showCaseReport() {
+            this.$router.push({
+                name: '专案报告',
+                query: {
+                    "caseId": this.caseId
+                }
+            })
         },
         // 标签切换
         tabChange(tab, event) {
@@ -1511,5 +1606,55 @@ export default {
 .align-items-center {
     display: flex;
     align-items: center;
+}
+
+.micro-case-drawer .drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.micro-case-drawer .drawer-header .case-title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.micro-case-drawer .drawer-header .case-title .text-ellipsis {
+  display: inline-block;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.micro-case-drawer .drawer-header .drawer-subtitle {
+  font-size: 14px;
+  color: #909399;
+  margin-top: 8px;
+}
+
+.micro-case-drawer .drawer-body {
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.micro-case-drawer .drawer-body .micro-case-table {
+  flex: 1;
+  margin-bottom: 20px;
+}
+
+.micro-case-drawer .drawer-body .micro-case-table .el-table__header-wrapper th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.micro-case-drawer .drawer-body .drawer-footer {
+  text-align: right;
+  padding-top: 16px;
+  border-top: 1px solid #ebeef5;
 }
 </style>

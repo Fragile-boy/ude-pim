@@ -102,7 +102,7 @@
                         <template slot-scope="scope">
                             <el-tag effect="dark" type="warning" v-if="scope.row.type === 1">临时事务</el-tag>
                             <el-tag effect="dark" type="primary" v-else-if="scope.row.type === 2">技术研究</el-tag>
-                            <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微任务</el-tag>
+                            <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">专案微阶段</el-tag>
                         </template>
                     </el-table-column>
                     <el-table-column prop="description" label="描述"></el-table-column>
@@ -199,7 +199,7 @@
             <el-form ref="addTaskFormRef" :rules="applyTaskRules" :model="addTaskObj" label-width="100px">
                 <el-form-item label="任务类型" prop="type">
                     <el-select v-model="addTaskObj.type" placeholder="请选择任务类型" @change="isCaseSubTask=(addTaskObj.type===3)">
-                        <el-option v-for="item in [{ label: '技术研究', value: 2 }, { label: '临时事务', value: 1 }, {label: '微阶段', value: 3 }]"
+                        <el-option v-for="item in taskOptions"
                             :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
@@ -265,7 +265,7 @@
 <script>
 import { allTaskList, updateTask, addTask, getExecutingTask, deleteTask } from '@/api/task';
 import { getUserListWithAssistants } from '@/api/user';
-import { format4back, formatDate, timeAdd, timeSub, initDirectorOptions } from '@/utils/common';
+import { format4back, formatDate, timeAdd, timeSub, initDirectorOptions, initTaskTypeOptions } from '@/utils/common';
 import { getDelayById } from '@/api/caseDelayApply'
 import { mapState } from 'vuex';
 import { unFinishedCaseList } from '@/api/case'
@@ -284,6 +284,7 @@ export default {
             taskList: [],
             //负责人的级联选择器
             directorOptions: initDirectorOptions(),
+            taskOptions: initTaskTypeOptions(),
             curUser: null,
             taskDetailVisible: false,
             curTaskObj: {},

@@ -3,7 +3,7 @@
   <el-card shadow="hover" class="designer-score-card">
     <div slot="header" class="clearfix">
       <span style="font-weight: bold; font-size: 16px;">设计人员积分分配</span>
-      <el-button type="primary" size="small" style="float: right;" @click="showAddMemberDialog()">
+      <el-button type="primary" size="small" style="float: right;" @click="showAddMemberDialog()" v-if="user.type===1">
         <i class="el-icon-plus"></i> 新增参与人员
       </el-button>
     </div>
@@ -38,7 +38,7 @@
       <el-table-column label="操作" width="60" align="center" v-if="editable">
         <template slot-scope="scope">
           <el-button type="danger" size="mini" icon="el-icon-delete" circle @click="removeMember(scope.row)"
-            v-if='scope.row.isDesigner === false'></el-button>
+            v-if='user.type===1&&scope.row.isDesigner === false'></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -220,7 +220,6 @@ export default {
         totalScore: designer.isDesigner ? designer.executionScore + designer.closureScore : designer.closureScore,
         scoreRate: designer.totalScore / this.totalScore * 100
       }));
-      console.log('处理后数据', data)
       return data
     },
     // 新增角色分组计算属性
@@ -293,8 +292,6 @@ export default {
             role: this.addMemberForm.role,
             commissionRate: this.addMemberForm.commissionRate
           }
-
-          console.log('新增成员', newMember)
           const res = await addMember(newMember)
           if (res.code === 200) {
             this.$message.success('新增成员成功')

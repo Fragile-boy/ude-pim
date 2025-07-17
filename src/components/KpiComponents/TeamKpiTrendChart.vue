@@ -18,7 +18,7 @@
         handler(newVal){
           if(newVal&&newVal.length>0){
             this.$nextTick(() => {
-              this.updateChart();
+              this.initChart();
             })
           }
         },
@@ -29,7 +29,6 @@
     },
     mounted() {
       this.initChart()
-      this.updateChart()
     },
     beforeDestroy() {
       if (this.chart) {
@@ -38,7 +37,10 @@
     },
     methods: {
       initChart() {
-        this.chart = echarts.init(this.$refs.chart)
+        if(this.chart){
+          this.chart.dispose()
+        }
+        this.updateChart()
         window.addEventListener('resize', this.resizeChart)
       },
       
@@ -58,7 +60,7 @@
       
       updateChart() {
         if (!this.data) return
-
+        this.chart = echarts.init(this.$refs.chart)
         const option = {
           title: {
             text: '团队KPI趋势分析',
@@ -77,7 +79,7 @@
                   <div style="display: flex; align-items: center; margin: 3px 0">
                     <span style="display: inline-block; width: 10px; height: 10px; background: ${item.color}; margin-right: 5px"></span>
                     <span style="flex: 1">${item.seriesName}:</span>
-                    <span style="font-weight: bold">${item.value}</span>
+                    <span style="font-weight: bold">${item.value.toFixed(1)}</span>
                   </div>
                 `
               })
@@ -85,7 +87,7 @@
             }
           },
           legend: {
-            data: ['纪律平均分', '贡献平均分', '临时任务平均分', '项目阶段平均分', '项目完结平均分', '团队平均分'],
+            data: ['纪律平均分', '贡献平均分', '临时任务平均分', '专案阶段平均分', '专案完结平均分', '团队平均分'],
             bottom: 10
           },
           grid: {
@@ -136,7 +138,7 @@
               symbolSize: 8
             },
             {
-              name: '项目阶段平均分',
+              name: '专案阶段平均分',
               type: 'line',
               smooth: true,
               data: this.data.map(item => item.projectPhaseAvgScore),
@@ -146,7 +148,7 @@
               symbolSize: 8
             },
             {
-              name: '项目完结平均分',
+              name: '专案完结平均分',
               type: 'line',
               smooth: true,
               data: this.data.map(item => item.projectCloseAvgScore),

@@ -3,9 +3,23 @@
         <!-- 筛选区域 -->
         <div class="filter-section">
             <el-form :inline="true">
-                <el-form-item label="选择月份">
+
+                <el-form-item label="视图模式">
+                    <el-radio-group v-model="viewMode" @change="fetchTeamKpiData">
+                        <el-radio-button label="monthly">单月视图</el-radio-button>
+                        <el-radio-button label="range">累计视图</el-radio-button>
+                    </el-radio-group>
+                </el-form-item>
+
+                <el-form-item label="选择月份" v-if="viewMode === 'monthly'">
                     <el-date-picker v-model="selectedMonth" type="month" placeholder="选择月份" format="yyyy年MM月"
-                        value-format="yyyy-MM" @change="fetchTeamKpiData" />
+                        value-format="yyyy-MM" @change="fetchTeamKpiData()" />
+                </el-form-item>
+
+                <!-- 时间范围模式下的日期范围选择 -->
+                <el-form-item label="时间范围" v-else>
+                    <el-date-picker v-model="dateRange" type="monthrange" range-separator="至" start-placeholder="开始月份"
+                        end-placeholder="结束月份" format="yyyy年MM月" value-format="yyyy-MM" @change="fetchTeamKpiData()" />
                 </el-form-item>
             </el-form>
         </div>
@@ -17,8 +31,8 @@
                     <el-card shadow="hover">
                         <div class="overview-card">
                             <div class="card-title">团队平均分</div>
-                            <div class="card-value">{{ curMonthDepartInfo.avgScore.toFixed(2) }}</div>
-                            <div class="card-compare" v-if="trendData.length > 1">
+                            <div class="card-value">{{ curMonthDepartInfo.avgScore.toFixed(1) }}</div>
+                            <div class="card-compare" v-if="viewMode==='monthly'&&trendData.length > 1">
                                 <span :class="avgScoreTrend > 0 ? 'up' : 'down'">
                                     <i :class="avgScoreTrend > 0 ? 'el-icon-top' : 'el-icon-bottom'"></i>
                                     {{ Math.abs(avgScoreTrend).toFixed(1) }}%
@@ -35,8 +49,8 @@
                                 placement="top">
                                 <div class="card-title">标准差</div>
                             </el-tooltip>
-                            <div class="card-value">{{ curMonthDepartInfo.standardDeviation.toFixed(2) }}</div>
-                            <div class="card-subtitle">方差: {{ curMonthDepartInfo.variance.toFixed(2) }}</div>
+                            <div class="card-value">{{ curMonthDepartInfo.standardDeviation.toFixed(1) }}</div>
+                            <div class="card-subtitle">方差: {{ curMonthDepartInfo.variance.toFixed(1) }}</div>
                         </div>
                     </el-card>
                 </el-col>
@@ -46,7 +60,8 @@
                             <div class="card-title">高于平均分</div>
                             <div class="card-value">{{ curMonthDepartInfo.higherThanAverage }} 人</div>
                             <div class="card-subtitle" style="color:#7fc051">人数占比：{{
-                                (curMonthDepartInfo.higherThanAverage / curMonthDepartInfo.employeeCount * 100).toFixed()
+                                (curMonthDepartInfo.higherThanAverage / curMonthDepartInfo.employeeCount *
+                                    100).toFixed()
                             }}%</div>
                         </div>
                     </el-card>
@@ -58,7 +73,7 @@
                             <div class="card-value">{{ curMonthDepartInfo.lowerThanAverage }} 人</div>
                             <div class="card-subtitle" style="color:#e57975">人数占比：{{
                                 (curMonthDepartInfo.lowerThanAverage / curMonthDepartInfo.employeeCount * 100).toFixed()
-                                }}%
+                            }}%
                             </div>
                         </div>
                     </el-card>
@@ -67,7 +82,7 @@
                     <el-card shadow="hover">
                         <div class="overview-card">
                             <div class="card-title">最高分</div>
-                            <div class="card-value">{{ curMonthDepartInfo.maxScore.toFixed(2) }}</div>
+                            <div class="card-value">{{ curMonthDepartInfo.maxScore.toFixed(1) }}</div>
                             <div class="card-subtitle">{{ curMonthDepartInfo.topPerformer }}</div>
                         </div>
                     </el-card>
@@ -76,7 +91,7 @@
                     <el-card shadow="hover">
                         <div class="overview-card">
                             <div class="card-title">最低分</div>
-                            <div class="card-value">{{ curMonthDepartInfo.minScore.toFixed(2) }}</div>
+                            <div class="card-value">{{ curMonthDepartInfo.minScore.toFixed(1) }}</div>
                             <div class="card-subtitle">{{ curMonthDepartInfo.lowPerformer }}</div>
                         </div>
                     </el-card>
@@ -85,7 +100,7 @@
         </div>
 
         <!-- 团队KPI堆叠柱状图 -->
-        <div class="chart-section">
+        <div class="chart-section" v-if="viewMode === 'monthly'">
             <el-card shadow="hover">
                 <div class="section-title">
                     <span>{{ selectedMonth }} 团队KPI构成</span>
@@ -97,12 +112,14 @@
             </el-card>
         </div>
 
-        <!-- 团队KPI趋势图表 -->
-        <div class="trend-section">
+        <div class="chart-section" v-else>
             <el-card shadow="hover">
-                <div class="section-title">团队KPI趋势分析</div>
+                <div class="section-title">
+                    <span>{{ dateRange[0] }} 至 {{ dateRange[1] }} 团队KPI构成</span>
+                </div>
                 <div class="chart-container">
-                    <TeamKpiTrendChart :data="trendData" :loading="trendLoading" />
+                    <TeamKpiStackChart :data="chartData" :selected-month="selectedMonth"
+                        :averageScore="curMonthDepartInfo.avgScore" :loading="chartLoading" />
                 </div>
             </el-card>
         </div>
@@ -116,7 +133,7 @@
                 <div>
                     <el-form :inline="true">
                         <el-form-item label="职责筛选">
-                            <el-select v-model="selectedDepartment" placeholder="全部职责" @change="filterTeamData">
+                            <el-select v-model="selectedDepartment" placeholder="全部职责" clearable multiple @change="filterTeamData">
                                 <el-option v-for="dept in departmentOptions" :key="dept.value" :label="dept.label"
                                     :value="dept.value" />
                             </el-select>
@@ -132,8 +149,8 @@
                         </el-form-item>
                     </el-form>
                 </div>
-                <el-table id="kpiTable" :data="filteredTeamData" border stripe style="width: 100%" v-loading="tableLoading"
-                    @sort-change="handleSortChange">
+                <el-table id="kpiTable" :data="filteredTeamData" border stripe style="width: 100%"
+                    v-loading="tableLoading" @sort-change="handleSortChange">
                     <el-table-column prop="rank" label="排名" width="80" sortable>
                         <template slot-scope="scope">
                             <span v-if="scope.row.rank <= 3" class="top-rank">
@@ -163,7 +180,7 @@
                     <el-table-column prop="totalScore" label="总分" width="120" sortable>
                         <template slot-scope="scope">
                             <span :class="getScoreClass(scope.row.totalScore)">
-                                {{ scope.row.totalScore.toFixed(2) }}
+                                {{ scope.row.totalScore.toFixed(1) }}
                             </span>
                         </template>
                     </el-table-column>
@@ -216,6 +233,16 @@
             </el-card>
         </div>
 
+        <!-- 团队KPI趋势图表 -->
+        <div class="trend-section">
+            <el-card shadow="hover">
+                <div class="section-title">团队KPI趋势分析</div>
+                <div class="chart-container">
+                    <TeamKpiTrendChart :data="trendData" :loading="trendLoading" />
+                </div>
+            </el-card>
+        </div>
+
     </div>
 </template>
 
@@ -224,10 +251,11 @@ import TeamKpiStackChart from '@/components/KpiComponents/TeamKpiStackChart'
 import TeamKpiTrendChart from '@/components/KpiComponents/TeamKpiTrendChart'
 // import MemberKpiDetail from '@/components/KpiComponents/MemberKpiDetail'
 import { mapState } from 'vuex'
-import { getTeamMonthKpi } from '@/api/kpi'
+import { getTeamMonthKpi, getMonthRangeKpi } from '@/api/kpi'
 import { exportExcel } from '@/utils/exportExcel'
 
 export default {
+    name: 'TeamKpi',
     components: {
         TeamKpiStackChart,
         TeamKpiTrendChart,
@@ -235,8 +263,10 @@ export default {
     },
     data() {
         return {
+            viewMode: 'monthly',
+            dateRange: [this.getPreviousMonth(), this.getPreviousMonth()],
             selectedMonth: this.getPreviousMonth(),
-            selectedDepartment: '',
+            selectedDepartment: [],
             sortType: 'totalScore',
             chartType: 'score',
             // 当月的部门kpi总体数据
@@ -257,7 +287,6 @@ export default {
             teamData: [],
             filteredTeamData: [],
             departmentOptions: [
-                { value: '', label: '全部职责' },
                 { value: 0, label: '机构' },
                 { value: 1, label: '电控' },
                 { value: 2, label: 'IE' },
@@ -299,31 +328,46 @@ export default {
         async fetchTeamKpiData() {
             this.tableLoading = true
             this.chartLoading = true
-
+            var res;
             // 模拟API调用
             try {
-                var year = Number(this.selectedMonth.slice(0, 4))
-                var month = Number(this.selectedMonth.slice(5, 7))
                 var params = {
-                    year: year,
-                    month: month
+                }
+                if (this.viewMode === 'monthly') {
+                    var year = Number(this.selectedMonth.slice(0, 4))
+                    var month = Number(this.selectedMonth.slice(5, 7))
+                    params = {
+                        year: year,
+                        month: month
+                    }
+                    // 实际项目中这里应该是API调用
+                    res = await getTeamMonthKpi(params)
+                }else{
+                    if(this.dateRange[0]<='2025-03'){
+                        this.$message.error('请从2025年4月开始查询！')
+                        return
+                    }
+                    params = {
+                        startDate: this.dateRange[0],
+                        endDate: this.dateRange[1]
+                    }
+                    res = await getMonthRangeKpi(params)
                 }
 
-                // 实际项目中这里应该是API调用
-                const res = await getTeamMonthKpi(params)
+                
                 // 环比上月的平均分
-                if(res.data.departmentAvgScoreList.length > 1)
+                if (res.data.departmentAvgScoreList.length > 1)
                     this.avgScoreTrend = (res.data.departmentAvgScoreList[0].avgScore - res.data.departmentAvgScoreList[1].avgScore) / res.data.departmentAvgScoreList[1].avgScore * 100
                 this.userKpiList = res.data.userKpis
                 // 加工数据
                 for (var i = 0; i < this.userKpiList.length; i++) {
-                    this.userKpiList[i].disciplineScore = this.userKpiList[i].disciplineScore === null ? 0 : Number(this.userKpiList[i].disciplineScore.toFixed(2))
-                    this.userKpiList[i].contributionScore = this.userKpiList[i].contributionScore === null ? 0 : Number(this.userKpiList[i].contributionScore.toFixed(2))
-                    this.userKpiList[i].tempTaskScore = this.userKpiList[i].tempTaskScore === null ? 0 : Number(this.userKpiList[i].tempTaskScore.toFixed(2))
-                    this.userKpiList[i].projectPhaseScore = this.userKpiList[i].projectPhaseScore === null ? 0 : Number(this.userKpiList[i].projectPhaseScore.toFixed(2))
-                    this.userKpiList[i].projectCloseScore = this.userKpiList[i].projectCloseScore === null ? 0 : Number(this.userKpiList[i].projectCloseScore.toFixed(2))
-                    this.userKpiList[i].tempTaskAvgAchievementRate = this.userKpiList[i].tempTaskAvgAchievementRate === null ? 0 : Number(this.userKpiList[i].tempTaskAvgAchievementRate.toFixed(2))
-                    this.userKpiList[i].projectPhaseAvgAchievementRate = this.userKpiList[i].projectPhaseAvgAchievementRate === null ? 0 : Number(this.userKpiList[i].projectPhaseAvgAchievementRate.toFixed(2))
+                    this.userKpiList[i].disciplineScore = this.userKpiList[i].disciplineScore === null ? 0 : Number(this.userKpiList[i].disciplineScore.toFixed(1))
+                    this.userKpiList[i].contributionScore = this.userKpiList[i].contributionScore === null ? 0 : Number(this.userKpiList[i].contributionScore.toFixed(1))
+                    this.userKpiList[i].tempTaskScore = this.userKpiList[i].tempTaskScore === null ? 0 : Number(this.userKpiList[i].tempTaskScore.toFixed(1))
+                    this.userKpiList[i].projectPhaseScore = this.userKpiList[i].projectPhaseScore === null ? 0 : Number(this.userKpiList[i].projectPhaseScore.toFixed(1))
+                    this.userKpiList[i].projectCloseScore = this.userKpiList[i].projectCloseScore === null ? 0 : Number(this.userKpiList[i].projectCloseScore.toFixed(1))
+                    this.userKpiList[i].tempTaskAvgAchievementRate = this.userKpiList[i].tempTaskAvgAchievementRate === null ? 0 : Number(this.userKpiList[i].tempTaskAvgAchievementRate.toFixed(1))
+                    this.userKpiList[i].projectPhaseAvgAchievementRate = this.userKpiList[i].projectPhaseAvgAchievementRate === null ? 0 : Number(this.userKpiList[i].projectPhaseAvgAchievementRate.toFixed(1))
                 }
                 var data = {
                     members: this.userKpiList,
@@ -331,10 +375,12 @@ export default {
                 }
                 this.processTeamData(data)
                 this.tableLoading = false
-            } catch (error) {
-                console.error(error)
+                // 刷新表格数据
+                this.filterTeamData()
                 this.tableLoading = false
                 this.chartLoading = false
+            } catch (error) {
+                console.error(error)
             }
         },
 
@@ -348,12 +394,18 @@ export default {
             this.sortTeamData()
 
             // 计算团队统计数据
-            this.curMonthDepartInfo = data.departInfo[0]
+            if(this.viewMode === 'monthly'){
+                this.curMonthDepartInfo = data.departInfo[0]
+                this.trendData = data.departInfo
+            }
+            else{
+                this.curMonthDepartInfo = data.departInfo[0]
+                this.trendData = data.departInfo.slice(1)
+            }
             this.passRate = 50
 
             // 准备图表数据
             this.chartData = this.prepareChartData()
-            this.trendData = data.departInfo
             this.trendData.sort((a, b) => a.curDate.localeCompare(b.curDate))
         },
 
@@ -372,11 +424,11 @@ export default {
         },
 
         filterTeamData() {
-            if (this.selectedDepartment === '') {
+            if (this.selectedDepartment.length === 0) {
                 this.filteredTeamData = [...this.teamData]
             } else {
                 this.filteredTeamData = this.teamData.filter(
-                    member => member.status === this.selectedDepartment
+                    member => this.selectedDepartment.includes(member.status)
                 )
             }
             this.currentPage = 1
@@ -445,13 +497,15 @@ export default {
                 name: 'KPI管理',
                 params: {
                     curUser: member.userId,
-                    selectedMonth: this.selectedMonth
+                    viewMode: this.viewMode,
+                    selectedMonth: this.viewMode==='monthly'?this.selectedMonth:null,
+                    dateRange: this.viewMode==='monthly'?null:this.dateRange
                 }
             })
         },
 
         exportTeamKpi() {
-            if(exportExcel('kpiTable', `${this.selectedMonth}新技研Kpi数据`, this))
+            if (exportExcel('kpiTable', `${this.viewMode==='monthly'?this.selectedMonth:(this.dateRange[0]+"至"+this.dateRange[1])}新技研Kpi数据`, this))
                 this.$message.success('导出团队KPI数据成功')
             else
                 this.$message.error('导出团队KPI数据失败')

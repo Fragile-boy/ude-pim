@@ -46,9 +46,9 @@ export default {
       const tempTaskData = this.data.map(item => item.tempTaskScore === null ? 0 : item.tempTaskScore)
       const projectPhaseData = this.data.map(item => item.projectPhaseScore === null ? 0 : item.projectPhaseScore)
       const projectCloseData = this.data.map(item => item.projectCloseScore === null ? 0 : item.projectCloseScore)
-      const tempTaskAvgAchieveRateData = this.data.map(item => item.tempTaskAvgAchievementRate===null?0:item.tempTaskAvgAchievementRate)
-      const projectPhaseAvgAchievementRateData = this.data.map(item => item.projectPhaseAvgAchievementRate===null?0:item.projectPhaseAvgAchievementRate)
-      const departAvgScoreData = this.data.map(item=>item.departmentAvgScore===null?0:item.departmentAvgScore)
+      const tempTaskAvgAchieveRateData = this.data.map(item => item.tempTaskAvgAchievementRate === null ? 0 : item.tempTaskAvgAchievementRate)
+      const projectPhaseAvgAchievementRateData = this.data.map(item => item.projectPhaseAvgAchievementRate === null ? 0 : item.projectPhaseAvgAchievementRate)
+      const departAvgScoreData = this.data.map(item => item.departmentAvgScore === null ? 0 : item.departmentAvgScore)
       chart.setOption({
         title: {
           text: '个人KPI趋势分析',
@@ -196,6 +196,16 @@ export default {
             yAxisIndex: 1,
             data: tempTaskAvgAchieveRateData,
             itemStyle: { color: '#87CEFA' },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function (params) {
+                return params.value === 0 ? '' : params.value.toFixed(2)+"%";
+              },
+              fontSize: 12,
+              fontWeight: 'bold',
+              color: '#000'
+            },
             symbol: 'circle',
             symbolSize: 8,
             lineStyle: { width: 3 }
@@ -206,10 +216,20 @@ export default {
             yAxisIndex: 1,
             data: projectPhaseAvgAchievementRateData,
             itemStyle: { color: '#32CD32' },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: function (params) {
+                return params.value === 0 ? '' : params.value.toFixed(2)+"%";
+              },
+              fontSize: 12,
+              fontWeight: 'bold',
+              color: '#000'
+            },
             symbol: 'circle',
             symbolSize: 8,
             lineStyle: { width: 3 }
-          },{
+          }, {
             name: '部门平均得分',
             type: 'line',
             yAxisIndex: 0,

@@ -36,7 +36,7 @@
                         <el-tag effect="dark" type="success" v-if="scope.row.type === 0">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
-                        <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微阶段</el-tag>
+                        <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">专案微阶段</el-tag>
                     </template>
                 </el-table-column>
                 <!-- <el-table-column prop="description" label="描述"></el-table-column> -->
@@ -153,7 +153,7 @@
                 class="form">
                 <el-form-item label="申请类型">
                     <el-input
-                        :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : delayApplyObject.type === 2 ? '技术研究' : '微阶段'"
+                        :value="delayApplyObject.type === 0 ? '专案类' : delayApplyObject.type === 1 ? '临时事务' : delayApplyObject.type === 2 ? '技术研究' : '专案微阶段'"
                         disabled></el-input>
                 </el-form-item>
 

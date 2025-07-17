@@ -882,8 +882,8 @@ export default {
         openReport(row){
             this.$router.push({
                 name: '专案报告',
-                params:{
-                    caseData: JSON.stringify(row)
+                query:{
+                    "caseId": row.id
                 }
             })
         },
