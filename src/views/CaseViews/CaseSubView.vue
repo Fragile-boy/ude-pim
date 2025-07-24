@@ -826,6 +826,8 @@ export default {
         async handleDoubleClick(row, column) {
             if (column.label === '外界因素延期') {
                 this.getUnforcedDays(row)
+                 // 不能放到getUnforcedDays函数里面去，因为在编辑阶段的时候也会获取延期列表，放在函数里面会导致编辑的时候打开抽屉
+                this.delayDrawer = true
             } else if (column.label === '人为因素延期')
                 this.getApplyDelay(row)
             else if (column.label === '积分') {
@@ -836,7 +838,6 @@ export default {
             } else if (column.label === '计划时间') {
                 this.getMicroCaseSubList(row)
             }
-
         },
         // 获得特定子流程关联的微阶段列表
         async getMicroCaseSubList(row) {
@@ -860,7 +861,6 @@ export default {
                 item.caseName = row.caseName
                 item.subName = row.subName
             })
-            this.delayDrawer = true
         },
         async getApplyDelay(row) {
             var res = await getDelayByStatus({ caseSubId: row.id, status: 1, delayType: '人为因素延期' })

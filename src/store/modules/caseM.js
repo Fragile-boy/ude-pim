@@ -15,15 +15,18 @@ export default {
         },
         //获取查询后的专案列表
         queryCase(state, obj) {
+            console.log(obj)
             state.queryList = state.caseList
+            console.log(state.caseList)
             if ("name" in obj)
                 state.queryList = state.queryList.filter(item => item.name.includes(obj.name))
 
-            if ("status" in obj)
-                state.queryList = state.queryList.filter(item => item.status === obj.status)
+            if ("directorStatus" in obj)
+                state.queryList = state.queryList.filter(item => item.directorStatus === obj.directorStatus)
 
-            if ("director" in obj)
-                state.queryList = state.queryList.filter(item => item.director === obj.director)
+            if ("director" in obj){
+                state.queryList = state.queryList.filter(item => obj.director.includes(item.director))
+            }
 
             if ("startTime" in obj && "endTime" in obj)
                 state.queryList = state.queryList.filter(item => (new Date(item.finishTime) >= new Date(obj.startTime)) && (new Date(item.finishTime) <= new Date(obj.endTime)))

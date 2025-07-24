@@ -13,12 +13,32 @@
             <div class="case_add">
                 <el-row :gutter="20">
                     <el-col :span="4">
-                        <el-input placeholder="请输入专案名称查询" @change="getTableDate()" v-model="queryInfo.query"></el-input>
+                        <el-input placeholder="请输入专案名称查询" @change="getTableDate()" v-model="queryInfo.caseName"></el-input>
                     </el-col>
 
                     <el-col :span="4">
-                        <el-select v-model="queryInfo.director" placeholder="请选择负责人" clearable @change="getTableDate">
-                            <el-option v-for="item in allUser" :key="item.id" :label="item.name" :value="item.id">
+                        <el-select v-model="queryInfo.directorStatus" placeholder="请选择负责人职责" clearable
+                            @change="getTableDate">
+                            <el-option v-for="item in directorOptions" :key="item.value" :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+
+                    <el-col :span="4">
+                        <el-select v-model="queryInfo.directors" placeholder="请选择负责人" clearable @change="getTableDate" multiple>
+                            <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                                <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                    :value="item.value">
+                                </el-option>
+                            </el-option-group>
+                        </el-select>
+                    </el-col>
+
+                    <el-col :span="4">
+                        <el-select v-model="queryInfo.isFinished" placeholder="筛选是否完成" clearable @change="getTableDate">
+                            <el-option v-for="item in [{value: null, label: '全部'}, {value: 1, label: '已完成'}, {value: 0, label: '未完成'}]" :key="item.value" :label="item.label"
+                                :value="item.value">
                             </el-option>
                         </el-select>
                     </el-col>
@@ -31,7 +51,7 @@
                         <el-button type="primary" icon="el-icon-plus" @click="openAddCase()">新增专案</el-button>
                     </el-col>
 
-                    <el-col :span="2" :offset="10">
+                    <el-col :span="2" :offset="2">
                         <el-switch v-model="queryInfo.showTerminated" active-text="中断专案" @change="getTableDate">
                         </el-switch>
                     </el-col>
@@ -164,8 +184,8 @@
                     按模板
                     <el-dropdown-menu slot="dropdown">
                         <el-dropdown-item v-for="item in templateList" :key="item.id" :command="item.id">{{
-                    item.description
-                }}</el-dropdown-item>
+                            item.description
+                        }}</el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
             </el-col>
@@ -373,10 +393,12 @@ export default {
             queryInfo: {
                 page: 1,
                 pageSize: 10,
-                query: '',
-                director: '',
+                caseName: '',
+                directors: [],
+                directorStatus: '',
                 // 显示中断专案
                 showTerminated: false,
+                isFinished: '',
             },
             total: 0,
             addCaseVisible: false,
@@ -421,8 +443,6 @@ export default {
             directorOptions: initDirectorOptions(),
             //添加关联关系显示标志位
             addRelationMenuVisible: false,
-            //所有科员
-            allUser: [],
             //所有子流程数据
             relationSub: [],
             //所有模板添加子流程数据
@@ -481,6 +501,7 @@ export default {
     },
     methods: {
         async getTableDate() {
+            console.log(this.queryInfo)
             var res = await getList(this.queryInfo)
             this.pageInfo = res.data.records
             this.total = res.data.total
@@ -583,12 +604,8 @@ export default {
         //获取负责人列表
         async getAllUser() {
             const res = await getUserListWithAssistants()
-            if (res.code === 200) {
-                this.allUser = res.data
-                // console.log(this.allUser)
-            } else {
-                this.$message.error(res.msg)
-                return
+            for (var i = 0; i < res.length; i++) {
+                this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
             }
         },
         //获取子流程特定难度的对应的计划天数
@@ -879,10 +896,10 @@ export default {
             this.$message.success(res.data)
         },
 
-        openReport(row){
+        openReport(row) {
             this.$router.push({
                 name: '专案报告',
-                query:{
+                query: {
                     "caseId": row.id
                 }
             })

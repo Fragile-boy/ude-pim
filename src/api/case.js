@@ -7,7 +7,7 @@ export const getCaseList = (isFinished) => {
 
 // 返回专案列表
 export const getList = (obj) => {
-    return service.get('case/list', { params: obj })
+    return service.post('case/list', obj)
 }
 
 // 返回专案DTO

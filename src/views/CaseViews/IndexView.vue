@@ -18,19 +18,20 @@
               </el-input>
             </el-col>
 
-            <!-- 执行状态 -->
-            <el-col :span="4" v-show="false" v-if="!showMode">
-              <el-select v-model="queryStatus" placeholder="请选择执行状态" clearable @change="handleQuery">
-                <el-option v-for="item in levels" :key="item" :label="item" :value="item">
+            <!-- 按负责人筛选 -->
+            <el-col :span="3">
+              <el-select v-model="directorStatus" placeholder="请选择负责人职责" clearable @change="handleQuery">
+                <el-option v-for="item in directorOptions" :key="item.value" :label="item.label" :value="item.value">
                 </el-option>
               </el-select>
             </el-col>
 
-            <!-- 按负责人筛选 -->
-            <el-col :span="4">
-              <el-select v-model="queryDirector" placeholder="请选择负责人" clearable @change="handleQuery">
-                <el-option v-for="item in users" :key="item.id" :label="item.name" :value="item.id">
-                </el-option>
+            <el-col :span="3">
+              <el-select v-model="queryDirector" placeholder="请选择负责人" clearable @change="handleQuery" multiple>
+                <el-option-group v-for="group in directorOptions" :key="group.value" :label="group.label">
+                  <el-option v-for="item in group.children" :key="item.value" :label="item.label" :value="item.value">
+                  </el-option>
+                </el-option-group>
               </el-select>
             </el-col>
 
@@ -50,7 +51,7 @@
               <el-button type="primary" @click="handleReset">重置 <i class="el-icon-s-tools"></i></el-button>
             </el-col>
 
-            <el-col :span="3" :offset="showMode ? 3 : 9">
+            <el-col :span="3" :offset="showMode ? 1 : 7">
               <el-switch v-model="showMode" active-text="已完成" inactive-text="正在执行">
               </el-switch>
             </el-col>
@@ -58,8 +59,8 @@
           </el-row>
         </div>
         <div ref="caseTableRef">
-          <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px;" 
-          :default-sort="{prop:'executionDays',order:'descending'}" @sort-change="handlesortChange">
+          <el-table :data="pageInfo" border stripe @cell-dblclick="handleDoubleClick" style="font-size:15px;"
+            :default-sort="{ prop: 'executionDays', order: 'descending' }" @sort-change="handlesortChange">
             <el-table-column label="操作" width="120">
               <template slot-scope="scope">
                 <el-tooltip effect="dark" content="子流程详情" placement="top" :enterable="false">
@@ -162,20 +163,22 @@ import { deleteCommit, getById, saveCommit } from '@/api/caseSubCommit';
 import { getExecuting } from '@/api/caseSub';
 import { getUserListWithAssistants } from '@/api/user'
 import html2canvas from 'html2canvas'
-import { timeAdd } from '@/utils/common';
+import { initDirectorOptions, timeAdd } from '@/utils/common';
 export default {
   name: 'indexPage',
   data() {
     return {
+      directorOptions: initDirectorOptions(),
       pageInfo: [],
       page: 1,
-      size: 9,
+      size: 10,
       total: 0,
       queryText: '',
       caseInfo: [],
       levels: ['正在执行', '已延误'],
       queryStatus: '',
-      queryDirector: null,
+      queryDirector: [],
+      directorStatus: null,
       commitVisible: false,
       commitForm: {
         caseName: '',
@@ -280,7 +283,7 @@ export default {
   },
   //缓存界面路由导航进入之前
   beforeRouteEnter(to, from, next) {
-  
+
     next((vm) => {
       // 个人界面查询的跳转
       if ('caseName' in to.query) {
@@ -300,10 +303,11 @@ export default {
       }
     },
     async getAllUser() {
-      const res = await getUserListWithAssistants()
-      if (res.code === 200) {
-        this.users = res.data
+      const {data: res} = await getUserListWithAssistants()
+      for (var i = 0; i < res.length; i++) {
+        this.directorOptions[res[i].status].children.push({ value: res[i].id, label: res[i].name })
       }
+      console.log(this.directorOptions)
     },
     showSub(row) {
       this.$router.push({
@@ -349,11 +353,6 @@ export default {
       var queryObj = {}
       if (this.queryText !== '')
         queryObj.name = this.queryText
-      // 状态不为空
-      if (!this.showMode && this.queryStatus !== '' && this.queryStatus !== null) {
-        // this.queryStatus = this.transformStatus(this.queryStatus)
-        queryObj.status = this.transformStatus(this.queryStatus)
-      }
 
       //时间区间
       if (this.showMode && this.start_stop_time !== null && this.start_stop_time !== '') {
@@ -361,8 +360,12 @@ export default {
         queryObj.endTime = this.start_stop_time[1]
       }
 
+      // 负责人职责
+      if (this.directorStatus !== null && this.directorStatus !== '')
+        queryObj.directorStatus = this.directorStatus
+
       //负责人
-      if (this.queryDirector !== null && this.queryDirector !== '')
+      if (this.queryDirector !== null && this.queryDirector.length > 0)
         queryObj.director = this.queryDirector
       this.queryCase(queryObj)
 
@@ -497,6 +500,4 @@ export default {
   line-height: 20px;
   padding: 0;
 }
-
 </style>
-

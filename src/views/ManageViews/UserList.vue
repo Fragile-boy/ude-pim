@@ -24,7 +24,12 @@
                         <el-button type="primary" icon="el-icon-plus" @click="addFormVisible = true">添加用户</el-button>
                     </el-col>
 
-                    <el-col :span="1" :offset="15">
+                    <el-col :span="3" :offset="12" style="margin-top: 7px;">
+                        <el-switch v-model="queryInfo.deleted" active-text="已删除" inactive-text="正常" @change="searchUser()">
+                        </el-switch>
+                    </el-col>
+
+                    <el-col :span="1">
                         <el-dropdown @command="handleCommand">
                             <el-button round>
                                 <i class="el-icon-setting el-icon-arrow-down"></i>
@@ -108,8 +113,7 @@
                     <el-col :span="12">
                         <el-form-item label="离职日期" prop="terminationTime">
                             <el-date-picker v-model="addForm.terminationTime" type="date" placeholder="选择离职日期"
-                                value-format="yyyy-MM-dd"
-                                :disabled="!addForm.hireTime">
+                                value-format="yyyy-MM-dd" :disabled="!addForm.hireTime">
                             </el-date-picker>
                         </el-form-item>
                     </el-col>
@@ -332,8 +336,9 @@ export default {
             total: 0,
             queryInfo: {
                 page: 1,
-                pageSize: 7,
-                query: ''
+                pageSize: 10,
+                query: '',
+                deleted: false,
             },
             //新增用户窗口显示
             addFormVisible: false,
@@ -363,7 +368,7 @@ export default {
                     { required: true, message: '请选择职务', trigger: 'blur' }
                 ],
                 hireTime: [
-                    {required: true, message: '请选择入职日期', trigger: 'change'}
+                    { required: true, message: '请选择入职日期', trigger: 'change' }
                 ]
             },
             //修改用户窗口显示
@@ -395,7 +400,7 @@ export default {
                     { validator: checkEmail, trigger: 'blur' }
                 ],
                 hireTime: [
-                    {required: true, message: '请选择入职日期', trigger: 'change'}
+                    { required: true, message: '请选择入职日期', trigger: 'change' }
                 ]
             },
             passwordInfo: {
@@ -488,8 +493,8 @@ export default {
         //修改用户
         async editUser() {
             console.log(this.editForm)
-            this.editForm.hireTime = this.editForm.hireTime===null?null:formatDate(this.editForm.hireTime)
-            this.editForm.terminationTime = this.editForm.terminationTime===null?null:formatDate(this.editForm.terminationTime)
+            this.editForm.hireTime = this.editForm.hireTime === null ? null : formatDate(this.editForm.hireTime)
+            this.editForm.terminationTime = this.editForm.terminationTime === null ? null : formatDate(this.editForm.terminationTime)
             const res = await updateUser(this.editForm)
             if (res.code === 200) {
                 this.$message.success(res.data)
@@ -501,26 +506,34 @@ export default {
         },
         //移除用户
         async removeUser(obj) {
-            if(obj.terminationTime===null){
+            if (obj.terminationTime === null) {
                 this.$message.error("请先设定该用户的离职日期！！！")
                 return;
             }
-            //如果该页只有一个表项，删除后应该回到上一页
-            if (this.userList.length === 1)
-                this.queryInfo.page -= 1
-            const res = await removeUser(id)
-            if (res.code === 200) {
-                this.$message.success(res.data)
-                this.getUserPage()
-            } else {
-                if (res.msg === "当前职员还有未完成的专案类任务，请为他负责的专案子阶段重新选择负责人后重试") {
-                    setTimeout(async () => {
-                        var r = await getChargeCaseSub(id)
-                        this.chargingTask = r.data
-                        this.chargeCaseSubVisible = true
-                    }, 1000)
+            this.$confirm('确认删除该用户吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                //如果该页只有一个表项，删除后应该回到上一页
+                if (this.userList.length === 1)
+                    this.queryInfo.page -= 1
+                const res = await removeUser(obj.id)
+                if (res.code === 200) {
+                    this.$message.success(res.data)
+                    this.getUserPage()
+                } else {
+                    if (res.msg === "当前职员还有未完成的专案类任务，请为他负责的专案子阶段重新选择负责人后重试") {
+                        setTimeout(async () => {
+                            var r = await getChargeCaseSub(obj.id)
+                            this.chargingTask = r.data
+                            this.chargeCaseSubVisible = true
+                        }, 1000)
+                    }
                 }
-            }
+            }).catch(() => {
+                this.$message.info('已取消删除')
+            })
         },
         //设置按钮
         handleCommand(command) {

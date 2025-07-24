@@ -18,8 +18,8 @@
 
                 <!-- 时间范围模式下的日期范围选择 -->
                 <el-form-item label="时间范围" v-else>
-                    <el-date-picker v-model="dateRange" type="monthrange" range-separator="至" start-placeholder="开始月份"
-                        end-placeholder="结束月份" format="yyyy年MM月" value-format="yyyy-MM" @change="fetchTeamKpiData()" />
+                    <el-date-picker v-model="dateRange" type="monthrange" range-separator="-" start-placeholder="开始月份"
+                        end-placeholder="结束月份" format="yyyy年MM月" value-format="yyyy-MM" @change="fetchTeamKpiData()"/>
                 </el-form-item>
             </el-form>
         </div>
