@@ -211,6 +211,7 @@
                     <el-table-column prop="startTime" label="开始时间" width="200"></el-table-column>
                     <el-table-column prop="finishTime" label="完成时间" width="200"></el-table-column>
                     <el-table-column prop="planDays" label="计划天数" width="120"></el-table-column>
+                    <el-table-column prop="estimatedWorkload" label="工作负荷" width="120"></el-table-column>
                     <el-table-column prop="unforcedDays" label="外界延期" width="120"></el-table-column>
                     <el-table-column prop="executionTime" label="实际执行天数" width="120"></el-table-column>
                     <el-table-column prop="score" label="得分" width="80">
@@ -390,11 +391,11 @@ export default {
     beforeRouteEnter(to, from, next) {
         next(vm => {
             // 这里可以访问组件实例 vm
-            vm.curUser = to.params.curUser
-            vm.viewMode = to.params.viewMode
-            vm.dateRange = to.params.dateRange
-            vm.selectedMonth = to.params.selectedMonth
-            vm.fetchKpiData()
+            // 只更新路由参数，不调用 fetchKpiData，让 mounted 来处理
+            vm.curUser = to.params.curUser || vm.curUser
+            vm.viewMode = to.params.viewMode || vm.viewMode
+            vm.dateRange = to.params.dateRange || vm.dateRange
+            vm.selectedMonth = to.params.selectedMonth || vm.selectedMonth
         });
     },
     beforeDestroy() {
@@ -440,10 +441,19 @@ export default {
         },
         async fetchKpiData() {
             this.loading = true
+
+            // 检查 curUser 是否已加载
+            if (!this.curUser) {
+                this.$message.error("用户信息未加载，请稍候重试！")
+                this.loading = false
+                return
+            }
+
             var res;
             if (this.viewMode === 'monthly') {
                 if(this.selectedMonth === null || this.selectedMonth === ''){
                     this.$message.error("请选择要查询的月份！")
+                    this.loading = false
                     return
                 }
                 this.queryYear = this.selectedMonth.slice(0, 4)
@@ -451,6 +461,7 @@ export default {
                 // 检查查询日期的合理性
                 if (this.selectedMonth <= "2025-03") {
                     this.$message.error("KPI数据从2025年4月开始统计！")
+                    this.loading = false
                     return
                 }
                 const params = {
@@ -460,8 +471,15 @@ export default {
                 }
                 res = await getMonthKpi(params)
             } else {
+                // 确保 dateRange 存在且是数组
+                if (!this.dateRange || !Array.isArray(this.dateRange) || this.dateRange.length < 2) {
+                    this.$message.error("请选择时间范围！")
+                    this.loading = false
+                    return
+                }
                 if (this.dateRange[0] <= '2025-03') {
                     this.$message.error("KPI数据从2025年4月开始统计！")
+                    this.loading = false
                     return
                 }
                 const params = {
@@ -482,8 +500,9 @@ export default {
                 this.prepareKpiDetailData(data)
                 // 加载时间线列表数据
                 this.getTimeLineList()
-                // 趋势数据
+                // 趋势数据 - 按日期排序
                 this.trendChartData = data.historyData
+                this.trendChartData.sort((a, b) => new Date(a.curDate + '-01') - new Date(b.curDate + '-01'))
 
                 this.loading = false
             }

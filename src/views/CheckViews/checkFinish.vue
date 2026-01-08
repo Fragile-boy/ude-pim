@@ -19,41 +19,54 @@
                 </el-row>
             </div>
             <el-table :data="finishList" style="width: 100%" @cell-dblclick="handleDoubleClick"
-                :cell-class-name="cellClassName" :row-class-name="rowClassName">
-                <el-table-column label="类型">
+                :cell-class-name="cellClassName" :row-class-name="rowClassName" size="small">
+                <el-table-column label="类型" width="100">
                     <template slot-scope="scope">
-                        <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null">专案类</el-tag>
+                        <el-tag effect="dark" type="success" v-if="scope.row.caseSubId !== null && scope.row.type!==3">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
                         <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微阶段</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="description" label="描述">
+                <el-table-column prop="description" label="描述" min-width="150" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column prop="startTime" label="开始时间">
+                <el-table-column label="开始时间" width="100">
+                    <template slot-scope="scope">
+                        {{ scope.row.startTime ? scope.row.startTime.split(' ')[0] : '-' }}
+                    </template>
                 </el-table-column>
-                <el-table-column prop="applyTime" label="申请完结时间">
+                <el-table-column label="申请完结时间" width="100">
+                    <template slot-scope="scope">
+                        {{ scope.row.applyTime ? scope.row.applyTime.split(' ')[0] : '-' }}
+                    </template>
                 </el-table-column>
                 <el-table-column prop="estimateValue" label="预计积分" width="80">
                 </el-table-column>
-                <el-table-column prop="planDays" label="计划时间">
+                <el-table-column prop="planDays" label="计划时间" width="70">
                 </el-table-column>
-                <el-table-column prop="executionDays" label="执行时间">
+                <el-table-column label="工作负荷" width="70">
+                    <template slot-scope="scope">
+                        {{ scope.row.estimatedWorkload || '-' }}
+                    </template>
                 </el-table-column>
-                <el-table-column prop="unforcedDays" label="外界因素延期" width="110">
+                <el-table-column prop="executionDays" label="执行时间" width="70">
                 </el-table-column>
-                <el-table-column prop="applyName" label="申请人">
+                <el-table-column prop="unforcedDays" label="外因延期" width="70">
                 </el-table-column>
-
-                <el-table-column prop="createTime" label="申请创建时间">
+                <el-table-column prop="applyName" label="申请人" width="70">
                 </el-table-column>
-                <el-table-column label="备注" width="90">
+                <el-table-column label="申请创建时间" width="100">
+                    <template slot-scope="scope">
+                        {{ scope.row.createTime ? scope.row.createTime.split(' ')[0] : '-' }}
+                    </template>
+                </el-table-column>
+                <el-table-column label="备注" width="60">
                     <template slot-scope="scope">
                         <el-button type="primary" icon="el-icon-info" size="mini" round @click="showCommit(scope.row)"
                             v-if="scope.row.caseSubId">备注</el-button>
                     </template>
                 </el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="150" fixed="right">
                     <template slot-scope="scope">
                         <el-button type="success" @click="handleCheck(scope.row, 1)" size="mini" round>通过</el-button>
                         <el-button type="primary" @click="handleCheck(scope.row, 2)" size="mini" round>拒绝</el-button>
@@ -257,7 +270,8 @@ export default {
     methods: {
         ...mapActions('apply', ['getFinish']),
         openImpactDialog() {
-            this.minTime = Math.min(this.curObj.planDays, this.curObj.executionDays)
+            // 2026.1.8 微阶段计算影响天数的基数从计划时间修改为工作负荷
+            this.minTime = Math.min(this.curObj.estimatedWorkload, this.curObj.executionDays)
             this.impactDays = (this.minTime * this.tempCoefficient).toFixed(0)
             this.showImpactDialog = true
         },

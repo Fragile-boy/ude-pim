@@ -8,11 +8,16 @@
         </div>
         <el-card>
             <el-row>
-                <el-col :span="4">
+                <el-col :span="6">
+                    <el-button :type="showFinished ? 'primary' : 'info'"
+                        :icon="showFinished ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" @click="toggleFinishedTasks"
+                        round>
+                        {{ showFinished ? '收起已完成' : '展开已完成' }}
+                    </el-button>
                     <el-button type="warning" @click="navigateToUserProjectManagerPage()">近况追踪</el-button>
                     <el-button type="info" @click="$router.push('/common/weekmeetcomments')">周会回顾</el-button>
                 </el-col>
-                <el-col :span="1" :offset="15">
+                <el-col :span="1" :offset="13">
                     <el-button type="primary" icon="el-icon-top" round @click="changeUser(-1)"></el-button>
                 </el-col>
                 <el-col :span="1">
@@ -30,7 +35,7 @@
             </el-row>
             <br>
             <!-- 执行任务的详情 -->
-            <el-table :data="userInfo" @cell-dblclick="handleDoubleClick" style="font-size: 17px;">
+            <el-table :data="filteredUserInfo" @cell-dblclick="handleDoubleClick" style="font-size: 17px;">
                 <el-table-column label="进度">
                     <template slot-scope="scope">
                         <!-- 未开始进度条 -->
@@ -81,11 +86,16 @@
                         </el-tooltip>
                     </template>
                 </el-table-column>
-                <!-- <el-table-column prop="pauseStart" label="暂停时间"></el-table-column> -->
+                <el-table-column prop="estimatedWorkload" label="工作负荷">
+                    <template #default="scope">
+                        <!-- 判断是否为 null 或 undefined，如果是则显示 -，否则显示原值 -->
+                        {{ scope.row.estimatedWorkload !== null ? scope.row.estimatedWorkload : '-' }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
-                <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
+                <!-- <el-table-column prop="applyDelay" label="人为延期"></el-table-column> -->
                 <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
                         <!-- 这里后面留着查看信息 -->
@@ -155,13 +165,13 @@
                     <ul v-show="!showAllCommit">
                         <li v-for="(o, index) in commitForm.content.slice(0, 4)" :key="o.id" class="text item">
                             <h3 :style="{ color: index < 2 ? 'red' : 'black', 'white-space': 'pre-wrap' }">{{ o.content
-                                }}</h3>
+                            }}</h3>
                         </li>
                     </ul>
                     <ul v-show="showAllCommit">
                         <li v-for="(o, index) in commitForm.content" :key="o.id" class="text item">
                             <h3 :style="{ color: index < 2 ? 'red' : 'black', 'white-space': 'pre-wrap' }">{{ o.content
-                                }}</h3>
+                            }}</h3>
                         </li>
                     </ul>
                     <label v-if="commitForm.content.length === 0">暂无备注</label>
@@ -342,6 +352,7 @@ export default {
             // 用户工作描述信息
             updateDescriptionVisible: false,
             directors: [],
+            showFinished: false,
         }
     },
     async mounted() {
@@ -362,7 +373,23 @@ export default {
         }, 100)
     },
     computed: {
-        ...mapState(['user'])
+        ...mapState(['user']),
+        // 新增：过滤后的用户信息
+        filteredUserInfo() {
+            if (this.showFinished) {
+                // 显示所有任务
+                return this.userInfo;
+            } else {
+                // 过滤掉已完成的任务（finishedOwnWork === true 且未暂停）
+                return this.userInfo.filter(item => {
+                // 排除条件：用户自己的任务已完成，且未暂停
+                if (item.finishedOwnWork === true && !item.pausing) {
+                    return false;
+                }
+                return true;
+                });
+            }
+        }
     },
     //缓存界面路由导航进入之前
     beforeRouteEnter(to, from, next) {
@@ -407,7 +434,6 @@ export default {
         async getTaskByUserId() {
             var res = await taskList(this.curUser)
             this.userInfo = res.data
-
             for (var i = 0; i < this.userInfo.length; i++) {
                 this.userInfo[i].executionDays = timeSub(this.userInfo[i].startTime, new Date())
                 this.userInfo[i].executionDays -= +this.userInfo[i].unforcedDays
@@ -424,7 +450,14 @@ export default {
                     //已经执行了多少天
                     var costDay = timeSub(this.userInfo[i].startTime, today)
                     // 已经执行了多少天/总共多少天
-                    this.userInfo[i].percentage = costDay * 1.0 / (this.userInfo[i].planDays + +this.userInfo[i].unforcedDays) * 100
+                    // 根据calcVersion选择不同的百分比计算方式
+                    if (this.userInfo[i].calcVersion === 2) {
+                        // 新版本：基于estimatedWorkload的计算
+                        this.userInfo[i].percentage = costDay * 1.0 / this.userInfo[i].estimatedWorkload * 100
+                    } else {
+                        // 旧版本：原来的计算方式
+                        this.userInfo[i].percentage = costDay * 1.0 / (this.userInfo[i].planDays + +this.userInfo[i].unforcedDays) * 100
+                    }
                 } else {
                     //已经延期了多少天(这里不能算预计时间当天，所以必须要-1)
                     var delayDay = timeSub(this.userInfo[i].presetTime, today) - 1
@@ -925,7 +958,12 @@ export default {
             // 格式化时间
             this.pauseObj.presetFinishTime = formatDate(now)
         },
-
+        // 新增：切换显示/隐藏已完成任务
+        toggleFinishedTasks() {
+            this.showFinished = !this.showFinished;
+            // 如果需要，可以添加其他逻辑，比如保存用户偏好到本地存储
+            // localStorage.setItem('showFinishedTasks', this.showFinished);
+        },
     }
 }
 </script>

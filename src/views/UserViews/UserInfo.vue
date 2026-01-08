@@ -85,6 +85,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="description" label="描述"></el-table-column>
+                <el-table-column prop="estimatedWorkload" label="工作负荷"></el-table-column>
                 <el-table-column prop="planDays" label="计划时间"></el-table-column>
                 <el-table-column prop="createTime" label="创建时间"></el-table-column>
                 <el-table-column label="操作">

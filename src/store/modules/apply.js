@@ -91,6 +91,9 @@ export default {
             var res = await getFinishApplyList()
             res.data.forEach(item => {
                 try {
+                    // 旧版本：保持原来的计算方式（从后端返回）
+                    item.estimateValue = item.estimateValue===null?null:item.estimateValue
+                    // 格式化为两位小数
                     item.estimateValue = item.estimateValue===null?null:item.estimateValue.toFixed(2)
                 } catch (error) {
                     item.estimateValue = "错误！"

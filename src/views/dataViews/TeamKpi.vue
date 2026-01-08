@@ -406,7 +406,7 @@ export default {
 
             // 准备图表数据
             this.chartData = this.prepareChartData()
-            this.trendData.sort((a, b) => a.curDate.localeCompare(b.curDate))
+            this.trendData.sort((a, b) => new Date(a.curDate + '-01') - new Date(b.curDate + '-01'))
         },
 
         prepareChartData() {

@@ -20,6 +20,9 @@
                         }, {
                             value: 2,
                             label: '技术研究'
+                        }, {
+                            value: 3,
+                            label: '微阶段'
                         }]" :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
@@ -75,11 +78,18 @@
                         <el-tag effect="dark" type="success" v-if="scope.row.caseSubId">专案类</el-tag>
                         <el-tag effect="dark" v-else-if="scope.row.type === 2">技术研究</el-tag>
                         <el-tag effect="dark" type="warning" v-else-if="scope.row.type === 1">临时事务</el-tag>
+                        <el-tag effect="dark" type="danger" v-else-if="scope.row.type === 3">微阶段</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column prop="description" label="描述" show-overflow-tooltip></el-table-column>
                 <el-table-column prop="startTime" sortable="custom" label="开始时间"></el-table-column>
                 <el-table-column prop="finishTime" sortable label="完成时间"></el-table-column>
+                <el-table-column prop="estimatedWorkload" label="工作负荷" show-overflow-tooltip>
+                    <template #default="scope">
+                        <!-- 判断是否为 null 或 undefined，如果是则显示 -，否则显示原值 -->
+                        {{ scope.row.estimatedWorkload !== null ? scope.row.estimatedWorkload : '-' }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="planDays" sortable label="计划时间"></el-table-column>
                 <el-table-column prop="executionDays" sortable label="执行时间"></el-table-column>
                 <el-table-column prop="unforcedDays" sortable label="外因延期"></el-table-column>

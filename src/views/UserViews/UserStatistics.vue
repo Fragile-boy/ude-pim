@@ -63,10 +63,16 @@
         <el-table-column prop="description" label="描述" show-overflow-tooltip></el-table-column>
         <el-table-column prop="startTime" sortable="custom" label="开始时间"></el-table-column>
         <el-table-column prop="finishTime" sortable label="完成时间"></el-table-column>
+        <el-table-column prop="estimatedWorkload" label="工作负荷">
+            <template #default="scope">
+                <!-- 判断是否为 null 或 undefined，如果是则显示 -，否则显示原值 -->
+                {{ scope.row.estimatedWorkload !== null ? scope.row.estimatedWorkload : '-' }}
+            </template>
+        </el-table-column>
         <el-table-column prop="planDays" sortable label="计划时间"></el-table-column>
         <el-table-column prop="executionDays" sortable label="执行时间"></el-table-column>
         <el-table-column prop="unforcedDays" sortable label="外因延期"></el-table-column>
-        <el-table-column prop="applyDelay" sortable label="人为延期"></el-table-column>
+        <!-- <el-table-column prop="applyDelay" sortable label="人为延期"></el-table-column> -->
         <el-table-column prop="achievingRate" sortable label="达成率(%)"></el-table-column>
         <el-table-column label="是否延误">
           <template slot-scope="scope">
@@ -252,7 +258,20 @@ export default {
         this.total = this.allTaskList.length
         this.allTaskList.forEach(s => {
           s.executionDays = timeSub(s.startTime, s.finishTime)
-          s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
+          // 根据calcVersion选择不同的达成率计算方式
+          if (s.calcVersion === 2) {
+            // 新版本：基于estimatedWorkload的计算
+            if (s.actualDurationDays < s.planDays) {
+              // 实际执行天数小于预计时间，获得estimatedWorkload数值表示的得分
+              s.achievingRate = 100
+            } else {
+              // 实际执行天数大于预计时间，计算达成率
+              s.achievingRate = +(s.planDays * 100 / s.actualDurationDays).toFixed()
+            }
+          } else {
+            // 旧版本：原来的计算方式
+            s.achievingRate = +((s.planDays + +s.unforcedDays) * 100 / s.executionDays).toFixed()
+          }
           s.isDelay = s.achievingRate < 100
         })
         // 保持筛选状态

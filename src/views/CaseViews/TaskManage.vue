@@ -132,33 +132,34 @@
         </el-card>
 
         <!-- 修改图层 -->
-        <el-dialog title="任务详情" :visible.sync="taskDetailVisible" width="30%">
-            <el-form ref="editCaseSubRef" label-width="90px">
+        <el-dialog title="任务详情" :visible.sync="taskDetailVisible" width="50%">
+            <el-form ref="editCaseSubRef" label-width="100px">
                 <el-form-item label="描述">
                     <el-input type="textarea" v-model="curTaskObj.description"></el-input>
                 </el-form-item>
 
+                <el-form-item label="计划天数">
+                    <el-input v-model="curTaskObj.planDays"></el-input>
+                </el-form-item>
 
-                <el-row>
-                    <el-col :span="10">
-                        <el-form-item label="计划天数">
-                            <el-input v-model="curTaskObj.planDays"></el-input>
-                        </el-form-item>
-                    </el-col>
+                <el-form-item label="工作负荷(天)">
+                    <el-input type="number" v-model="curTaskObj.estimatedWorkload" placeholder="工作日数"></el-input>
+                </el-form-item>
 
-                    <el-col :span="12" :offset="2">
-                        <el-form-item label="负责人">
-                            <el-select v-model="curTaskObj.director" placeholder="请选择科员" @change="handleUserChange()">
-                                <el-option-group v-for="group in directorOptions" :key="group.value"
-                                    :label="group.label">
-                                    <el-option v-for="item in group.children" :key="item.value" :label="item.label"
-                                        :value="item.value">
-                                    </el-option>
-                                </el-option-group>
-                            </el-select>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
+                <el-form-item label="实际执行天数">
+                    <el-input type="number" v-model="curTaskObj.actualDurationDays" placeholder="实际执行天数"></el-input>
+                </el-form-item>
+
+                <el-form-item label="负责人">
+                    <el-select v-model="curTaskObj.director" placeholder="请选择科员" @change="handleUserChange()">
+                        <el-option-group v-for="group in directorOptions" :key="group.value"
+                            :label="group.label">
+                            <el-option v-for="item in group.children" :key="item.value" :label="item.label"
+                                :value="item.value">
+                            </el-option>
+                        </el-option-group>
+                    </el-select>
+                </el-form-item>
 
                 <!-- 开始时间 -->
                 <el-form-item label="开始时间">
@@ -167,7 +168,6 @@
                 </el-form-item>
 
                 <!-- 结束时间 -->
-
                 <el-form-item label="结束时间">
                     <el-date-picker v-model="curTaskObj.finishTime" type="date" placeholder="结束时间">
                     </el-date-picker>
@@ -196,7 +196,7 @@
 
         <!-- 新增任务图层 -->
         <el-dialog title="任务详情" :visible.sync="addTaskVisible" width="30%">
-            <el-form ref="addTaskFormRef" :rules="applyTaskRules" :model="addTaskObj" label-width="100px">
+            <el-form ref="addTaskFormRef" :rules="applyTaskRules" :model="addTaskObj" label-width="120px">
                 <el-form-item label="任务类型" prop="type">
                     <el-select v-model="addTaskObj.type" placeholder="请选择任务类型" @change="isCaseSubTask=(addTaskObj.type===3)">
                         <el-option v-for="item in taskOptions"
@@ -227,6 +227,9 @@
                 </el-form-item>
                 <el-form-item label="预估时间" prop="planDays">
                     <el-input type="number" placeholder="请输入预估完成时间（天）" v-model.number="addTaskObj.planDays"></el-input>
+                </el-form-item>
+                <el-form-item label="工作负荷(天)" prop="estimatedWorkload">
+                    <el-input type="number" placeholder="请输入工作负荷（工作日数）" v-model.number="addTaskObj.estimatedWorkload"></el-input>
                 </el-form-item>
                 <el-form-item label="负责人" prop="director">
                     <el-select v-model="addTaskObj.director" placeholder="请选择科员">
@@ -280,6 +283,13 @@ export default {
                 callback(new Error("申请天数必须大于1"))
             callback()
         }
+        var checkEstimatedWorkload = (rule, value, callback) => {
+            if (value === null || value === '')
+                callback(new Error("工作负荷不能为空"))
+            if (value < 1)
+                callback(new Error("工作负荷必须大于0"))
+            callback()
+        }
         return {
             taskList: [],
             //负责人的级联选择器
@@ -300,6 +310,10 @@ export default {
                 planDays: [
                     { required: true, message: '申请天数不能为空', trigger: 'blur' },
                     { validator: checkPlandays, trigger: 'blur' }
+                ],
+                estimatedWorkload: [
+                    { required: true, message: '工作负荷不能为空', trigger: 'blur' },
+                    { validator: checkEstimatedWorkload, trigger: 'blur' }
                 ],
                 director: [
                     { required: true, message: '请指派负责人', trigger: 'change' }
@@ -421,12 +435,15 @@ export default {
             this.$refs.addTaskFormRef.validate(async (valid) => {
                 if (valid) {
                     this.addTaskObj.createUser = this.user.id
+                    // 确保新增的属性被传递到后端（使用驼峰命名法）
+                    this.addTaskObj.estimatedWorkload = this.addTaskObj.estimatedWorkload
+                    this.addTaskObj.planDays = this.addTaskObj.planDays
                     if(this.addTaskObj.type === 3){
                         // 获取选中的文本
                         const caseName = this.unFinishedCaseList.find(
                             item => item.id === this.unFinishedCaseId
                             )?.name || '';
-                            
+
                             const subName = this.unfinishedSubList.find(
                             item => item.id === this.addTaskObj.name
                             )?.subName || '';
@@ -438,6 +455,9 @@ export default {
                         this.$message.success(res.data)
                         this.getAllTaskList()
                         this.getExecutingTask()
+                        // 重置表单
+                        this.$refs.addTaskFormRef.resetFields()
+                        this.addTaskObj = { director: null }
                     } else {
                         this.$message.error(res.msg)
                     }

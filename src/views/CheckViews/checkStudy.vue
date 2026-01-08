@@ -32,13 +32,18 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="planDays" label="计划天数"></el-table-column>
+                <el-table-column label="工作负荷">
+                    <template slot-scope="scope">
+                        {{ scope.row.estimatedWorkload || '-' }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="predictTime" label="预计完成时间"></el-table-column>
                 <el-table-column prop="applyName" label="申请人"></el-table-column>
                 <el-table-column prop="createTime" label="申请时间"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="150" fixed="right">
                     <template slot-scope="scope">
-                        <el-button type="success" @click="judgeApply(scope.row, 1)">通 过</el-button>
-                        <el-button type="primary" @click="judgeApply(scope.row, 2)">拒 绝</el-button>
+                        <el-button type="success" @click="openApproveDialog(scope.row)" size="mini">通 过</el-button>
+                        <el-button type="primary" @click="judgeApply(scope.row, 2)" size="mini">拒 绝</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -60,6 +65,11 @@
                 </el-table-column>
                 <el-table-column prop="planDays" label="计划时间">
                 </el-table-column>
+                <el-table-column label="工作负荷">
+                    <template slot-scope="scope">
+                        {{ scope.row.estimatedWorkload || '-' }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="predictTime" label="预计完成时间">
                 </el-table-column>
                 <el-table-column prop="applyName" label="申请人">
@@ -76,12 +86,37 @@
                 :page-size="queryInfo.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="total">
             </el-pagination>
         </el-card>
+
+        <!-- 审批对话框 -->
+        <el-dialog title="审批申请" :visible.sync="approveDialogVisible" width="50%">
+            <el-form ref="approveFormRef" :model="approveObj" label-width="100px">
+                <el-form-item label="任务类型">
+                    <el-input v-model="approveObj.typeText" disabled></el-input>
+                </el-form-item>
+                <el-form-item label="申请人">
+                    <el-input v-model="approveObj.applyName" disabled></el-input>
+                </el-form-item>
+                <el-form-item label="任务描述">
+                    <el-input type="textarea" v-model="approveObj.description" placeholder="可编辑任务描述"></el-input>
+                </el-form-item>
+                <el-form-item label="工作负荷">
+                    <el-input type="number" v-model.number="approveObj.estimatedWorkload" placeholder="可编辑工作负荷"></el-input>
+                </el-form-item>
+                <el-form-item label="计划天数">
+                    <el-input type="number" v-model.number="approveObj.planDays" placeholder="可编辑计划天数"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="approveDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="submitApprove()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { applyList, judgeApply, applyHistoryList } from '@/api/applyTask'
-import { timeAdd } from '@/utils/common'
+import { timeAdd, initTaskTypeOptions } from '@/utils/common'
 import { mapActions, mapState } from 'vuex'
 export default {
     data() {
@@ -93,7 +128,23 @@ export default {
                 pageSize: 7
             },
             total: 0,
-            applyHistoryList: []
+            applyHistoryList: [],
+            // 审批对话框相关
+            approveDialogVisible: false,
+            approveObj: {
+                id: null,
+                type: null,
+                typeText: '',
+                applyName: '',
+                applyId: null,
+                description: '',
+                estimatedWorkload: null,
+                planDays: null,
+                createTime: null,
+                comment: null,
+                status: null,
+                checkUser: null
+            }
         }
     },
     created() {
@@ -107,16 +158,53 @@ export default {
     },
     methods: {
         ...mapActions('apply', ['getTaskList']),
-        judgeApply(row, status) {
-            row.status = status
+        // 打开审批对话框
+        openApproveDialog(row) {
+            const typeMap = {
+                1: '临时事务',
+                2: '技术研究',
+                3: '微阶段'
+            }
+            this.approveObj = {
+                id: row.id,
+                type: row.type,
+                typeText: typeMap[row.type] || '',
+                applyName: row.applyName,
+                applyId: row.applyId,
+                description: row.description,
+                estimatedWorkload: row.estimatedWorkload,
+                planDays: row.planDays,
+                createTime: row.createTime,
+                comment: row.comment,
+                status: null,
+                checkUser: null
+            }
+            this.approveDialogVisible = true
+        },
+        // 提交审批（通过）
+        async submitApprove() {
+            const row = this.approveObj
+            row.status = 1
             row.checkUser = this.user.id
-            if (status === 1) {
-                this.$confirm('确定同意该科员的任务申请?', '提示', {
+            const res = await judgeApply(row)
+            if (res.code === 200) {
+                this.$message.success(res.data)
+                this.approveDialogVisible = false
+                this.getTaskList()
+            } else {
+                this.$message.error(res.msg)
+            }
+        },
+        // 拒绝申请
+        judgeApply(row, status) {
+            if (status === 2) {
+                this.$prompt('请输入拒绝理由', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
-                    type: 'warning'
-                }).then(async () => {
-
+                }).then(async ({ value }) => {
+                    row.status = status
+                    row.checkUser = this.user.id
+                    row.comment = value
                     const res = await judgeApply(row)
                     if (res.code === 200) {
                         this.$message.success(res.data)
@@ -130,20 +218,6 @@ export default {
                         message: '取消操作'
                     });
                 });
-            } else if (status === 2) {
-                this.$prompt('请输入拒绝理由', '提示', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                }).then(async ({ value }) => {
-                    row.comment = value
-                    const res = await judgeApply(row)
-                    if (res.code === 200) {
-                        this.$message.success(res.data)
-                        this.getTaskList()
-                    } else {
-                        this.$message.error(res.msg)
-                    }
-                })
             }
         },
         openHistory() {

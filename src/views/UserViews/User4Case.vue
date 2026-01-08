@@ -65,8 +65,14 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="executionDays" label="执行时间"></el-table-column>
+                <el-table-column prop="estimatedWorkload" label="工作负荷">
+                    <template #default="scope">
+                        <!-- 判断是否为 null 或 undefined，如果是则显示 -，否则显示原值 -->
+                        {{ scope.row.estimatedWorkload !== null ? scope.row.estimatedWorkload : '-' }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="unforcedDays" label="外因延期"></el-table-column>
-                <el-table-column prop="applyDelay" label="人为延期"></el-table-column>
+                <!-- <el-table-column prop="applyDelay" label="人为延期"></el-table-column> -->
                 <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
                         <el-tooltip class="item" effect="dark" content="申请延期" placement="top"
@@ -260,10 +266,10 @@
         </el-dialog>
 
         <el-dialog title="申请任务" :visible.sync="applyTaskVisible" width="30%" @close="applyTaskFormReset()">
-            <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="90px">
+            <el-form ref="applyTaskFormRef" :rules="applyTaskRules" :model="applyTask" label-width="120px">
                 <el-form-item label="任务类型" prop="type">
                     <el-select v-model="applyTask.type" placeholder="请选择任务类型"
-                        @change="isCaseSubTask = applyTask.type === 3">
+                        @change="handleTaskTypeChange">
                         <el-option v-for="item in taskTypes" :key="item.value" :label="item.label" :value="item.value">
                         </el-option>
                     </el-select>
@@ -289,7 +295,11 @@
                     <el-input type="textarea" placeholder="请输入任务描述" v-model="applyTask.description"></el-input>
                 </el-form-item>
                 <el-form-item label="预估时间" prop="planDays">
-                    <el-input type="number" placeholder="请输入预估完成时间（天）" v-model.number="applyTask.planDays"></el-input>
+                    <el-input type="number" placeholder="请输入预估完成时间（天）" v-model.number="applyTask.planDays" @input="handlePlanDaysChange"></el-input>
+                </el-form-item>
+                <el-form-item label="工作负荷(天)" prop="estimatedWorkload">
+                    <el-input type="number" placeholder="请输入工作负荷（工作日数）" v-model.number="applyTask.estimatedWorkload" :disabled="isCaseSubTask"></el-input>
+                    <span v-if="isCaseSubTask" style="color: #909399; font-size: 12px;">专案微阶段的工作负荷自动等于预估时间</span>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -384,6 +394,13 @@ export default {
                 callback(new Error("申请天数必须大于1"))
             callback()
         }
+        var checkEstimatedWorkload = (rule, value, callback) => {
+            if (value === null || value === '')
+                callback(new Error("工作负荷不能为空"))
+            if (value < 1)
+                callback(new Error("工作负荷必须大于0"))
+            callback()
+        }
         return {
             // 是否是子流程的微阶段任务
             isCaseSubTask: false,
@@ -424,6 +441,10 @@ export default {
                 planDays: [
                     { required: true, message: '申请天数不能为空', trigger: 'blur' },
                     { validator: checkPlandays, trigger: 'blur' }
+                ],
+                estimatedWorkload: [
+                    { required: true, message: '工作负荷不能为空', trigger: 'blur' },
+                    { validator: checkEstimatedWorkload, trigger: 'blur' }
                 ]
             },
             //完结的时候确认工作内容
@@ -444,6 +465,7 @@ export default {
                 type: null,
                 description: '',
                 planDays: null,
+                estimatedWorkload: null,
                 comment: ''
             },
             //当前申请完结的任务
@@ -500,6 +522,20 @@ export default {
         ...mapState(['user'])
     },
     methods: {
+        // 处理任务类型变化
+        handleTaskTypeChange() {
+            this.isCaseSubTask = this.applyTask.type === 3
+            // 如果切换到专案微阶段，自动同步工作负荷
+            if (this.isCaseSubTask && this.applyTask.planDays !== null) {
+                this.applyTask.estimatedWorkload = this.applyTask.planDays
+            }
+        },
+        // 处理预估时间变化，如果是专案微阶段，自动同步到工作负荷
+        handlePlanDaysChange() {
+            if (this.isCaseSubTask && this.applyTask.planDays !== null) {
+                this.applyTask.estimatedWorkload = this.applyTask.planDays
+            }
+        },
         applyTaskFormReset() {
             this.$refs.applyTaskFormRef.resetFields()
             this.unfinishedSubList = []
@@ -830,7 +866,15 @@ export default {
             this.$refs.applyTaskFormRef.validate(async (valid) => {
                 try {
                     if (valid) {
+                        // 防呆设计，工作负荷不能大于计划天数
+                         if (this.applyTask.estimatedWorkload > this.applyTask.planDays) {
+                            this.$message.error('工作负荷不能大于计划天数')
+                            return
+                        }
                         this.applyTask.applyId = this.user.id
+                        // 确保新增的属性被传递到后端（使用驼峰命名法）
+                        this.applyTask.estimatedWorkload = this.applyTask.estimatedWorkload
+                        this.applyTask.planDays = this.applyTask.planDays
                         // 判断是否是子流程的微阶段任务，如果是，在描述前加上子流程名称
                         if (this.applyTask.type === 3) {
                             // 获取选中的文本
@@ -847,6 +891,9 @@ export default {
                         if (res.code === 200) {
                             this.applyTaskVisible = false
                             this.$message.success(res.data)
+                            // 重置表单
+                            this.$refs.applyTaskFormRef.resetFields()
+                            this.applyTask = { name: '', type: null, description: '', planDays: null, estimatedWorkload: null, comment: '' }
                         } else {
                             this.$message.error(res.msg)
                         }

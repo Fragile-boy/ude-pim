@@ -277,6 +277,14 @@
                             {{ row.finishTime }}
                         </template>
                     </el-table-column>
+                    
+                    <el-table-column prop="impactedTime" label="增加天数" width="100" align="center">
+                        <template slot-scope="{row}">
+                            <el-tag size="mini" type="danger">
+                                {{ row.impactedTime }}
+                            </el-tag>
+                        </template>
+                    </el-table-column>
 
                     <el-table-column prop="planDays" label="计划天数" width="100" align="center">
                         <template slot-scope="{row}">
